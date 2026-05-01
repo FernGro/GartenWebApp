@@ -1,6 +1,6 @@
 # Deployment fuer Einsteiger
 
-Diese Anleitung beschreibt den Weg von diesem Ordner bis zu einer laufenden Webseite. Du brauchst drei kostenlose Konten:
+Diese Anleitung beschreibt den Weg von diesem Ordner bis zu einer laufenden Webseite. Du brauchst drei kostenlose Konten: 
 
 - GitHub: speichert den Code
 - Supabase: speichert Login und Datenbank
