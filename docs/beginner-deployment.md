@@ -48,9 +48,10 @@ Im Supabase Dashboard:
 5. Datei `supabase/migrations/003_create_garden_rpc.sql` komplett kopieren und ausfuehren.
 6. Datei `supabase/migrations/004_invite_no_downgrade_and_owner_recovery.sql` komplett kopieren und ausfuehren.
 7. Datei `supabase/migrations/005_enforce_last_owner.sql` komplett kopieren und ausfuehren.
-8. Optional `supabase/seed.sql` kopieren und ausfuehren, damit Standard-Aufgabenvorlagen vorhanden sind.
+8. Datei `supabase/migrations/006_leave_and_delete_garden.sql` komplett kopieren und ausfuehren.
+9. Optional `supabase/seed.sql` kopieren und ausfuehren, damit Standard-Aufgabenvorlagen vorhanden sind.
 
-Wenn beim Garten-Anlegen ein `Application error` erscheint, pruefe zuerst, ob wirklich alle drei Migrationen ausgefuehrt wurden.
+Wenn ein `Application error` erscheint, pruefe zuerst, ob wirklich alle Migrationen (001 bis 006) in Supabase ausgefuehrt wurden. Die genaue Fehlermeldung findest du im Vercel Dashboard unter Projekt → Logs → Functions.
 
 ## 4. Supabase API Keys finden
 
