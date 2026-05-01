@@ -128,6 +128,8 @@ Diese URL danach in Supabase Auth als Redirect URL eintragen.
 5. Den angezeigten Link kopieren und der Person schicken.
 6. Die Person oeffnet den Link, registriert/loggt sich ein und klickt `Einladung annehmen`.
 
+Wichtig: Wenn die Person nur die normale Webseiten-Adresse oeffnet, sieht sie deinen Garten nicht. Sie muss den `/invite/...` Link oeffnen und annehmen. Erst dadurch wird ihr Account mit deinem Garten verknuepft.
+
 ## 9. Markus zieht aus, Anna kommt
 
 1. Oeffne `Mitglieder`.
@@ -156,6 +158,28 @@ Den Gartennamen aendern Owner/Admins ebenfalls unter `Garten`.
 4. Speichern.
 
 Die automatische Zuweisung beruecksichtigt diese Abwesenheiten.
+
+## 11a. App auf dem Handy speichern
+
+Ein Link kann nicht automatisch ohne Zustimmung eine App oder Verknuepfung auf dem Handy installieren. Das verhindern iOS und Android aus Sicherheitsgruenden.
+
+Du kannst aber die Webseite als App speichern:
+
+iPhone:
+
+1. Webseite in Safari oeffnen.
+2. Teilen-Symbol antippen.
+3. `Zum Home-Bildschirm` auswaehlen.
+4. `Hinzufuegen`.
+
+Android:
+
+1. Webseite in Chrome oeffnen.
+2. Drei-Punkte-Menue oeffnen.
+3. `App installieren` oder `Zum Startbildschirm hinzufuegen`.
+4. Bestaetigen.
+
+In der App gibt es dafuer auch die Seite `/install`.
 
 ## 12. Updates
 

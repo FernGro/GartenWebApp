@@ -16,7 +16,8 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
       <div className="max-w-xl rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-5 shadow-sm shadow-[#4a5d3f]/5">
         <h1 className="text-2xl font-bold">Garten-Einladung</h1>
         <p className="mt-2 text-sm text-[#5a6655]">
-          Melde dich an und nimm die Einladung an. Der Link wird serverseitig geprueft und kann abgelaufen sein.
+          Das ist der Link, der deinen Account mit dem bestehenden Garten verbindet. Ohne diesen Schritt siehst du nur die Option,
+          einen eigenen neuen Garten zu erstellen.
         </p>
         {user ? (
           <form action={acceptInviteAction} className="mt-5">
@@ -24,9 +25,12 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
             <Button type="submit">Einladung annehmen</Button>
           </form>
         ) : (
-          <Link className="mt-5 inline-flex rounded-lg bg-[#2f6b3f] px-4 py-3 font-semibold text-white" href={`/login?next=/invite/${token}`}>
-            Erst einloggen
-          </Link>
+          <div className="mt-5 rounded-lg bg-[#f2f7ec] p-4">
+            <p className="text-sm text-[#42513d]">Melde dich erst an. Danach kommst du automatisch hierher zurueck.</p>
+            <Link className="mt-3 inline-flex rounded-lg bg-[#2f6b3f] px-4 py-3 font-semibold text-white" href={`/login?next=/invite/${token}`}>
+              Einloggen und Einladung annehmen
+            </Link>
+          </div>
         )}
       </div>
     </AppShell>

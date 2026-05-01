@@ -7,6 +7,7 @@ const navItems = [
   { href: "/tasks/new", label: "Neu" },
   { href: "/templates", label: "Vorlagen" },
   { href: "/notifications", label: "Meldungen" },
+  { href: "/install", label: "Install" },
 ];
 
 export async function AppShell({ children }: { children: React.ReactNode }) {
@@ -21,7 +22,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
             <span className="grid h-9 w-9 place-items-center rounded-lg bg-[#2f6b3f] text-white">GD</span>
             <span>Garten Dienstplan</span>
           </Link>
-          <nav className="hidden gap-2 md:flex">
+          <nav className="hidden gap-1 md:flex">
             {navItems.map((item) => (
               <Link
                 className="rounded-md px-3 py-2 text-sm font-medium text-[#405039] hover:bg-[#e3ecd9]"
@@ -36,7 +37,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
       <main className="mx-auto max-w-6xl px-4 py-6 pb-24">{children}</main>
-      <nav className="fixed inset-x-0 bottom-0 grid grid-cols-5 border-t border-[#d7dfcf] bg-[#fbfcf7]/96 shadow-[0_-10px_30px_rgba(38,61,30,0.08)] backdrop-blur md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 grid grid-cols-6 border-t border-[#d7dfcf] bg-[#fbfcf7]/96 shadow-[0_-10px_30px_rgba(38,61,30,0.08)] backdrop-blur md:hidden">
         {navItems.map((item) => (
           <Link className="px-2 py-3 text-center text-xs font-semibold text-[#405039]" href={item.href} key={item.href}>
             {item.label}

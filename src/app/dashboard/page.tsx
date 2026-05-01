@@ -48,14 +48,18 @@ export default async function DashboardPage() {
     return (
       <AppShell>
         <div className="max-w-xl rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-5 shadow-sm shadow-[#4a5d3f]/5">
-          <h1 className="text-2xl font-bold">Garten anlegen</h1>
-          <p className="mt-2 text-sm text-[#5a6655]">
-            Lege zuerst den Haushalt oder Garten an. Du wirst automatisch Owner.
+          <h1 className="text-2xl font-bold">Garten beitreten oder anlegen</h1>
+          <p className="mt-2 text-sm leading-6 text-[#5a6655]">
+            Wenn du eingeladen wurdest, oeffne den Einladungslink, den der Owner unter Mitglieder erstellt hat.
+            Nur wenn du einen eigenen neuen Haushalt starten willst, lege hier einen neuen Garten an.
           </p>
           <form action={createGardenAction} className="mt-5 space-y-4">
             <input className="w-full rounded-lg border border-[#cbd8c1] px-3 py-3" name="name" placeholder="z. B. Garten Haus 12" required />
             <Button type="submit">Garten erstellen</Button>
           </form>
+          <Link className="mt-4 inline-block text-sm font-semibold text-[#2f6b3f] underline" href="/install">
+            App auf dem Handy speichern
+          </Link>
         </div>
       </AppShell>
     );

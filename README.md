@@ -15,6 +15,7 @@ MVP fuer eine Garten-Dienstplan-Web-App mit Next.js App Router, TypeScript, Tail
 - Mitgliederverwaltung mit Invite-Links
 - Lesbare In-App Notifications
 - Saisonaufgaben aus Templates erzeugen
+- Installationshinweise fuer Handy/Startbildschirm unter `/install`
 - Row Level Security fuer Garten-Mitgliedschaft
 
 ## Lokales Setup
