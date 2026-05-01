@@ -49,3 +49,23 @@ Bei neuen Features:
 5. Vercel deployed automatisch.
 
 Keine `drop table`, `truncate` oder destruktiven Migrationen ohne Backup und expliziten Plan ausfuehren.
+
+## Kein Update-Button in der App
+
+Die Webseite sollte sich nicht ueber einen Button in der UI selbst aus Git aktualisieren. Bei Vercel ist der sichere Standard:
+
+1. GitHub bekommt einen neuen Commit.
+2. Vercel erkennt den Commit automatisch.
+3. Vercel baut und veroeffentlicht die neue Version.
+
+Ein UI-Update-Button waere unsauber, weil die App dafuer GitHub-/Deployment-Zugangsdaten im laufenden System brauchen wuerde. Das erhoeht das Sicherheitsrisiko und passt nicht gut zu serverlosen Deployments.
+
+## Kostenlose Einstiegsdienste
+
+Zum Start reichen typischerweise:
+
+- Vercel Hobby fuer die Webseite
+- Supabase Free fuer Datenbank und Auth
+- GitHub Free fuer das Repository
+
+Limits koennen sich aendern. Vor produktiver Nutzung die aktuellen Anbieter-Seiten pruefen.

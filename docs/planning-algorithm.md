@@ -20,3 +20,5 @@ Die Task-Erstellung nutzt diesen Algorithmus serverseitig, wenn keine Person man
 `isTemplateInSeason` unterstuetzt normale Saisonbereiche und Bereiche ueber den Jahreswechsel, z. B. Dezember bis Februar.
 
 Wiederkehrende Generierung ist im MVP manuell ueber die Vorlagen-Seite aktiv. Ein spaeterer Cron Job oder eine Supabase Edge Function kann dieselbe Logik zeitgesteuert ausloesen.
+
+Der Vercel Cron Job `/api/cron/garden-jobs` loest diese Automatisierung serverseitig aus, wenn `SUPABASE_SERVICE_ROLE_KEY` und `CRON_SECRET` gesetzt sind.

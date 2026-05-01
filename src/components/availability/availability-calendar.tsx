@@ -2,15 +2,13 @@ import { deleteAvailabilityAction, createAvailabilityAction } from "@/lib/availa
 import { formatDate } from "@/lib/format/date";
 import type { AvailabilityWindow } from "@/types/domain";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
-function monthDays() {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth();
-  const days = new Date(year, month + 1, 0).getDate();
+function monthDays(year: number, month: number) {
+  const days = new Date(Date.UTC(year, month, 0)).getUTCDate();
 
   return Array.from({ length: days }, (_, index) => {
-    const date = new Date(year, month, index + 1);
+    const date = new Date(Date.UTC(year, month - 1, index + 1));
     return date.toISOString().slice(0, 10);
   });
 }
@@ -22,16 +20,36 @@ function isBlocked(date: string, entries: AvailabilityWindow[]) {
 export function AvailabilityCalendar({
   gardenId,
   entries,
+  year,
+  month,
 }: {
   gardenId: string;
   entries: AvailabilityWindow[];
+  year: number;
+  month: number;
 }) {
-  const days = monthDays();
+  const days = monthDays(year, month);
+  const prev = month === 1 ? { year: year - 1, month: 12 } : { year, month: month - 1 };
+  const next = month === 12 ? { year: year + 1, month: 1 } : { year, month: month + 1 };
+  const label = new Intl.DateTimeFormat("de-DE", { month: "long", year: "numeric", timeZone: "UTC" }).format(
+    new Date(Date.UTC(year, month - 1, 1)),
+  );
 
   return (
     <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
       <section className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
-        <h2 className="text-lg font-bold">Abwesenheit eintragen</h2>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-lg font-bold">Abwesenheit eintragen</h2>
+          <div className="flex items-center gap-2 text-sm font-semibold">
+            <Link className="rounded-lg bg-[#eef4e8] px-3 py-2 text-[#2f6b3f]" href={`/settings/garden?year=${prev.year}&month=${prev.month}`}>
+              Zurueck
+            </Link>
+            <span className="min-w-32 text-center capitalize">{label}</span>
+            <Link className="rounded-lg bg-[#eef4e8] px-3 py-2 text-[#2f6b3f]" href={`/settings/garden?year=${next.year}&month=${next.month}`}>
+              Weiter
+            </Link>
+          </div>
+        </div>
         <form action={createAvailabilityAction} className="mt-4 grid gap-3 sm:grid-cols-2">
           <input name="garden_id" type="hidden" value={gardenId} />
           <label className="text-sm font-semibold">

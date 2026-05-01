@@ -75,6 +75,8 @@ https://deine-domain.vercel.app/auth/callback
 
 Keine Service-Role Keys im Frontend oder in Vercel Public Env Vars speichern.
 
+Eine ausfuehrliche Schritt-fuer-Schritt-Anleitung fuer Nicht-Entwickler steht in [docs/beginner-deployment.md](docs/beginner-deployment.md).
+
 ## Projektstruktur
 
 ```text

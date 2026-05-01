@@ -23,13 +23,19 @@ export async function getCurrentGarden(
 export async function getGardenMembers(
   supabase: SupabaseClient<Database>,
   gardenId: string,
+  includeInactive = false,
 ): Promise<GardenMember[]> {
-  const { data, error } = await supabase
+  let query = supabase
     .from("garden_members")
     .select("id,garden_id,user_id,role,is_active,profiles(id,display_name)")
     .eq("garden_id", gardenId)
-    .eq("is_active", true)
     .order("joined_at", { ascending: true });
+
+  if (!includeInactive) {
+    query = query.eq("is_active", true);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error("getGardenMembers", error.message);

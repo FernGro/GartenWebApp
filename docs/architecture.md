@@ -20,3 +20,7 @@ Nicht gebaut sind WhatsApp, Service Worker und Push. Diese Bereiche sind dokumen
 ## Update-Strategie
 
 App-Code kann jederzeit ueber GitHub/Vercel aktualisiert werden. Persistente Daten liegen in Supabase. Neue Features, die Datenbankfelder brauchen, bekommen additive Migrationen. Destruktive Migrationen muessen separat geplant werden.
+
+## Automatisierung
+
+`vercel.json` definiert einen taeglichen Cron Job auf `/api/cron/garden-jobs`. Die Route nutzt serverseitig `SUPABASE_SERVICE_ROLE_KEY` und ist ueber `CRON_SECRET` geschuetzt. Sie erzeugt saisonale Aufgaben, markiert ueberfaellige Aufgaben und erstellt Erinnerungs-Notifications.

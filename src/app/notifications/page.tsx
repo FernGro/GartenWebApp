@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { formatDateTime } from "@/lib/format/date";
 import { getCurrentGarden } from "@/lib/gardens/queries";
 import { markNotificationReadAction } from "@/lib/notifications/actions";
+import { createDueNotificationsAction } from "@/lib/notifications/reminder-actions";
 import { getNotifications } from "@/lib/notifications/queries";
 import { createClient } from "@/lib/supabase/server";
 
@@ -17,7 +18,18 @@ export default async function NotificationsPage() {
 
   return (
     <AppShell>
-      <h1 className="mb-6 text-3xl font-bold">Meldungen</h1>
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Meldungen</h1>
+          <p className="mt-1 text-sm text-[#5a6655]">Zuweisungen, Erinnerungen und ueberfaellige Aufgaben.</p>
+        </div>
+        {garden ? (
+          <form action={createDueNotificationsAction}>
+            <input name="garden_id" type="hidden" value={garden.id} />
+            <Button type="submit">Erinnerungen pruefen</Button>
+          </form>
+        ) : null}
+      </div>
       <div className="grid gap-3">
         {notifications.map((notification) => (
           <article className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5" key={notification.id}>

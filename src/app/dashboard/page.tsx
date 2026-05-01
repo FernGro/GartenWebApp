@@ -64,10 +64,10 @@ export default async function DashboardPage() {
   const [members, tasks] = await Promise.all([getGardenMembers(supabase, garden.id), getTasks(supabase, garden.id)]);
   const scores = calculateScores(tasks, members);
   const suggestion = suggestAssignee(scores, null);
-  const openTasks = tasks.filter((task) => task.status === "open" || task.status === "assigned");
+  const openTasks = tasks.filter((task) => task.status === "open" || task.status === "assigned" || task.status === "overdue");
   const myTasks = openTasks.filter((task) => task.assigned_to === user.id);
   const today = todayIsoDate();
-  const overdueTasks = openTasks.filter((task) => task.due_date && task.due_date < today);
+  const overdueTasks = openTasks.filter((task) => task.status === "overdue" || (task.due_date && task.due_date < today));
   const doneTasks = tasks.filter((task) => task.status === "done");
 
   return (

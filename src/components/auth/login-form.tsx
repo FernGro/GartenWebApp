@@ -11,7 +11,8 @@ type Mode = "magic" | "password" | "signup";
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const nextPath = searchParams.get("next") ?? "/dashboard";
+  const rawNextPath = searchParams.get("next") ?? "/dashboard";
+  const nextPath = rawNextPath.startsWith("/") && !rawNextPath.startsWith("//") ? rawNextPath : "/dashboard";
   const [mode, setMode] = useState<Mode>("magic");
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
