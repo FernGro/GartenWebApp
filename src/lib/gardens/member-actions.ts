@@ -87,3 +87,29 @@ export async function setMemberActiveAction(formData: FormData) {
   revalidatePath("/settings/members");
   revalidatePath("/dashboard");
 }
+
+export async function restoreOwnerAction(formData: FormData) {
+  await requireUser();
+  const supabase = await createClient();
+
+  if (!supabase) {
+    throw new Error("Supabase ist nicht konfiguriert.");
+  }
+
+  const gardenId = readString(formData, "garden_id");
+
+  if (!gardenId) {
+    throw new Error("Garten fehlt.");
+  }
+
+  const { error } = await supabase.rpc("restore_garden_creator_owner", {
+    target_garden_id: gardenId,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/dashboard");
+  revalidatePath("/settings/members");
+}

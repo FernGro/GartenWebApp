@@ -140,6 +140,10 @@ export type Database = {
         Args: { garden_name: string };
         Returns: string;
       };
+      restore_garden_creator_owner: {
+        Args: { target_garden_id: string };
+        Returns: void;
+      };
     };
     Enums: {
       garden_role: GardenRole;

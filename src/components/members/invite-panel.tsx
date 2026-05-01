@@ -59,6 +59,11 @@ export function InvitePanel({
       </section>
       <aside className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
         <h2 className="text-lg font-bold">Einladung erstellen</h2>
+        {canManage ? (
+          <p className="mt-2 rounded-lg bg-[#fff7e8] p-3 text-sm leading-6 text-[#6f4d16]">
+            Erstelle keine Einladung fuer deinen eigenen Account. Wenn du den Link selbst annimmst, wird deine Rolle nicht mehr heruntergestuft, aber der Link ist dann verbraucht.
+          </p>
+        ) : null}
         {canManage ? <form action={createInviteAction} className="mt-4 space-y-3">
           <input name="garden_id" type="hidden" value={gardenId} />
           <label className="text-sm font-semibold">

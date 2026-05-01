@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AppShell } from "@/components/layout/app-shell";
+import { OwnerRecovery } from "@/components/dashboard/owner-recovery";
 import { ScoreTable } from "@/components/dashboard/score-table";
 import { TaskCard } from "@/components/tasks/task-card";
 import { Button } from "@/components/ui/button";
@@ -65,7 +66,11 @@ export default async function DashboardPage() {
     );
   }
 
-  const [members, tasks] = await Promise.all([getGardenMembers(supabase, garden.id), getTasks(supabase, garden.id)]);
+  const [members, allMembers, tasks] = await Promise.all([
+    getGardenMembers(supabase, garden.id),
+    getGardenMembers(supabase, garden.id, true),
+    getTasks(supabase, garden.id),
+  ]);
   const scores = calculateScores(tasks, members);
   const suggestion = suggestAssignee(scores, null);
   const openTasks = tasks.filter((task) => task.status === "open" || task.status === "assigned" || task.status === "overdue");
@@ -76,6 +81,7 @@ export default async function DashboardPage() {
 
   return (
     <AppShell>
+      <OwnerRecovery gardenId={garden.id} members={allMembers} currentUserId={user.id} createdBy={garden.created_by} />
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-sm font-semibold text-[#2f6b3f]">{garden.name}</p>

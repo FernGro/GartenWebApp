@@ -35,3 +35,5 @@ Der erste Garden Owner darf direkt nach Erstellung seines Gartens den eigenen `g
 Invites werden von Owner/Admin erstellt. Die Annahme erfolgt ueber `public.accept_garden_invite(token)`, eine `security definer`-Funktion, die Token, Ablaufdatum und bisherige Annahme prueft und dann Mitgliedschaft anlegt.
 
 Das erste Garten-Onboarding erfolgt ueber `public.create_garden_with_owner(name)`. Die Funktion erstellt Garten und Owner-Mitgliedschaft atomar, damit RLS nicht zwischen Garten-Insert und Mitgliedschafts-Insert blockiert.
+
+`public.accept_garden_invite(token)` darf bestehende Mitglieder nicht mehr herunterstufen. Wenn ein bestehender Owner versehentlich einen Member-Invite annimmt, bleibt die hoehere Rolle erhalten. `public.restore_garden_creator_owner(garden_id)` stellt fuer den Gartenersteller die Owner-Rolle wieder her, falls ein Garten keinen aktiven Owner mehr hat.

@@ -130,6 +130,8 @@ Diese URL danach in Supabase Auth als Redirect URL eintragen.
 
 Wichtig: Wenn die Person nur die normale Webseiten-Adresse oeffnet, sieht sie deinen Garten nicht. Sie muss den `/invite/...` Link oeffnen und annehmen. Erst dadurch wird ihr Account mit deinem Garten verknuepft.
 
+Erstelle und oeffne keine Einladung fuer deinen eigenen Owner-Account. Falls das versehentlich passiert ist und kein Owner mehr vorhanden ist, erscheint im Dashboard fuer den Gartenersteller ein Button `Mich wieder zum Owner machen`. Vorher muss die Migration `004_invite_no_downgrade_and_owner_recovery.sql` in Supabase ausgefuehrt sein.
+
 ## 9. Markus zieht aus, Anna kommt
 
 1. Oeffne `Mitglieder`.
