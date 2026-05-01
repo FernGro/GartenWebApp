@@ -136,6 +136,10 @@ export type Database = {
         Args: { invite_token: string };
         Returns: string;
       };
+      create_garden_with_owner: {
+        Args: { garden_name: string };
+        Returns: string;
+      };
     };
     Enums: {
       garden_role: GardenRole;

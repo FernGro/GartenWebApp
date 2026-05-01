@@ -33,3 +33,5 @@ Alle Garten-bezogenen Tabellen pruefen Mitgliedschaft ueber `public.is_garden_me
 Der erste Garden Owner darf direkt nach Erstellung seines Gartens den eigenen `garden_members`-Datensatz anlegen. Danach greifen die normalen Admin-Regeln.
 
 Invites werden von Owner/Admin erstellt. Die Annahme erfolgt ueber `public.accept_garden_invite(token)`, eine `security definer`-Funktion, die Token, Ablaufdatum und bisherige Annahme prueft und dann Mitgliedschaft anlegt.
+
+Das erste Garten-Onboarding erfolgt ueber `public.create_garden_with_owner(name)`. Die Funktion erstellt Garten und Owner-Mitgliedschaft atomar, damit RLS nicht zwischen Garten-Insert und Mitgliedschafts-Insert blockiert.

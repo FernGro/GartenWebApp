@@ -45,7 +45,10 @@ Im Supabase Dashboard:
 2. Datei `supabase/migrations/001_initial_schema.sql` aus diesem Projekt oeffnen.
 3. Inhalt komplett kopieren und im SQL Editor ausfuehren.
 4. Datei `supabase/migrations/002_invites_and_task_helpers.sql` komplett kopieren und ausfuehren.
-5. Optional `supabase/seed.sql` kopieren und ausfuehren, damit Standard-Aufgabenvorlagen vorhanden sind.
+5. Datei `supabase/migrations/003_create_garden_rpc.sql` komplett kopieren und ausfuehren.
+6. Optional `supabase/seed.sql` kopieren und ausfuehren, damit Standard-Aufgabenvorlagen vorhanden sind.
+
+Wenn beim Garten-Anlegen ein `Application error` erscheint, pruefe zuerst, ob wirklich alle drei Migrationen ausgefuehrt wurden.
 
 ## 4. Supabase API Keys finden
 
