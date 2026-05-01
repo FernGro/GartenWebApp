@@ -7,6 +7,8 @@ const navItems = [
   { href: "/tasks/new", label: "Neu" },
   { href: "/templates", label: "Vorlagen" },
   { href: "/notifications", label: "Meldungen" },
+  { href: "/settings/garden", label: "Garten" },
+  { href: "/settings/members", label: "Mitglieder" },
   { href: "/install", label: "Install" },
 ];
 
@@ -37,9 +39,9 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
       <main className="mx-auto max-w-6xl px-4 py-6 pb-24">{children}</main>
-      <nav className="fixed inset-x-0 bottom-0 grid grid-cols-6 border-t border-[#d7dfcf] bg-[#fbfcf7]/96 shadow-[0_-10px_30px_rgba(38,61,30,0.08)] backdrop-blur md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 flex overflow-x-auto border-t border-[#d7dfcf] bg-[#fbfcf7]/96 shadow-[0_-10px_30px_rgba(38,61,30,0.08)] backdrop-blur md:hidden">
         {navItems.map((item) => (
-          <Link className="px-2 py-3 text-center text-xs font-semibold text-[#405039]" href={item.href} key={item.href}>
+          <Link className="min-w-24 px-2 py-3 text-center text-xs font-semibold text-[#405039]" href={item.href} key={item.href}>
             {item.label}
           </Link>
         ))}
