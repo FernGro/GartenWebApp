@@ -144,6 +144,14 @@ export type Database = {
         Args: { target_garden_id: string };
         Returns: void;
       };
+      leave_garden: {
+        Args: { target_garden_id: string };
+        Returns: void;
+      };
+      delete_garden: {
+        Args: { target_garden_id: string };
+        Returns: void;
+      };
     };
     Enums: {
       garden_role: GardenRole;
