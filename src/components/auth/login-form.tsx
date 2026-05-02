@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { getBrowserAppUrl } from "@/lib/app-url";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { Button } from "@/components/ui/button";
 
@@ -33,12 +34,13 @@ export function LoginForm() {
       const password = String(formData.get("password") ?? "");
       const displayName = String(formData.get("display_name") ?? "");
       const supabase = createClient();
+      const redirectUrl = `${getBrowserAppUrl()}/auth/callback?next=${encodeURIComponent(nextPath)}`;
 
       if (mode === "magic") {
         const { error } = await supabase.auth.signInWithOtp({
           email,
           options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`,
+            emailRedirectTo: redirectUrl,
           },
         });
 
@@ -57,7 +59,7 @@ export function LoginForm() {
           password,
           options: {
             data: { display_name: displayName },
-            emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`,
+            emailRedirectTo: redirectUrl,
           },
         });
 

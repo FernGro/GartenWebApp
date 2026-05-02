@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth/session";
+import { formatMoney } from "@/lib/format/money";
+import { createNotification } from "@/lib/notifications/send";
 import { createClient } from "@/lib/supabase/server";
 import type { GardenTransactionType } from "@/types/domain";
 
@@ -78,6 +80,26 @@ export async function createTransactionAction(formData: FormData) {
 
   if (error) {
     throw new Error(error.message);
+  }
+
+  if (type === "payment" && paidTo) {
+    await createNotification(supabase, {
+      userId: paidTo,
+      gardenId,
+      type: "billing_payment_received",
+      title: "Zahlung eingetragen",
+      message: `${title}: ${formatMoney(amountCents)}`,
+    });
+  }
+
+  if (type === "expense" && paidBy !== user.id) {
+    await createNotification(supabase, {
+      userId: paidBy,
+      gardenId,
+      type: "billing_expense_recorded",
+      title: "Ausgabe eingetragen",
+      message: `${title}: ${formatMoney(amountCents)}`,
+    });
   }
 
   revalidatePath("/billing");

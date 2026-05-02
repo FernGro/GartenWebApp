@@ -9,6 +9,10 @@ Environment Variables:
 ```text
 NEXT_PUBLIC_SUPABASE_URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY
+NEXT_PUBLIC_SITE_URL
+SUPABASE_SERVICE_ROLE_KEY
+CRON_SECRET
+TELEGRAM_BOT_TOKEN
 ```
 
 Build:
@@ -26,6 +30,7 @@ Vor dem Deployment:
 3. Auth Redirect URLs setzen:
    - lokal: `http://localhost:3000/auth/callback`
    - Vercel: `https://<domain>/auth/callback`
+4. `NEXT_PUBLIC_SITE_URL` muss auf die echte Vercel-URL zeigen, damit Magic-Link- und Registrierungs-Mails nicht auf localhost weiterleiten.
 
 ## Sicherheitscheck
 

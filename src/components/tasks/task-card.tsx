@@ -9,6 +9,7 @@ import {
   restoreTaskAction,
 } from "@/lib/tasks/actions";
 import { formatDate } from "@/lib/format/date";
+import { daysUntilCompletionWindow, getCompletionWindow, isWithinCompletionWindow } from "@/lib/tasks/completion-window";
 import type { TaskWithPeople } from "@/types/domain";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -26,6 +27,9 @@ export function TaskCard({
   canManage?: boolean;
 }) {
   const canComplete = currentUserId && task.assigned_to === currentUserId && task.status === "assigned";
+  const isCompletionWindowOpen = !task.due_date || isWithinCompletionWindow(task.due_date);
+  const completionWindow = task.due_date ? getCompletionWindow(task.due_date) : null;
+  const daysUntilWindow = task.due_date ? daysUntilCompletionWindow(task.due_date) : 0;
   const canRequestTakeover = currentUserId && task.assigned_to !== currentUserId && ["open", "assigned", "overdue", "postponed"].includes(task.status);
 
   return (
@@ -47,7 +51,7 @@ export function TaskCard({
         <StatusBadge status={task.status} />
       </div>
       {!compact && task.description ? <p className="mt-3 text-sm text-[#42513d]">{task.description}</p> : null}
-      {canComplete ? (
+      {canComplete && isCompletionWindowOpen ? (
         <form action={completeTaskAction} className="mt-4">
           <input name="task_id" type="hidden" value={task.id} />
           <input name="garden_id" type="hidden" value={task.garden_id} />
@@ -56,6 +60,12 @@ export function TaskCard({
             Erledigung melden
           </Button>
         </form>
+      ) : null}
+      {canComplete && !isCompletionWindowOpen && completionWindow ? (
+        <div className="mt-4 rounded-lg bg-[#fff7e8] px-4 py-3 text-sm text-[#915b10]">
+          Diese Aufgabe kann erst im Zeitraum {formatDate(completionWindow.earliest)} bis {formatDate(completionWindow.latest)} erledigt gemeldet werden.
+          {daysUntilWindow > 0 ? ` Das ist in ${daysUntilWindow} Tagen.` : " Das Zeitfenster ist bereits vorbei."}
+        </div>
       ) : null}
       {task.status === "pending_review" && canManage ? (
         <div className="mt-4 rounded-lg bg-[#fff7e8] p-3">

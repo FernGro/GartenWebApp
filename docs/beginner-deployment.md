@@ -102,6 +102,7 @@ http://localhost:3000/auth/callback
 ```text
 NEXT_PUBLIC_SUPABASE_URL=deine Supabase Project URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY=dein anon public key
+NEXT_PUBLIC_SITE_URL=https://deine-vercel-url.vercel.app
 SUPABASE_SERVICE_ROLE_KEY=dein service_role key
 CRON_SECRET=ein langes zufaelliges Passwort
 ```
@@ -116,6 +117,15 @@ https://garten-dienstplan.vercel.app
 
 Diese URL danach in Supabase Auth als Redirect URL eintragen.
 
+Wichtig fuer E-Mail-Login:
+
+```text
+Key: NEXT_PUBLIC_SITE_URL
+Value: https://garten-dienstplan.vercel.app
+```
+
+Der Value muss deine echte Vercel-Adresse sein, ohne Slash am Ende. Wenn dort `http://localhost:3000` steht oder die Variable fehlt, koennen Magic-Link- und Registrierungs-Mails auf die lokale Entwicklerseite zeigen.
+
 Optional fuer kostenlose Telegram-Nachrichten:
 
 1. In Telegram `@BotFather` oeffnen.
@@ -128,6 +138,12 @@ TELEGRAM_BOT_TOKEN=dein BotFather Token
 ```
 
 Jedes Mitglied muss den Bot in Telegram einmal starten und seine Chat-ID in der App unter `Garten -> Benachrichtigungen` hinterlegen.
+
+Kostenlose Push-Benachrichtigungen:
+
+- In-App Notifications funktionieren direkt in der Webseite.
+- Telegram funktioniert als kostenloser Handy-Push, wenn `TELEGRAM_BOT_TOKEN` gesetzt ist und jedes Mitglied die eigene Telegram Chat-ID hinterlegt.
+- Echte Browser Web Push Notifications sind noch nicht aktiviert. Dafuer braucht die App spaeter VAPID Keys, Service Worker und eine Push-Subscription-Tabelle. Das ist bewusst nicht halb eingebaut.
 
 Chat-ID finden:
 

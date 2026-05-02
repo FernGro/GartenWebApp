@@ -32,7 +32,7 @@ export async function createDueNotificationsAction(formData: FormData) {
   }
 
   const today = new Date().toISOString().slice(0, 10);
-  const soon = addDays(new Date(), 3);
+  const soon = addDays(new Date(), 7);
   const tasks = await getTasks(supabase, gardenId);
   const openTasks = tasks.filter((task) => task.assigned_to && (task.status === "open" || task.status === "assigned"));
 
@@ -56,7 +56,7 @@ export async function createDueNotificationsAction(formData: FormData) {
       userId: task.assigned_to as string,
       gardenId,
       type: "task_due_soon",
-      title: "Aufgabe bald faellig",
+      title: "Diese Woche im Garten dran",
       message: task.title,
       relatedTaskId: task.id,
     })),

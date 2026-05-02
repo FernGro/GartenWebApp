@@ -46,6 +46,7 @@ Alternativ koennen alle Dateien aus `supabase/migrations/` der Reihenfolge nach 
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
 
 4. App starten:
@@ -70,12 +71,15 @@ Fuer Vercel spaeter entsprechend:
 https://deine-domain.vercel.app/auth/callback
 ```
 
+Die App nutzt fuer Magic-Link- und Registrierungs-Mails `NEXT_PUBLIC_SITE_URL`. Wenn diese Variable auf Vercel fehlt oder falsch gesetzt ist, koennen Mail-Links auf `localhost` zeigen.
+
 ## Vercel Deployment
 
 1. Repository mit Vercel verbinden.
 2. Environment Variables setzen:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `NEXT_PUBLIC_SITE_URL` mit deiner echten Vercel-Adresse, z. B. `https://garten-web-app.vercel.app`
 3. Build Command: `npm run build`
 4. Output wird durch Next.js automatisch verwaltet.
 5. In Supabase die Vercel Callback URL fuer Auth ergaenzen.

@@ -10,6 +10,7 @@ import { createNotification } from "@/lib/notifications/send";
 import { suggestAssignee } from "@/lib/planning/fairness";
 import { assertCleanOptionalText, assertCleanText } from "@/lib/moderation/content";
 import { createClient } from "@/lib/supabase/server";
+import { getCompletionWindow, isWithinCompletionWindow } from "@/lib/tasks/completion-window";
 import { calculateScores, getTasks } from "@/lib/tasks/queries";
 
 function readString(formData: FormData, key: string) {
@@ -126,13 +127,10 @@ export async function completeTaskAction(formData: FormData) {
 
   if (existingTask.due_date) {
     const today = new Date().toISOString().slice(0, 10);
-    const earliest = new Date(`${existingTask.due_date}T00:00:00.000Z`);
-    earliest.setUTCDate(earliest.getUTCDate() - 7);
-    const latest = new Date(`${existingTask.due_date}T00:00:00.000Z`);
-    latest.setUTCDate(latest.getUTCDate() + 7);
+    const { earliest, latest } = getCompletionWindow(existingTask.due_date);
 
-    if (today < earliest.toISOString().slice(0, 10) || today > latest.toISOString().slice(0, 10)) {
-      throw new Error("Diese Aufgabe kann nur im Zeitraum 7 Tage vor bis 7 Tage nach Faelligkeit erledigt werden.");
+    if (!isWithinCompletionWindow(existingTask.due_date, today)) {
+      throw new Error(`Diese Aufgabe kann nur vom ${earliest} bis ${latest} als erledigt gemeldet werden.`);
     }
   }
 

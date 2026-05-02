@@ -37,7 +37,7 @@ export async function runGardenAutomation(supabase: SupabaseClient<Database>) {
   let createdTasks = 0;
   let createdNotifications = 0;
   const today = new Date().toISOString().slice(0, 10);
-  const soon = addDays(new Date(), 3);
+  const soon = addDays(new Date(), 7);
   const month = new Date().getMonth() + 1;
 
   for (const garden of gardens ?? []) {
@@ -127,7 +127,7 @@ export async function runGardenAutomation(supabase: SupabaseClient<Database>) {
         user_id: task.assigned_to as string,
         garden_id: garden.id,
         type: "task_due_soon",
-        title: "Aufgabe bald faellig",
+        title: "Diese Woche im Garten dran",
         message: task.title,
         related_task_id: task.id,
       })),
