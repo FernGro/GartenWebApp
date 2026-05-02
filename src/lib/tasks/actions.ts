@@ -341,19 +341,27 @@ export async function deleteTaskAction(formData: FormData) {
     throw new Error("Nur Owner/Admin duerfen Aufgaben loeschen.");
   }
 
-  await supabase.from("task_events").insert({
-    task_id: taskId,
-    garden_id: gardenId,
-    actor_id: user.id,
-    event_type: "cancelled",
-    note: "Aufgabe geloescht",
-  });
+  const { data: task } = await supabase
+    .from("tasks")
+    .select("title,points,assigned_to,completed_by,status")
+    .eq("id", taskId)
+    .maybeSingle();
 
   const { error } = await supabase.from("tasks").delete().eq("id", taskId);
 
   if (error) {
     throw new Error(error.message);
   }
+
+  await supabase.from("task_events").insert({
+    task_id: null,
+    garden_id: gardenId,
+    actor_id: user.id,
+    event_type: "cancelled",
+    from_user_id: task?.assigned_to ?? task?.completed_by ?? null,
+    points_delta: task?.status === "done" ? -(task?.points ?? 0) : null,
+    note: `Aufgabe geloescht: ${task?.title ?? taskId}`,
+  });
 
   revalidatePath("/dashboard");
   revalidatePath("/tasks");

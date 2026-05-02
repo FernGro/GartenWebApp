@@ -98,7 +98,7 @@ export type Database = {
       task_events: {
         Row: {
           id: string;
-          task_id: string;
+          task_id: string | null;
           garden_id: string;
           actor_id: string | null;
           event_type: TaskEventType;
@@ -109,7 +109,6 @@ export type Database = {
           created_at: string;
         };
         Insert: Partial<Database["public"]["Tables"]["task_events"]["Row"]> & {
-          task_id: string;
           garden_id: string;
           event_type: TaskEventType;
         };

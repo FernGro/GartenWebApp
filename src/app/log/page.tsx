@@ -36,9 +36,13 @@ export default async function LogPage() {
                 <div className="text-[#5a6655]">{event.tasks?.title ?? "Aufgabe"}</div>
                 {event.note ? <div className="mt-1 text-xs text-[#6d7669]">{event.note}</div> : null}
               </div>
-              <Link className="text-sm font-semibold text-[#2f6b3f] underline" href={`/tasks/${event.task_id}`}>
-                Aufgabe
-              </Link>
+              {event.task_id ? (
+                <Link className="text-sm font-semibold text-[#2f6b3f] underline" href={`/tasks/${event.task_id}`}>
+                  Aufgabe
+                </Link>
+              ) : (
+                <span className="text-sm text-[#6d7669]">Geloescht</span>
+              )}
             </div>
           ))}
           {events.length === 0 ? <div className="p-4"><EmptyState title="Noch keine Events">Sobald Aufgaben bearbeitet werden, erscheint hier der Verlauf.</EmptyState></div> : null}

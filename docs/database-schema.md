@@ -51,3 +51,8 @@ Das erste Garten-Onboarding erfolgt ueber `public.create_garden_with_owner(name)
 
 - `member_adjustments`: Startwerte, Punktuebernahmen und Geldkorrekturen.
 - `notification_contacts`: WhatsApp-Kontaktinfo und Telegram Chat-ID pro Gartenmitglied.
+
+`009_task_delete_policy_and_persistent_events.sql` ergaenzt:
+
+- Owner/Admins duerfen Aufgaben per RLS loeschen.
+- `task_events.task_id` bleibt fuer geloeschte Aufgaben nullable erhalten, damit der zentrale Log den Delete weiterhin zeigt.

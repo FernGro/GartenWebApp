@@ -111,7 +111,7 @@ export type TaskComment = {
 
 export type TaskEvent = {
   id: string;
-  task_id: string;
+  task_id: string | null;
   garden_id: string;
   actor_id: string | null;
   event_type: TaskEventType;
