@@ -35,6 +35,8 @@ Die Seite `/forecast` zeigt eine unverbindliche Vorschau fuer die naechsten drei
 
 Forecast-Eintraege sind noch keine verbindlichen Aufgaben. Verbindlich werden sie erst, wenn Aufgaben erzeugt oder uebernommen werden.
 
+Aufgaben mit Status `pending_review` zaehlen noch nicht als erledigt. Sie beeinflussen Punktestand, Abrechnung und Fairness erst nach Owner/Admin-Bestaetigung als `done`.
+
 ## Visualisierung
 
 Das Dashboard zeigt Punkte nicht nur tabellarisch, sondern auch als Rasenmaeher-Rennen. Wichtig: Diese Visualisierung ist rein lesend. Sie veraendert keine Planung und speichert keine zusaetzlichen Punktestaende. Die faire Zuweisung bleibt weiterhin an den Algorithmus gebunden, der niedrigere Punktestaende bevorzugt.

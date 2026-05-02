@@ -52,9 +52,10 @@ Im Supabase Dashboard:
 9. Datei `supabase/migrations/007_task_control_and_billing.sql` komplett kopieren und ausfuehren.
 10. Datei `supabase/migrations/008_adjustments_and_notification_contacts.sql` komplett kopieren und ausfuehren.
 11. Datei `supabase/migrations/009_task_delete_policy_and_persistent_events.sql` komplett kopieren und ausfuehren.
+12. Datei `supabase/migrations/010_task_review_and_trash.sql` komplett kopieren und ausfuehren.
 12. Optional `supabase/seed.sql` kopieren und ausfuehren, damit Standard-Aufgabenvorlagen vorhanden sind.
 
-Wenn ein `Application error` erscheint, pruefe zuerst, ob wirklich alle Migrationen (001 bis 009) in Supabase ausgefuehrt wurden. Die genaue Fehlermeldung findest du im Vercel Dashboard unter Projekt → Logs → Functions.
+Wenn ein `Application error` erscheint, pruefe zuerst, ob wirklich alle Migrationen (001 bis 010) in Supabase ausgefuehrt wurden. Die genaue Fehlermeldung findest du im Vercel Dashboard unter Projekt → Logs → Functions.
 
 ## 4. Supabase API Keys finden
 

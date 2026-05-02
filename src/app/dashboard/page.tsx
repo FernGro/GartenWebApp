@@ -79,6 +79,7 @@ export default async function DashboardPage() {
   const scores = calculateScores(tasks, members);
   const suggestion = suggestAssignee(scores, null);
   const openTasks = tasks.filter((task) => task.status === "open" || task.status === "assigned" || task.status === "overdue");
+  const pendingReviewTasks = tasks.filter((task) => task.status === "pending_review");
   const myTasks = openTasks.filter((task) => task.assigned_to === user.id);
   const today = todayIsoDate();
   const overdueTasks = openTasks.filter((task) => task.status === "overdue" || (task.due_date && task.due_date < today));
@@ -96,10 +97,11 @@ export default async function DashboardPage() {
           <Button>Neue Aufgabe</Button>
         </Link>
       </div>
-      <section className="grid gap-3 sm:grid-cols-4">
+      <section className="grid gap-3 sm:grid-cols-5">
         {[
           ["Offen", openTasks.length],
           ["Meine", myTasks.length],
+          ["Pruefung", pendingReviewTasks.length],
           ["Ueberfaellig", overdueTasks.length],
           ["Erledigt", doneTasks.length],
         ].map(([label, value]) => (

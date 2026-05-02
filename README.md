@@ -7,12 +7,15 @@ MVP fuer eine Garten-Dienstplan-Web-App mit Next.js App Router, TypeScript, Tail
 - Supabase Auth mit Magic-Link, Passwort-Login und Registrierung
 - Garten-Onboarding fuer den ersten Haushalt
 - Aufgaben anlegen, zuweisen und als erledigt markieren
+- Erledigungen werden erst zur Pruefung gemeldet und danach durch Owner/Admin bestaetigt
+- Aufgaben-Papierkorb ueber `cancelled` mit Wiederherstellen
 - Punkteuebersicht aus erledigten Aufgaben, ohne gespeicherte Gesamtsummen
 - Fairness-Vorschlag nach niedrigsten Punkten und aeltestem letztem Dienst
 - Rasenmaeher-Rennen mit Podest als visuelle Fairness-/Punkteanzeige
 - Task-Icons fuer typische Gartenarbeiten
 - Kommentare und Event-Verlauf auf der Task-Detailseite
 - Abwesenheiten/Beschaeftigt-Zeiten mit Kalenderuebersicht
+- gemeinsame Kalenderseite fuer Aufgaben und Abwesenheiten
 - Mitgliederverwaltung mit Invite-Links
 - Lesbare In-App Notifications
 - Saisonaufgaben aus Templates erzeugen
@@ -113,6 +116,7 @@ Die Daten gehen bei App-Updates nicht verloren, solange sie in Supabase bleiben 
 
 - Der Client nutzt nur `NEXT_PUBLIC_SUPABASE_URL` und `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
 - Keine Service-Role Keys im Frontend.
+- Kein hartcodierter Superadmin und kein globales Master-Passwort. Adminrechte laufen ueber Supabase Auth plus Gartenrolle.
 - RLS ist auf allen App-Tabellen aktiv.
 - Garten-Daten sind an aktive Mitgliedschaft gebunden.
 - Invite-Annahme laeuft ueber eine serverseitige RPC-Funktion, nicht ueber oeffentliche Schreibrechte.

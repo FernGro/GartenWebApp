@@ -56,3 +56,9 @@ Das erste Garten-Onboarding erfolgt ueber `public.create_garden_with_owner(name)
 
 - Owner/Admins duerfen Aufgaben per RLS loeschen.
 - `task_events.task_id` bleibt fuer geloeschte Aufgaben nullable erhalten, damit der zentrale Log den Delete weiterhin zeigt.
+
+`010_task_review_and_trash.sql` ergaenzt:
+
+- `pending_review` als neuen Aufgabenstatus.
+- Mitglieder melden Erledigungen nur zur Pruefung.
+- Punkte und Abrechnung zaehlen weiterhin ausschliesslich Aufgaben mit Status `done`.

@@ -57,6 +57,14 @@ export type BillingRow = {
   balanceCents: number;
 };
 
+export type SettlementSuggestion = {
+  fromUserId: string;
+  fromName: string;
+  toUserId: string;
+  toName: string;
+  amountCents: number;
+};
+
 export function calculateBilling(
   members: GardenMember[],
   tasks: Task[],
@@ -111,4 +119,41 @@ export function calculateBilling(
     fairShareCents,
     balanceCents: row.contributionCents - fairShareCents,
   }));
+}
+
+export function calculateSettlementSuggestions(rows: BillingRow[]): SettlementSuggestion[] {
+  const debtors = rows
+    .filter((row) => row.balanceCents < 0)
+    .map((row) => ({ ...row, remaining: Math.abs(row.balanceCents) }))
+    .sort((a, b) => b.remaining - a.remaining);
+  const creditors = rows
+    .filter((row) => row.balanceCents > 0)
+    .map((row) => ({ ...row, remaining: row.balanceCents }))
+    .sort((a, b) => b.remaining - a.remaining);
+  const suggestions: SettlementSuggestion[] = [];
+
+  for (const debtor of debtors) {
+    for (const creditor of creditors) {
+      if (debtor.remaining <= 0) {
+        break;
+      }
+
+      if (creditor.remaining <= 0) {
+        continue;
+      }
+
+      const amountCents = Math.min(debtor.remaining, creditor.remaining);
+      debtor.remaining -= amountCents;
+      creditor.remaining -= amountCents;
+      suggestions.push({
+        fromUserId: debtor.userId,
+        fromName: debtor.displayName,
+        toUserId: creditor.userId,
+        toName: creditor.displayName,
+        amountCents,
+      });
+    }
+  }
+
+  return suggestions.filter((suggestion) => suggestion.amountCents > 0);
 }

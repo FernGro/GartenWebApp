@@ -13,7 +13,7 @@ Server Components laden Daten direkt ueber den Supabase Server Client. Schreibop
 
 ## MVP-Grenzen
 
-Gebaut sind Login, Garten-Onboarding, Aufgabenliste, Aufgabe erstellen, Aufgabe erledigen, Dashboard, Punkteuebersicht, Mitglieder-Invites, Abwesenheiten, Kommentare, Task Events, Notifications und saisonale Task-Erzeugung aus Templates. Das Dashboard zeigt Punkte klassisch als Tabelle/Diagramm und zusaetzlich als Rasenmaeher-Rennen mit Podest.
+Gebaut sind Login, Garten-Onboarding, Aufgabenliste, Aufgabe erstellen, Aufgabe erledigen, Dashboard, Punkteuebersicht, Mitglieder-Invites, Abwesenheiten, Kommentare, Task Events, Notifications, Kalenderansicht und saisonale Task-Erzeugung aus Templates. Das Dashboard zeigt Punkte klassisch als Tabelle/Diagramm und zusaetzlich als Rasenmaeher-Rennen mit Podest.
 
 Nicht gebaut sind WhatsApp, Service Worker, Push und Foto-Nachweise. Diese Bereiche sind dokumentiert und datenmodellseitig vorbereitet, werden aber nicht halb integriert. Foto-Nachweise bleiben bewusst draussen, weil sie fuer den aktuellen Haushalt keinen Mehrwert bringen und spaeter Speicher-/Datenschutzfragen oeffnen wuerden.
 
@@ -27,9 +27,13 @@ App-Code kann jederzeit ueber GitHub/Vercel aktualisiert werden. Persistente Dat
 
 ## Integritaet
 
-Aufgaben duerfen nur von der zugewiesenen Person als erledigt markiert werden. Andere Mitglieder koennen eine Uebernahme anfragen. Die aktuelle Zuweisung oder Owner/Admins koennen diese Uebernahme bestaetigen. Erledigungen sind nur im Zeitfenster von sieben Tagen vor bis sieben Tagen nach Faelligkeit erlaubt.
+Aufgaben duerfen nur von der zugewiesenen Person als erledigt gemeldet werden. Die Meldung setzt den Status `pending_review` und gibt noch keine Punkte. Owner/Admins bestaetigen die Erledigung; erst dann wird der Status `done` gesetzt und die Punkte zaehlen. Andere Mitglieder koennen eine Uebernahme anfragen. Die aktuelle Zuweisung oder Owner/Admins koennen diese Uebernahme bestaetigen. Erledigungen sind nur im Zeitfenster von sieben Tagen vor bis sieben Tagen nach Faelligkeit erlaubt.
 
 Owner/Admins koennen falsch erledigte Aufgaben wieder oeffnen. Der zentrale Log unter `/log` dokumentiert die Aktionen.
+
+Aufgaben werden beim Loeschen nicht hart entfernt, sondern in den Papierkorb verschoben (`cancelled`). Owner/Admins koennen sie wiederherstellen. Dadurch bleiben Verlauf, UI und spaetere Pruefung nachvollziehbar.
+
+Es gibt bewusst keinen hartcodierten globalen Admin-Login und kein Master-Passwort. Adminrechte sind immer an Supabase Auth und die Gartenrolle `owner` oder `admin` gebunden.
 
 Aufgaben, Uebernahmegruende und Kommentare laufen serverseitig durch eine einfache Inhaltspruefung unter `src/lib/moderation/content.ts`. Das ist kein vollwertiges Moderationssystem, verhindert aber offensichtliche unsachliche Eintraege ohne externe Dienste.
 
@@ -40,6 +44,7 @@ Die UI bleibt mobile-first und leichtgewichtig. Wiederkehrende Visuals werden oh
 - Task-Icons als lokale SVG-Komponenten
 - Rasenmaeher-Ladeanimation in `src/app/loading.tsx`
 - Punkte-/Fairness-Rennen in `src/components/dashboard/score-race.tsx`
+- Monatskalender fuer Aufgaben und Abwesenheiten unter `/calendar`
 - reduzierbare Animationen via `prefers-reduced-motion`
 
 ## Benachrichtigungen

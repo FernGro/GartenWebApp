@@ -3,6 +3,7 @@ export type GardenRole = "owner" | "admin" | "member";
 export type TaskStatus =
   | "open"
   | "assigned"
+  | "pending_review"
   | "done"
   | "overdue"
   | "cancelled"

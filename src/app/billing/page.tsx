@@ -4,7 +4,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { createMemberAdjustmentAction } from "@/lib/adjustments/actions";
 import { getMemberAdjustments } from "@/lib/adjustments/queries";
 import { createTransactionAction, updateBillingSettingsAction } from "@/lib/billing/actions";
-import { calculateBilling, getBillingSettings, getGardenTransactions } from "@/lib/billing/queries";
+import { calculateBilling, calculateSettlementSuggestions, getBillingSettings, getGardenTransactions } from "@/lib/billing/queries";
 import { formatDate } from "@/lib/format/date";
 import { formatMoney } from "@/lib/format/money";
 import { getCurrentGarden, getGardenMembers } from "@/lib/gardens/queries";
@@ -33,6 +33,7 @@ export default async function BillingPage() {
     getMemberAdjustments(supabase, garden.id),
   ]);
   const billing = calculateBilling(members, tasks, transactions, settings, adjustments);
+  const settlements = calculateSettlementSuggestions(billing);
 
   return (
     <AppShell>
@@ -132,6 +133,21 @@ export default async function BillingPage() {
         </div>
 
         <div className="space-y-4">
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
+              <div className="text-sm text-[#5a6655]">Arbeitswert</div>
+              <div className="mt-2 text-2xl font-bold text-[#2f6b3f]">{formatMoney(billing.reduce((sum, row) => sum + row.workCents, 0))}</div>
+            </div>
+            <div className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
+              <div className="text-sm text-[#5a6655]">Auslagen</div>
+              <div className="mt-2 text-2xl font-bold text-[#2f6b3f]">{formatMoney(billing.reduce((sum, row) => sum + row.expenseCents, 0))}</div>
+            </div>
+            <div className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
+              <div className="text-sm text-[#5a6655]">Pro Person</div>
+              <div className="mt-2 text-2xl font-bold text-[#2f6b3f]">{formatMoney(billing[0]?.fairShareCents ?? 0)}</div>
+            </div>
+          </div>
+
           <div className="overflow-hidden rounded-lg border border-[#d7dfcf] bg-[#fffef9] shadow-sm shadow-[#4a5d3f]/5">
             {billing.map((row) => (
               <div className="grid gap-2 border-b border-[#e5ecdc] p-4 text-sm sm:grid-cols-[1fr_repeat(4,120px)]" key={row.userId}>
@@ -144,6 +160,21 @@ export default async function BillingPage() {
                 </div>
               </div>
             ))}
+          </div>
+
+          <div className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
+            <h2 className="text-lg font-bold">Zahlungsvorschlaege</h2>
+            <div className="mt-3 space-y-3">
+              {settlements.map((settlement) => (
+                <div className="flex flex-col gap-2 rounded-lg bg-[#f2f7ec] p-3 text-sm sm:flex-row sm:items-center sm:justify-between" key={`${settlement.fromUserId}-${settlement.toUserId}-${settlement.amountCents}`}>
+                  <div>
+                    <span className="font-bold">{settlement.fromName}</span> zahlt an <span className="font-bold">{settlement.toName}</span>
+                  </div>
+                  <div className="text-lg font-bold text-[#2f6b3f]">{formatMoney(settlement.amountCents)}</div>
+                </div>
+              ))}
+              {settlements.length === 0 ? <p className="text-sm text-[#6d7669]">Aktuell ist rechnerisch nichts auszugleichen.</p> : null}
+            </div>
           </div>
 
           <div className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">

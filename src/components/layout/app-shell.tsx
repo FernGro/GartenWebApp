@@ -8,6 +8,7 @@ const navItems: NavItem[] = [
   { href: "/tasks/new", label: "Neu" },
   { href: "/templates", label: "Vorlagen" },
   { href: "/forecast", label: "Forecast" },
+  { href: "/calendar", label: "Kalender" },
   { href: "/billing", label: "Abrechnung" },
   { href: "/notifications", label: "Meldungen" },
   { href: "/log", label: "Log" },
