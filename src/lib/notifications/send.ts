@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 import { sendTelegramMessage } from "./telegram";
+import { sendWebPushToUser } from "./web-push";
 
 type NotificationInput = {
   userId: string;
@@ -40,4 +41,10 @@ export async function createNotification(
       console.error("createNotification telegram", error);
     }
   }
+
+  await sendWebPushToUser(supabase, input.userId, input.gardenId, {
+    title: input.title,
+    message: input.message,
+    url: input.relatedTaskId ? `/tasks/${input.relatedTaskId}` : "/notifications",
+  });
 }

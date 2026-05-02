@@ -245,6 +245,33 @@ export type Database = {
         };
         Update: Partial<Database["public"]["Tables"]["notification_contacts"]["Row"]>;
       };
+      web_push_subscriptions: {
+        Row: {
+          id: string;
+          user_id: string;
+          garden_id: string;
+          endpoint: string;
+          p256dh: string;
+          auth: string;
+          user_agent: string | null;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          garden_id: string;
+          endpoint: string;
+          p256dh: string;
+          auth: string;
+          user_agent?: string | null;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["web_push_subscriptions"]["Row"]>;
+      };
     };
     Views: Record<string, never>;
     Functions: {

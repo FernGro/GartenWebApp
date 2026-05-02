@@ -62,3 +62,8 @@ Das erste Garten-Onboarding erfolgt ueber `public.create_garden_with_owner(name)
 - `pending_review` als neuen Aufgabenstatus.
 - Mitglieder melden Erledigungen nur zur Pruefung.
 - Punkte und Abrechnung zaehlen weiterhin ausschliesslich Aufgaben mit Status `done`.
+
+`011_web_push_subscriptions.sql` ergaenzt:
+
+- `web_push_subscriptions`: Browser Push Subscriptions pro User/Garten/Geraet.
+- RLS erlaubt jedem Mitglied nur eigene Push Subscriptions im eigenen Garten.

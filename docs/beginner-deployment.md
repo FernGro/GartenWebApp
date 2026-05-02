@@ -103,6 +103,9 @@ http://localhost:3000/auth/callback
 NEXT_PUBLIC_SUPABASE_URL=deine Supabase Project URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY=dein anon public key
 NEXT_PUBLIC_SITE_URL=https://deine-vercel-url.vercel.app
+NEXT_PUBLIC_WEB_PUSH_VAPID_PUBLIC_KEY=dein public VAPID key
+WEB_PUSH_VAPID_PRIVATE_KEY=dein private VAPID key
+WEB_PUSH_VAPID_SUBJECT=mailto:deine-email@example.com
 SUPABASE_SERVICE_ROLE_KEY=dein service_role key
 CRON_SECRET=ein langes zufaelliges Passwort
 ```
@@ -143,7 +146,66 @@ Kostenlose Push-Benachrichtigungen:
 
 - In-App Notifications funktionieren direkt in der Webseite.
 - Telegram funktioniert als kostenloser Handy-Push, wenn `TELEGRAM_BOT_TOKEN` gesetzt ist und jedes Mitglied die eigene Telegram Chat-ID hinterlegt.
-- Echte Browser Web Push Notifications sind noch nicht aktiviert. Dafuer braucht die App spaeter VAPID Keys, Service Worker und eine Push-Subscription-Tabelle. Das ist bewusst nicht halb eingebaut.
+- Echte Browser Web Push Notifications funktionieren, wenn `NEXT_PUBLIC_WEB_PUSH_VAPID_PUBLIC_KEY`, `WEB_PUSH_VAPID_PRIVATE_KEY`, `WEB_PUSH_VAPID_SUBJECT` gesetzt sind und jedes Mitglied in der App unter `Garten -> Benachrichtigungen -> Web Push` Push aktiviert.
+
+VAPID Keys fuer Web Push erstellen:
+
+1. Lokal im Projekt ausfuehren:
+
+```bash
+npx web-push generate-vapid-keys
+```
+
+2. In Vercel eintragen:
+
+```text
+Key: NEXT_PUBLIC_WEB_PUSH_VAPID_PUBLIC_KEY
+Value: Public Key aus der Ausgabe
+
+Key: WEB_PUSH_VAPID_PRIVATE_KEY
+Value: Private Key aus der Ausgabe
+
+Key: WEB_PUSH_VAPID_SUBJECT
+Value: mailto:deine-email@example.com
+```
+
+3. Migration `supabase/migrations/011_web_push_subscriptions.sql` in Supabase SQL Editor ausfuehren.
+4. Vercel neu deployen.
+5. In der App unter `Garten -> Benachrichtigungen` auf `Push aktivieren` klicken.
+
+## Supabase Auth wirklich einfach
+
+Supabase ist Login und Datenbank. Vercel ist die Webseite. Beide muessen dieselbe Webseitenadresse kennen.
+
+1. Oeffne `https://supabase.com`.
+2. Dein Projekt oeffnen.
+3. Links `Authentication` anklicken.
+4. `URL Configuration` oeffnen.
+5. Bei `Site URL` eintragen:
+
+```text
+https://deine-vercel-url.vercel.app
+```
+
+6. Bei `Redirect URLs` hinzufuegen:
+
+```text
+https://deine-vercel-url.vercel.app/auth/callback
+```
+
+7. Optional fuer lokale Tests zusaetzlich:
+
+```text
+http://localhost:3000/auth/callback
+```
+
+8. In Vercel muss dazu passen:
+
+```text
+NEXT_PUBLIC_SITE_URL=https://deine-vercel-url.vercel.app
+```
+
+Wenn Supabase Auth falsch eingestellt ist, kommt die Login-Mail zwar an, aber der Link fuehrt auf `localhost` oder eine falsche Seite.
 
 Chat-ID finden:
 

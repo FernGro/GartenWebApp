@@ -1,6 +1,7 @@
 import { sendTelegramTestAction, updateNotificationContactAction } from "@/lib/notifications/contact-actions";
 import type { NotificationContact } from "@/types/domain";
 import { Button } from "@/components/ui/button";
+import { WebPushPanel } from "@/components/settings/web-push-panel";
 
 export function NotificationContactPanel({
   gardenId,
@@ -41,6 +42,7 @@ export function NotificationContactPanel({
           <Button variant="secondary" type="submit">Telegram Test senden</Button>
         </form>
       ) : null}
+      <WebPushPanel gardenId={gardenId} publicKey={process.env.NEXT_PUBLIC_WEB_PUSH_VAPID_PUBLIC_KEY ?? ""} />
     </section>
   );
 }

@@ -49,4 +49,4 @@ Die UI bleibt mobile-first und leichtgewichtig. Wiederkehrende Visuals werden oh
 
 ## Benachrichtigungen
 
-In-App-Notifications bleiben der robuste Standard. Telegram ist optional vorbereitet und nutzt serverseitig `TELEGRAM_BOT_TOKEN`. WhatsApp wird nur als Kontaktinformation gespeichert, weil die offizielle WhatsApp Business Platform kein einfacher kostenloser Push-Kanal ist. Echte Browser Web Push Notifications sind noch nicht aktiv; dafuer werden spaeter VAPID Keys, ein Service Worker und gespeicherte Push Subscriptions ergaenzt.
+In-App-Notifications bleiben der robuste Standard. Telegram ist optional vorbereitet und nutzt serverseitig `TELEGRAM_BOT_TOKEN`. WhatsApp wird nur als Kontaktinformation gespeichert, weil die offizielle WhatsApp Business Platform kein einfacher kostenloser Push-Kanal ist. Echte Browser Web Push Notifications laufen ueber VAPID Keys, `public/sw.js` und gespeicherte Subscriptions in `web_push_subscriptions`.

@@ -47,6 +47,9 @@ Alternativ koennen alle Dateien aus `supabase/migrations/` der Reihenfolge nach 
 NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
+NEXT_PUBLIC_WEB_PUSH_VAPID_PUBLIC_KEY=...
+WEB_PUSH_VAPID_PRIVATE_KEY=...
+WEB_PUSH_VAPID_SUBJECT=mailto:deine-email@example.com
 ```
 
 4. App starten:
@@ -80,6 +83,9 @@ Die App nutzt fuer Magic-Link- und Registrierungs-Mails `NEXT_PUBLIC_SITE_URL`. 
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `NEXT_PUBLIC_SITE_URL` mit deiner echten Vercel-Adresse, z. B. `https://garten-web-app.vercel.app`
+   - `NEXT_PUBLIC_WEB_PUSH_VAPID_PUBLIC_KEY`
+   - `WEB_PUSH_VAPID_PRIVATE_KEY`
+   - `WEB_PUSH_VAPID_SUBJECT`, z. B. `mailto:deine-email@example.com`
 3. Build Command: `npm run build`
 4. Output wird durch Next.js automatisch verwaltet.
 5. In Supabase die Vercel Callback URL fuer Auth ergaenzen.

@@ -13,6 +13,9 @@ NEXT_PUBLIC_SITE_URL
 SUPABASE_SERVICE_ROLE_KEY
 CRON_SECRET
 TELEGRAM_BOT_TOKEN
+NEXT_PUBLIC_WEB_PUSH_VAPID_PUBLIC_KEY
+WEB_PUSH_VAPID_PRIVATE_KEY
+WEB_PUSH_VAPID_SUBJECT
 ```
 
 Build:
@@ -31,6 +34,7 @@ Vor dem Deployment:
    - lokal: `http://localhost:3000/auth/callback`
    - Vercel: `https://<domain>/auth/callback`
 4. `NEXT_PUBLIC_SITE_URL` muss auf die echte Vercel-URL zeigen, damit Magic-Link- und Registrierungs-Mails nicht auf localhost weiterleiten.
+5. Fuer Web Push die Migration `011_web_push_subscriptions.sql` ausfuehren und VAPID Keys in Vercel setzen.
 
 ## Sicherheitscheck
 
