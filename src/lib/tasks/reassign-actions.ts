@@ -7,6 +7,7 @@ import { applyPointAdjustments } from "@/lib/adjustments/scores";
 import { getAvailability } from "@/lib/availability/queries";
 import { getGardenMembers } from "@/lib/gardens/queries";
 import { canManageGarden, getUserGardenRole } from "@/lib/gardens/roles";
+import { createNotification } from "@/lib/notifications/send";
 import { suggestAssignee } from "@/lib/planning/fairness";
 import { createClient } from "@/lib/supabase/server";
 import { calculateScores, getTasks } from "@/lib/tasks/queries";
@@ -74,6 +75,15 @@ export async function reassignOpenTasksAction(formData: FormData) {
       from_user_id: task.assigned_to,
       to_user_id: suggestion.userId,
       note: "Fair neu zugewiesen",
+    });
+
+    await createNotification(supabase, {
+      userId: suggestion.userId,
+      gardenId,
+      type: "task_reassigned",
+      title: "Aufgabe neu zugewiesen",
+      message: task.title,
+      relatedTaskId: task.id,
     });
 
     const score = mutableScores.find((row) => row.userId === suggestion.userId);

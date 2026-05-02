@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { completeTaskAction, requestTakeoverAction, reopenTaskAction } from "@/lib/tasks/actions";
+import { completeTaskAction, deleteTaskAction, requestTakeoverAction, reopenTaskAction } from "@/lib/tasks/actions";
 import { formatDate } from "@/lib/format/date";
 import type { TaskWithPeople } from "@/types/domain";
 import { Button } from "@/components/ui/button";
@@ -75,6 +75,15 @@ export function TaskCard({
           />
           <Button variant="secondary" type="submit">
             Erledigung rueckgaengig
+          </Button>
+        </form>
+      ) : null}
+      {canManage ? (
+        <form action={deleteTaskAction} className="mt-3">
+          <input name="task_id" type="hidden" value={task.id} />
+          <input name="garden_id" type="hidden" value={task.garden_id} />
+          <Button variant="ghost" type="submit">
+            Aufgabe loeschen
           </Button>
         </form>
       ) : null}

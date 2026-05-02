@@ -30,7 +30,8 @@ export function buildThreeMonthForecast(
 ): ForecastTask[] {
   const horizon = new Date(startDate);
   horizon.setUTCMonth(horizon.getUTCMonth() + 3);
-  const rows: ForecastTask[] = [];
+  const candidates: ForecastTask[] = [];
+  const simulatedScores = scores.map((score) => ({ ...score }));
 
   for (const template of templates) {
     if (template.recurrence_type === "none" || template.recurrence_type === "on_demand") {
@@ -44,13 +45,12 @@ export function buildThreeMonthForecast(
 
       if (isTemplateInSeason(month, template.season_start_month, template.season_end_month)) {
         const dueDate = cursor.toISOString().slice(0, 10);
-        const suggestion = suggestAssignee(scores, dueDate, availability);
-        rows.push({
+        candidates.push({
           title: template.title,
           dueDate,
           points: template.default_points,
-          suggestedUserId: suggestion?.userId ?? null,
-          suggestedName: suggestion?.displayName ?? "Niemand verfuegbar",
+          suggestedUserId: null,
+          suggestedName: "Noch nicht berechnet",
           sourceTemplateId: template.id,
         });
       }
@@ -59,5 +59,23 @@ export function buildThreeMonthForecast(
     }
   }
 
-  return rows.sort((a, b) => a.dueDate.localeCompare(b.dueDate) || a.title.localeCompare(b.title));
+  return candidates
+    .sort((a, b) => a.dueDate.localeCompare(b.dueDate) || a.title.localeCompare(b.title))
+    .map((candidate) => {
+      const suggestion = suggestAssignee(simulatedScores, candidate.dueDate, availability);
+
+      if (suggestion) {
+        const score = simulatedScores.find((row) => row.userId === suggestion.userId);
+        if (score) {
+          score.points += candidate.points;
+          score.lastCompletedAt = candidate.dueDate;
+        }
+      }
+
+      return {
+        ...candidate,
+        suggestedUserId: suggestion?.userId ?? null,
+        suggestedName: suggestion?.displayName ?? "Niemand verfuegbar",
+      };
+    });
 }

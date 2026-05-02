@@ -126,6 +126,20 @@ TELEGRAM_BOT_TOKEN=dein BotFather Token
 
 Jedes Mitglied muss den Bot in Telegram einmal starten und seine Chat-ID in der App unter `Garten -> Benachrichtigungen` hinterlegen.
 
+Chat-ID finden:
+
+1. Deinen Bot in Telegram oeffnen und `Start` antippen.
+2. Im Browser oeffnen:
+
+```text
+https://api.telegram.org/botDEIN_BOT_TOKEN/getUpdates
+```
+
+3. In der Antwort nach `"chat":{"id":...}` suchen.
+4. Diese Zahl in der App unter `Garten -> Benachrichtigungen -> Telegram Chat-ID` eintragen.
+5. `Telegram aktivieren` anhaeken.
+6. `Telegram Test senden` klicken.
+
 WhatsApp ist nicht als kostenloser automatischer Kanal umgesetzt. Die offizielle WhatsApp Business Platform ist ein eigener Meta-Dienst und nicht einfach kostenloser Push wie Telegram.
 
 ## 7. Erster Start

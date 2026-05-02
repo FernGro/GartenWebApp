@@ -3,6 +3,7 @@ import { isTemplateInSeason, suggestAssignee } from "@/lib/planning/fairness";
 import { calculateScores, getTaskTemplates, getTasks } from "@/lib/tasks/queries";
 import { getGardenMembers } from "@/lib/gardens/queries";
 import { getAvailability } from "@/lib/availability/queries";
+import { createNotification } from "@/lib/notifications/send";
 import type { Database } from "@/types/database";
 import type { RecurrenceType } from "@/types/domain";
 
@@ -92,9 +93,16 @@ export async function runGardenAutomation(supabase: SupabaseClient<Database>) {
           related_task_id: task.id,
         }));
 
-      if (assignedNotifications.length > 0) {
-        await supabase.from("notifications").insert(assignedNotifications);
-        createdNotifications += assignedNotifications.length;
+      for (const notification of assignedNotifications) {
+        await createNotification(supabase, {
+          userId: notification.user_id,
+          gardenId: notification.garden_id,
+          type: notification.type,
+          title: notification.title,
+          message: notification.message,
+          relatedTaskId: notification.related_task_id,
+        });
+        createdNotifications += 1;
       }
     }
 
@@ -125,9 +133,16 @@ export async function runGardenAutomation(supabase: SupabaseClient<Database>) {
       })),
     ];
 
-    if (reminderRows.length > 0) {
-      await supabase.from("notifications").insert(reminderRows);
-      createdNotifications += reminderRows.length;
+    for (const notification of reminderRows) {
+      await createNotification(supabase, {
+        userId: notification.user_id,
+        gardenId: notification.garden_id,
+        type: notification.type,
+        title: notification.title,
+        message: notification.message,
+        relatedTaskId: notification.related_task_id,
+      });
+      createdNotifications += 1;
     }
   }
 

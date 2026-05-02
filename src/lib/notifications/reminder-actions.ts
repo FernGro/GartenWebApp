@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth/session";
+import { createNotification } from "@/lib/notifications/send";
 import { createClient } from "@/lib/supabase/server";
 import { getTasks } from "@/lib/tasks/queries";
 
@@ -44,25 +45,25 @@ export async function createDueNotificationsAction(formData: FormData) {
 
   const rows = [
     ...overdue.map((task) => ({
-      user_id: task.assigned_to as string,
-      garden_id: gardenId,
+      userId: task.assigned_to as string,
+      gardenId,
       type: "task_overdue",
       title: "Aufgabe ueberfaellig",
       message: task.title,
-      related_task_id: task.id,
+      relatedTaskId: task.id,
     })),
     ...dueSoon.map((task) => ({
-      user_id: task.assigned_to as string,
-      garden_id: gardenId,
+      userId: task.assigned_to as string,
+      gardenId,
       type: "task_due_soon",
       title: "Aufgabe bald faellig",
       message: task.title,
-      related_task_id: task.id,
+      relatedTaskId: task.id,
     })),
   ];
 
-  if (rows.length > 0) {
-    await supabase.from("notifications").insert(rows);
+  for (const row of rows) {
+    await createNotification(supabase, row);
   }
 
   revalidatePath("/notifications");
