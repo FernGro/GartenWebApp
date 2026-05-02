@@ -184,3 +184,24 @@ export type GardenBillingSettings = {
   hourly_rate_cents: number;
   point_hours: number;
 };
+
+export type MemberAdjustment = {
+  id: string;
+  garden_id: string;
+  user_id: string;
+  points_delta: number;
+  amount_cents_delta: number;
+  reason: string;
+  created_by: string | null;
+  created_at: string;
+  profiles?: Profile | null;
+};
+
+export type NotificationContact = {
+  user_id: string;
+  garden_id: string;
+  whatsapp_phone: string | null;
+  telegram_chat_id: string | null;
+  telegram_enabled: boolean;
+  in_app_enabled: boolean;
+};

@@ -30,3 +30,7 @@ App-Code kann jederzeit ueber GitHub/Vercel aktualisiert werden. Persistente Dat
 Aufgaben duerfen nur von der zugewiesenen Person als erledigt markiert werden. Andere Mitglieder koennen eine Uebernahme anfragen. Die aktuelle Zuweisung oder Owner/Admins koennen diese Uebernahme bestaetigen. Erledigungen sind nur im Zeitfenster von sieben Tagen vor bis sieben Tagen nach Faelligkeit erlaubt.
 
 Owner/Admins koennen falsch erledigte Aufgaben wieder oeffnen. Der zentrale Log unter `/log` dokumentiert die Aktionen.
+
+## Benachrichtigungen
+
+In-App-Notifications bleiben der robuste Standard. Telegram ist optional vorbereitet und nutzt serverseitig `TELEGRAM_BOT_TOKEN`. WhatsApp wird nur als Kontaktinformation gespeichert, weil die offizielle WhatsApp Business Platform kein einfacher kostenloser Push-Kanal ist.

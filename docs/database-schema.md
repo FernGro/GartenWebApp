@@ -46,3 +46,8 @@ Das erste Garten-Onboarding erfolgt ueber `public.create_garden_with_owner(name)
 - `garden_transactions`: Ausgaben und Zahlungen fuer die Gartenabrechnung.
 - `garden_billing_settings`: Stundenlohn und Stunden-pro-Punkt.
 - `prevent_invalid_task_completion()`: verhindert Erledigungen durch nicht zugewiesene Personen und ausserhalb des ±7-Tage-Fensters.
+
+`008_adjustments_and_notification_contacts.sql` ergaenzt:
+
+- `member_adjustments`: Startwerte, Punktuebernahmen und Geldkorrekturen.
+- `notification_contacts`: WhatsApp-Kontaktinfo und Telegram Chat-ID pro Gartenmitglied.

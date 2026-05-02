@@ -113,6 +113,21 @@ https://garten-dienstplan.vercel.app
 
 Diese URL danach in Supabase Auth als Redirect URL eintragen.
 
+Optional fuer kostenlose Telegram-Nachrichten:
+
+1. In Telegram `@BotFather` oeffnen.
+2. `/newbot` senden und Bot erstellen.
+3. Den Bot Token kopieren.
+4. In Vercel als Environment Variable setzen:
+
+```text
+TELEGRAM_BOT_TOKEN=dein BotFather Token
+```
+
+Jedes Mitglied muss den Bot in Telegram einmal starten und seine Chat-ID in der App unter `Garten -> Benachrichtigungen` hinterlegen.
+
+WhatsApp ist nicht als kostenloser automatischer Kanal umgesetzt. Die offizielle WhatsApp Business Platform ist ein eigener Meta-Dienst und nicht einfach kostenloser Push wie Telegram.
+
 ## 7. Erster Start
 
 1. Oeffne die Vercel URL.

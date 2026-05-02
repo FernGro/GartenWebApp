@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
-import type { GardenBillingSettings, GardenMember, GardenTransaction, Task } from "@/types/domain";
+import type { GardenBillingSettings, GardenMember, GardenTransaction, MemberAdjustment, Task } from "@/types/domain";
 
 export async function getBillingSettings(
   supabase: SupabaseClient<Database>,
@@ -62,6 +62,7 @@ export function calculateBilling(
   tasks: Task[],
   transactions: GardenTransaction[],
   settings: GardenBillingSettings,
+  adjustments: MemberAdjustment[] = [],
 ) {
   const activeMembers = members.filter((member) => member.is_active);
   const memberCount = Math.max(activeMembers.length, 1);
@@ -70,6 +71,16 @@ export function calculateBilling(
       .filter((task) => task.status === "done" && task.completed_by === member.user_id)
       .reduce((sum, task) => sum + task.points, 0);
     const workCents = Math.round(points * settings.point_hours * settings.hourly_rate_cents);
+    const adjustmentWorkCents = Math.round(
+      adjustments
+        .filter((adjustment) => adjustment.user_id === member.user_id)
+        .reduce((sum, adjustment) => sum + adjustment.points_delta, 0)
+        * settings.point_hours
+        * settings.hourly_rate_cents,
+    );
+    const adjustmentAmountCents = adjustments
+      .filter((adjustment) => adjustment.user_id === member.user_id)
+      .reduce((sum, adjustment) => sum + adjustment.amount_cents_delta, 0);
     const expenseCents = transactions
       .filter((transaction) => transaction.type === "expense" && transaction.paid_by === member.user_id)
       .reduce((sum, transaction) => sum + transaction.amount_cents, 0);
@@ -83,11 +94,11 @@ export function calculateBilling(
     return {
       userId: member.user_id,
       displayName: member.profiles?.display_name ?? "Mitglied",
-      workCents,
+      workCents: workCents + adjustmentWorkCents,
       expenseCents,
       paidOutCents,
       receivedCents,
-      contributionCents: workCents + expenseCents + paidOutCents - receivedCents,
+      contributionCents: workCents + adjustmentWorkCents + adjustmentAmountCents + expenseCents + paidOutCents - receivedCents,
       fairShareCents: 0,
       balanceCents: 0,
     };

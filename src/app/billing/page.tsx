@@ -1,6 +1,8 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { createMemberAdjustmentAction } from "@/lib/adjustments/actions";
+import { getMemberAdjustments } from "@/lib/adjustments/queries";
 import { createTransactionAction, updateBillingSettingsAction } from "@/lib/billing/actions";
 import { calculateBilling, getBillingSettings, getGardenTransactions } from "@/lib/billing/queries";
 import { formatDate } from "@/lib/format/date";
@@ -23,13 +25,14 @@ export default async function BillingPage() {
     );
   }
 
-  const [members, tasks, transactions, settings] = await Promise.all([
+  const [members, tasks, transactions, settings, adjustments] = await Promise.all([
     getGardenMembers(supabase, garden.id),
     getTasks(supabase, garden.id),
     getGardenTransactions(supabase, garden.id),
     getBillingSettings(supabase, garden.id),
+    getMemberAdjustments(supabase, garden.id),
   ]);
-  const billing = calculateBilling(members, tasks, transactions, settings);
+  const billing = calculateBilling(members, tasks, transactions, settings, adjustments);
 
   return (
     <AppShell>
@@ -100,6 +103,32 @@ export default async function BillingPage() {
             </label>
             <Button className="mt-3" type="submit">Eintragen</Button>
           </form>
+
+          <form action={createMemberAdjustmentAction} className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
+            <h2 className="text-lg font-bold">Startwert / Uebernahme</h2>
+            <input name="garden_id" type="hidden" value={garden.id} />
+            <label className="mt-3 block text-sm font-semibold">
+              Mitglied
+              <select className="mt-1 w-full rounded-lg border border-[#cbd8c1] bg-white px-3 py-3" name="user_id">
+                {members.map((member) => (
+                  <option key={member.user_id} value={member.user_id}>{member.profiles?.display_name ?? "Mitglied"}</option>
+                ))}
+              </select>
+            </label>
+            <label className="mt-3 block text-sm font-semibold">
+              Punkte +/-
+              <input className="mt-1 w-full rounded-lg border border-[#cbd8c1] px-3 py-3" name="points_delta" defaultValue="0" />
+            </label>
+            <label className="mt-3 block text-sm font-semibold">
+              Betrag EUR +/-
+              <input className="mt-1 w-full rounded-lg border border-[#cbd8c1] px-3 py-3" name="amount_delta" defaultValue="0" />
+            </label>
+            <label className="mt-3 block text-sm font-semibold">
+              Grund
+              <input className="mt-1 w-full rounded-lg border border-[#cbd8c1] px-3 py-3" name="reason" placeholder="Anna uebernimmt Markus Punkte" required />
+            </label>
+            <Button className="mt-3" type="submit">Ausgleich eintragen</Button>
+          </form>
         </div>
 
         <div className="space-y-4">
@@ -130,6 +159,21 @@ export default async function BillingPage() {
                 </div>
               ))}
               {transactions.length === 0 ? <p className="text-sm text-[#6d7669]">Noch keine Ausgaben oder Zahlungen.</p> : null}
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
+            <h2 className="text-lg font-bold">Ausgleiche</h2>
+            <div className="mt-3 space-y-3">
+              {adjustments.map((adjustment) => (
+                <div className="rounded-lg bg-[#f2f7ec] p-3 text-sm" key={adjustment.id}>
+                  <div className="font-semibold">{adjustment.profiles?.display_name ?? "Mitglied"} · {adjustment.reason}</div>
+                  <div className="text-xs text-[#6d7669]">
+                    {adjustment.points_delta} Punkte · {formatMoney(adjustment.amount_cents_delta)}
+                  </div>
+                </div>
+              ))}
+              {adjustments.length === 0 ? <p className="text-sm text-[#6d7669]">Noch keine Startwerte oder Uebernahmen.</p> : null}
             </div>
           </div>
         </div>

@@ -200,6 +200,52 @@ export type Database = {
           updated_at?: string;
         };
       };
+      member_adjustments: {
+        Row: {
+          id: string;
+          garden_id: string;
+          user_id: string;
+          points_delta: number;
+          amount_cents_delta: number;
+          reason: string;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          garden_id: string;
+          user_id: string;
+          points_delta?: number;
+          amount_cents_delta?: number;
+          reason: string;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["member_adjustments"]["Row"]>;
+      };
+      notification_contacts: {
+        Row: {
+          user_id: string;
+          garden_id: string;
+          whatsapp_phone: string | null;
+          telegram_chat_id: string | null;
+          telegram_enabled: boolean;
+          in_app_enabled: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          garden_id: string;
+          whatsapp_phone?: string | null;
+          telegram_chat_id?: string | null;
+          telegram_enabled?: boolean;
+          in_app_enabled?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["notification_contacts"]["Row"]>;
+      };
     };
     Views: Record<string, never>;
     Functions: {

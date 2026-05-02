@@ -1,5 +1,7 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { EmptyState } from "@/components/ui/empty-state";
+import { getMemberAdjustments } from "@/lib/adjustments/queries";
+import { applyPointAdjustments } from "@/lib/adjustments/scores";
 import { getAvailability } from "@/lib/availability/queries";
 import { formatDate } from "@/lib/format/date";
 import { getCurrentGarden, getGardenMembers } from "@/lib/gardens/queries";
@@ -21,13 +23,14 @@ export default async function ForecastPage() {
     );
   }
 
-  const [templates, tasks, members, availability] = await Promise.all([
+  const [templates, tasks, members, availability, adjustments] = await Promise.all([
     getTaskTemplates(supabase, garden.id),
     getTasks(supabase, garden.id),
     getGardenMembers(supabase, garden.id),
     getAvailability(supabase, garden.id),
+    getMemberAdjustments(supabase, garden.id),
   ]);
-  const scores = calculateScores(tasks, members);
+  const scores = applyPointAdjustments(calculateScores(tasks, members), adjustments);
   const forecast = buildThreeMonthForecast(templates, scores, availability);
 
   return (

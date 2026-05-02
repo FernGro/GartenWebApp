@@ -1,9 +1,11 @@
 import { AvailabilityCalendar } from "@/components/availability/availability-calendar";
 import { GardenSettingsPanel } from "@/components/settings/garden-settings-panel";
+import { NotificationContactPanel } from "@/components/settings/notification-contact-panel";
 import { AppShell } from "@/components/layout/app-shell";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getAvailability } from "@/lib/availability/queries";
 import { getCurrentGarden } from "@/lib/gardens/queries";
+import { getNotificationContact } from "@/lib/notifications/contacts";
 import { createClient } from "@/lib/supabase/server";
 import type { GardenRole } from "@/types/domain";
 
@@ -35,6 +37,7 @@ export default async function GardenSettingsPage({
     : null;
   const userRole: GardenRole = (membership?.role as GardenRole) ?? "member";
   const availability = supabase && garden ? await getAvailability(supabase, garden.id) : [];
+  const contact = supabase && garden && user ? await getNotificationContact(supabase, garden.id, user.id) : null;
 
   return (
     <AppShell>
@@ -42,6 +45,7 @@ export default async function GardenSettingsPage({
       {garden ? (
         <>
           <GardenSettingsPanel garden={garden} profile={profile} userRole={userRole} />
+          <NotificationContactPanel gardenId={garden.id} contact={contact} />
           <AvailabilityCalendar gardenId={garden.id} entries={availability} year={year} month={month} />
         </>
       ) : (
