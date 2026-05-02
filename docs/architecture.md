@@ -24,3 +24,9 @@ App-Code kann jederzeit ueber GitHub/Vercel aktualisiert werden. Persistente Dat
 ## Automatisierung
 
 `vercel.json` definiert einen taeglichen Cron Job auf `/api/cron/garden-jobs`. Die Route nutzt serverseitig `SUPABASE_SERVICE_ROLE_KEY` und ist ueber `CRON_SECRET` geschuetzt. Sie erzeugt saisonale Aufgaben, markiert ueberfaellige Aufgaben und erstellt Erinnerungs-Notifications.
+
+## Integritaet
+
+Aufgaben duerfen nur von der zugewiesenen Person als erledigt markiert werden. Andere Mitglieder koennen eine Uebernahme anfragen. Die aktuelle Zuweisung oder Owner/Admins koennen diese Uebernahme bestaetigen. Erledigungen sind nur im Zeitfenster von sieben Tagen vor bis sieben Tagen nach Faelligkeit erlaubt.
+
+Owner/Admins koennen falsch erledigte Aufgaben wieder oeffnen. Der zentrale Log unter `/log` dokumentiert die Aktionen.

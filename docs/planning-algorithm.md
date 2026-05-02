@@ -22,3 +22,15 @@ Die Task-Erstellung nutzt diesen Algorithmus serverseitig, wenn keine Person man
 Wiederkehrende Generierung ist im MVP manuell ueber die Vorlagen-Seite aktiv. Ein spaeterer Cron Job oder eine Supabase Edge Function kann dieselbe Logik zeitgesteuert ausloesen.
 
 Der Vercel Cron Job `/api/cron/garden-jobs` loest diese Automatisierung serverseitig aus, wenn `SUPABASE_SERVICE_ROLE_KEY` und `CRON_SECRET` gesetzt sind.
+
+## Forecast
+
+Die Seite `/forecast` zeigt eine unverbindliche Vorschau fuer die naechsten drei Monate. Sie beruecksichtigt:
+
+- aktive Mitglieder
+- bisherige Punkte
+- letzte Dienste
+- Abwesenheiten
+- saisonale Templates
+
+Forecast-Eintraege sind noch keine verbindlichen Aufgaben. Verbindlich werden sie erst, wenn Aufgaben erzeugt oder uebernommen werden.

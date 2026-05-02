@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth/session";
 import { getAvailability } from "@/lib/availability/queries";
 import { getGardenMembers } from "@/lib/gardens/queries";
+import { canManageGarden, getUserGardenRole } from "@/lib/gardens/roles";
 import { suggestAssignee } from "@/lib/planning/fairness";
 import { createClient } from "@/lib/supabase/server";
 import { calculateScores, getTasks } from "@/lib/tasks/queries";
@@ -104,6 +105,32 @@ export async function completeTaskAction(formData: FormData) {
     throw new Error("Aufgabe konnte nicht gefunden werden.");
   }
 
+  const { data: existingTask, error: taskError } = await supabase
+    .from("tasks")
+    .select("id,garden_id,title,due_date,assigned_to,status")
+    .eq("id", taskId)
+    .maybeSingle();
+
+  if (taskError || !existingTask) {
+    throw new Error(taskError?.message ?? "Aufgabe wurde nicht gefunden.");
+  }
+
+  if (existingTask.assigned_to !== user.id) {
+    throw new Error("Nur die zugewiesene Person kann diese Aufgabe erledigen. Bitte erst Uebernahme anfragen.");
+  }
+
+  if (existingTask.due_date) {
+    const today = new Date().toISOString().slice(0, 10);
+    const earliest = new Date(`${existingTask.due_date}T00:00:00.000Z`);
+    earliest.setUTCDate(earliest.getUTCDate() - 7);
+    const latest = new Date(`${existingTask.due_date}T00:00:00.000Z`);
+    latest.setUTCDate(latest.getUTCDate() + 7);
+
+    if (today < earliest.toISOString().slice(0, 10) || today > latest.toISOString().slice(0, 10)) {
+      throw new Error("Diese Aufgabe kann nur im Zeitraum 7 Tage vor bis 7 Tage nach Faelligkeit erledigt werden.");
+    }
+  }
+
   const completedAt = new Date().toISOString();
   const { error } = await supabase
     .from("tasks")
@@ -131,4 +158,163 @@ export async function completeTaskAction(formData: FormData) {
   revalidatePath("/dashboard");
   revalidatePath("/tasks");
   revalidatePath(`/tasks/${taskId}`);
+}
+
+export async function requestTakeoverAction(formData: FormData) {
+  const user = await requireUser();
+  const supabase = await createClient();
+
+  if (!supabase) {
+    throw new Error("Supabase ist nicht konfiguriert.");
+  }
+
+  const taskId = readString(formData, "task_id");
+  const gardenId = readString(formData, "garden_id");
+  const currentAssignee = readString(formData, "current_assignee") || null;
+  const note = readString(formData, "note") || null;
+
+  if (!taskId || !gardenId) {
+    throw new Error("Aufgabe fehlt.");
+  }
+
+  const { error } = await supabase.from("task_takeover_requests").insert({
+    task_id: taskId,
+    garden_id: gardenId,
+    requested_by: user.id,
+    current_assignee: currentAssignee,
+    note,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  await supabase.from("task_events").insert({
+    task_id: taskId,
+    garden_id: gardenId,
+    actor_id: user.id,
+    event_type: "accepted",
+    from_user_id: currentAssignee,
+    to_user_id: user.id,
+    note: "Uebernahme angefragt",
+  });
+
+  if (currentAssignee) {
+    await supabase.from("notifications").insert({
+      user_id: currentAssignee,
+      garden_id: gardenId,
+      type: "task_takeover_requested",
+      title: "Uebernahme angefragt",
+      message: "Jemand moechte deine Aufgabe uebernehmen.",
+      related_task_id: taskId,
+    });
+  }
+
+  revalidatePath(`/tasks/${taskId}`);
+}
+
+export async function decideTakeoverAction(formData: FormData) {
+  const user = await requireUser();
+  const supabase = await createClient();
+
+  if (!supabase) {
+    throw new Error("Supabase ist nicht konfiguriert.");
+  }
+
+  const requestId = readString(formData, "request_id");
+  const taskId = readString(formData, "task_id");
+  const gardenId = readString(formData, "garden_id");
+  const requestedBy = readString(formData, "requested_by");
+  const currentAssignee = readString(formData, "current_assignee") || null;
+  const decision = readString(formData, "decision");
+
+  if (!requestId || !taskId || !gardenId || !requestedBy || !["approved", "rejected"].includes(decision)) {
+    throw new Error("Uebernahme-Anfrage ist ungueltig.");
+  }
+
+  const role = await getUserGardenRole(supabase, gardenId, user.id);
+  const mayDecide = canManageGarden(role) || currentAssignee === user.id;
+
+  if (!mayDecide) {
+    throw new Error("Nur aktuelle Zuweisung oder Owner/Admin duerfen diese Uebernahme entscheiden.");
+  }
+
+  const decidedAt = new Date().toISOString();
+  const { error } = await supabase
+    .from("task_takeover_requests")
+    .update({ status: decision as "approved" | "rejected", decided_by: user.id, decided_at: decidedAt })
+    .eq("id", requestId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (decision === "approved") {
+    const { error: taskError } = await supabase
+      .from("tasks")
+      .update({ assigned_to: requestedBy, status: "assigned" })
+      .eq("id", taskId);
+
+    if (taskError) {
+      throw new Error(taskError.message);
+    }
+  }
+
+  await supabase.from("task_events").insert({
+    task_id: taskId,
+    garden_id: gardenId,
+    actor_id: user.id,
+    event_type: decision === "approved" ? "reassigned" : "cancelled",
+    from_user_id: currentAssignee,
+    to_user_id: decision === "approved" ? requestedBy : null,
+    note: decision === "approved" ? "Uebernahme bestaetigt" : "Uebernahme abgelehnt",
+  });
+
+  revalidatePath(`/tasks/${taskId}`);
+  revalidatePath("/tasks");
+  revalidatePath("/dashboard");
+}
+
+export async function reopenTaskAction(formData: FormData) {
+  const user = await requireUser();
+  const supabase = await createClient();
+
+  if (!supabase) {
+    throw new Error("Supabase ist nicht konfiguriert.");
+  }
+
+  const taskId = readString(formData, "task_id");
+  const gardenId = readString(formData, "garden_id");
+  const note = readString(formData, "note") || "Erledigung durch Admin/Owner rueckgaengig gemacht";
+
+  if (!taskId || !gardenId) {
+    throw new Error("Aufgabe fehlt.");
+  }
+
+  const role = await getUserGardenRole(supabase, gardenId, user.id);
+
+  if (!canManageGarden(role)) {
+    throw new Error("Nur Owner/Admin duerfen Aufgaben wieder oeffnen.");
+  }
+
+  const { error } = await supabase
+    .from("tasks")
+    .update({ status: "assigned", completed_by: null, completed_at: null })
+    .eq("id", taskId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  await supabase.from("task_events").insert({
+    task_id: taskId,
+    garden_id: gardenId,
+    actor_id: user.id,
+    event_type: "reopened",
+    note,
+  });
+
+  revalidatePath(`/tasks/${taskId}`);
+  revalidatePath("/tasks");
+  revalidatePath("/dashboard");
 }

@@ -49,9 +49,10 @@ Im Supabase Dashboard:
 6. Datei `supabase/migrations/004_invite_no_downgrade_and_owner_recovery.sql` komplett kopieren und ausfuehren.
 7. Datei `supabase/migrations/005_enforce_last_owner.sql` komplett kopieren und ausfuehren.
 8. Datei `supabase/migrations/006_leave_and_delete_garden.sql` komplett kopieren und ausfuehren.
-9. Optional `supabase/seed.sql` kopieren und ausfuehren, damit Standard-Aufgabenvorlagen vorhanden sind.
+9. Datei `supabase/migrations/007_task_control_and_billing.sql` komplett kopieren und ausfuehren.
+10. Optional `supabase/seed.sql` kopieren und ausfuehren, damit Standard-Aufgabenvorlagen vorhanden sind.
 
-Wenn ein `Application error` erscheint, pruefe zuerst, ob wirklich alle Migrationen (001 bis 006) in Supabase ausgefuehrt wurden. Die genaue Fehlermeldung findest du im Vercel Dashboard unter Projekt → Logs → Functions.
+Wenn ein `Application error` erscheint, pruefe zuerst, ob wirklich alle Migrationen (001 bis 007) in Supabase ausgefuehrt wurden. Die genaue Fehlermeldung findest du im Vercel Dashboard unter Projekt → Logs → Functions.
 
 ## 4. Supabase API Keys finden
 

@@ -2,10 +2,13 @@ import { notFound } from "next/navigation";
 import { AppShell } from "@/components/layout/app-shell";
 import { TaskDiscussion } from "@/components/tasks/comment-list";
 import { TaskCard } from "@/components/tasks/task-card";
+import { TakeoverPanel } from "@/components/tasks/takeover-panel";
 import { formatDateTime } from "@/lib/format/date";
+import { canManageGarden, getUserGardenRole } from "@/lib/gardens/roles";
 import { createClient } from "@/lib/supabase/server";
 import { getTaskComments, getTaskEvents } from "@/lib/tasks/comments";
 import { getTask } from "@/lib/tasks/queries";
+import { getPendingTakeoverRequests } from "@/lib/tasks/takeover";
 
 export const dynamic = "force-dynamic";
 
@@ -13,21 +16,28 @@ export default async function TaskDetailPage({ params }: { params: Promise<{ id:
   const { id } = await params;
   const supabase = await createClient();
   const task = supabase ? await getTask(supabase, id) : null;
+  const user = supabase ? (await supabase.auth.getUser()).data.user : null;
 
   if (!task) {
     notFound();
   }
 
-  const [comments, events] = supabase
-    ? await Promise.all([getTaskComments(supabase, task.id), getTaskEvents(supabase, task.id)])
-    : [[], []];
+  const [comments, events, takeoverRequests] = supabase
+    ? await Promise.all([
+        getTaskComments(supabase, task.id),
+        getTaskEvents(supabase, task.id),
+        getPendingTakeoverRequests(supabase, task.id),
+      ])
+    : [[], [], []];
+  const role = supabase && user ? await getUserGardenRole(supabase, task.garden_id, user.id) : null;
 
   return (
     <AppShell>
       <div className="mb-6">
         <h1 className="text-3xl font-bold">Aufgabe</h1>
       </div>
-      <TaskCard task={task} />
+      <TaskCard task={task} currentUserId={user?.id} canManage={canManageGarden(role)} />
+      <TakeoverPanel requests={takeoverRequests} currentUserId={user?.id} canManage={canManageGarden(role)} />
       <section className="mt-4 rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
         <h2 className="text-lg font-bold">Details</h2>
         <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-2">

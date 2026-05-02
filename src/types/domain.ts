@@ -21,6 +21,10 @@ export type TaskEventType =
   | "cancelled"
   | "commented";
 
+export type TaskTakeoverStatus = "pending" | "approved" | "rejected" | "cancelled";
+
+export type GardenTransactionType = "expense" | "payment";
+
 export type Profile = {
   id: string;
   display_name: string;
@@ -142,4 +146,41 @@ export type GardenInvite = {
   accepted_at: string | null;
   expires_at: string;
   created_at: string;
+};
+
+export type TaskTakeoverRequest = {
+  id: string;
+  task_id: string;
+  garden_id: string;
+  requested_by: string;
+  current_assignee: string | null;
+  status: TaskTakeoverStatus;
+  decided_by: string | null;
+  decided_at: string | null;
+  note: string | null;
+  created_at: string;
+  requested_profile?: Profile | null;
+  current_assignee_profile?: Profile | null;
+};
+
+export type GardenTransaction = {
+  id: string;
+  garden_id: string;
+  type: GardenTransactionType;
+  title: string;
+  amount_cents: number;
+  paid_by: string;
+  paid_to: string | null;
+  occurred_on: string;
+  note: string | null;
+  created_by: string | null;
+  created_at: string;
+  paid_by_profile?: Profile | null;
+  paid_to_profile?: Profile | null;
+};
+
+export type GardenBillingSettings = {
+  garden_id: string;
+  hourly_rate_cents: number;
+  point_hours: number;
 };

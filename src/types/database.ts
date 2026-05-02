@@ -1,4 +1,11 @@
-import type { GardenRole, RecurrenceType, TaskEventType, TaskStatus } from "./domain";
+import type {
+  GardenRole,
+  GardenTransactionType,
+  RecurrenceType,
+  TaskEventType,
+  TaskStatus,
+  TaskTakeoverStatus,
+} from "./domain";
 
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
@@ -129,6 +136,70 @@ export type Database = {
         };
         Update: Partial<Database["public"]["Tables"]["notifications"]["Row"]>;
       };
+      task_takeover_requests: {
+        Row: {
+          id: string;
+          task_id: string;
+          garden_id: string;
+          requested_by: string;
+          current_assignee: string | null;
+          status: TaskTakeoverStatus;
+          decided_by: string | null;
+          decided_at: string | null;
+          note: string | null;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["task_takeover_requests"]["Row"]> & {
+          task_id: string;
+          garden_id: string;
+          requested_by: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["task_takeover_requests"]["Row"]>;
+      };
+      garden_transactions: {
+        Row: {
+          id: string;
+          garden_id: string;
+          type: GardenTransactionType;
+          title: string;
+          amount_cents: number;
+          paid_by: string;
+          paid_to: string | null;
+          occurred_on: string;
+          note: string | null;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["garden_transactions"]["Row"]> & {
+          garden_id: string;
+          type: GardenTransactionType;
+          title: string;
+          amount_cents: number;
+          paid_by: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["garden_transactions"]["Row"]>;
+      };
+      garden_billing_settings: {
+        Row: {
+          garden_id: string;
+          hourly_rate_cents: number;
+          point_hours: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          garden_id: string;
+          hourly_rate_cents?: number;
+          point_hours?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          hourly_rate_cents?: number;
+          point_hours?: number;
+          updated_at?: string;
+        };
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -158,6 +229,8 @@ export type Database = {
       task_status: TaskStatus;
       recurrence_type: RecurrenceType;
       task_event_type: TaskEventType;
+      task_takeover_status: TaskTakeoverStatus;
+      garden_transaction_type: GardenTransactionType;
     };
     CompositeTypes: Record<string, never>;
   };

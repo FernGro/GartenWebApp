@@ -28,3 +28,9 @@ export function formatDateTime(value: string | null) {
 export function todayIsoDate() {
   return new Date().toISOString().slice(0, 10);
 }
+
+export function addDaysIso(value: string, days: number) {
+  const date = new Date(`${value}T00:00:00.000Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}

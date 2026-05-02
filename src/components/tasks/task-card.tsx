@@ -1,12 +1,25 @@
 import Link from "next/link";
-import { completeTaskAction } from "@/lib/tasks/actions";
+import { completeTaskAction, requestTakeoverAction, reopenTaskAction } from "@/lib/tasks/actions";
 import { formatDate } from "@/lib/format/date";
 import type { TaskWithPeople } from "@/types/domain";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { TaskIcon } from "@/components/tasks/task-icon";
 
-export function TaskCard({ task, compact = false }: { task: TaskWithPeople; compact?: boolean }) {
+export function TaskCard({
+  task,
+  compact = false,
+  currentUserId,
+  canManage = false,
+}: {
+  task: TaskWithPeople;
+  compact?: boolean;
+  currentUserId?: string;
+  canManage?: boolean;
+}) {
+  const canComplete = currentUserId && task.assigned_to === currentUserId;
+  const canRequestTakeover = currentUserId && task.assigned_to !== currentUserId && task.status !== "done" && task.status !== "cancelled";
+
   return (
     <article className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
       <div className="flex items-start justify-between gap-3">
@@ -26,13 +39,42 @@ export function TaskCard({ task, compact = false }: { task: TaskWithPeople; comp
         <StatusBadge status={task.status} />
       </div>
       {!compact && task.description ? <p className="mt-3 text-sm text-[#42513d]">{task.description}</p> : null}
-      {task.status !== "done" && task.status !== "cancelled" ? (
+      {task.status !== "done" && task.status !== "cancelled" && canComplete ? (
         <form action={completeTaskAction} className="mt-4">
           <input name="task_id" type="hidden" value={task.id} />
           <input name="garden_id" type="hidden" value={task.garden_id} />
           <input name="points" type="hidden" value={task.points} />
           <Button className="w-full sm:w-auto" type="submit">
             Als erledigt markieren
+          </Button>
+        </form>
+      ) : null}
+      {canRequestTakeover ? (
+        <form action={requestTakeoverAction} className="mt-4 flex flex-col gap-2 sm:flex-row">
+          <input name="task_id" type="hidden" value={task.id} />
+          <input name="garden_id" type="hidden" value={task.garden_id} />
+          <input name="current_assignee" type="hidden" value={task.assigned_to ?? ""} />
+          <input
+            className="min-h-11 flex-1 rounded-lg border border-[#cbd8c1] px-3 py-2 text-sm"
+            name="note"
+            placeholder="Warum willst du uebernehmen?"
+          />
+          <Button variant="secondary" type="submit">
+            Uebernahme anfragen
+          </Button>
+        </form>
+      ) : null}
+      {task.status === "done" && canManage ? (
+        <form action={reopenTaskAction} className="mt-4 flex flex-col gap-2 sm:flex-row">
+          <input name="task_id" type="hidden" value={task.id} />
+          <input name="garden_id" type="hidden" value={task.garden_id} />
+          <input
+            className="min-h-11 flex-1 rounded-lg border border-[#cbd8c1] px-3 py-2 text-sm"
+            name="note"
+            placeholder="Grund fuer Ruecknahme"
+          />
+          <Button variant="secondary" type="submit">
+            Erledigung rueckgaengig
           </Button>
         </form>
       ) : null}

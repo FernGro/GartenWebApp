@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AppShell } from "@/components/layout/app-shell";
 import { OwnerRecovery } from "@/components/dashboard/owner-recovery";
+import { ScorePie } from "@/components/dashboard/score-pie";
 import { ScoreTable } from "@/components/dashboard/score-table";
 import { TaskCard } from "@/components/tasks/task-card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { SupabaseSetupWarning } from "@/components/ui/setup-warning";
 import { todayIsoDate } from "@/lib/format/date";
 import { createGardenAction } from "@/lib/gardens/actions";
 import { getCurrentGarden, getGardenMembers } from "@/lib/gardens/queries";
+import { canManageGarden, getUserGardenRole } from "@/lib/gardens/roles";
 import { suggestAssignee } from "@/lib/planning/fairness";
 import { createClient } from "@/lib/supabase/server";
 import { calculateScores, getTasks } from "@/lib/tasks/queries";
@@ -66,11 +68,13 @@ export default async function DashboardPage() {
     );
   }
 
-  const [members, allMembers, tasks] = await Promise.all([
+  const [members, allMembers, tasks, role] = await Promise.all([
     getGardenMembers(supabase, garden.id),
     getGardenMembers(supabase, garden.id, true),
     getTasks(supabase, garden.id),
+    getUserGardenRole(supabase, garden.id, user.id),
   ]);
+  const canManage = canManageGarden(role);
   const scores = calculateScores(tasks, members);
   const suggestion = suggestAssignee(scores, null);
   const openTasks = tasks.filter((task) => task.status === "open" || task.status === "assigned" || task.status === "overdue");
@@ -114,7 +118,7 @@ export default async function DashboardPage() {
           </div>
           <div className="space-y-3">
             {openTasks.slice(0, 5).map((task) => (
-              <TaskCard compact key={task.id} task={task} />
+              <TaskCard compact key={task.id} task={task} currentUserId={user.id} canManage={canManage} />
             ))}
             {openTasks.length === 0 ? (
               <EmptyState title="Keine offenen Aufgaben">Aktuell ist nichts zu tun.</EmptyState>
@@ -124,6 +128,9 @@ export default async function DashboardPage() {
         <aside>
           <h2 className="mb-3 text-xl font-bold">Punkte</h2>
           <ScoreTable scores={scores} />
+          <div className="mt-3">
+            <ScorePie scores={scores} />
+          </div>
           {suggestion ? (
             <p className="mt-3 rounded-lg bg-[#e7efe1] px-4 py-3 text-sm text-[#2f6b3f]">
               Fairness-Hinweis: {suggestion.displayName} hat aktuell den niedrigsten Stand.

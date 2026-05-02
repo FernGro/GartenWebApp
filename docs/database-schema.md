@@ -39,3 +39,10 @@ Das erste Garten-Onboarding erfolgt ueber `public.create_garden_with_owner(name)
 `public.accept_garden_invite(token)` darf bestehende Mitglieder nicht mehr herunterstufen. Wenn ein bestehender Owner versehentlich einen Member-Invite annimmt, bleibt die hoehere Rolle erhalten. `public.restore_garden_creator_owner(garden_id)` stellt fuer den Gartenersteller die Owner-Rolle wieder her, falls ein Garten keinen aktiven Owner mehr hat.
 
 `public.prevent_last_owner_loss()` ist ein Datenbank-Trigger auf `garden_members`. Er verhindert, dass der letzte aktive Owner heruntergestuft, deaktiviert oder geloescht wird.
+
+`007_task_control_and_billing.sql` ergaenzt:
+
+- `task_takeover_requests`: Uebernahme-Anfragen, damit fremde Aufgaben nicht einfach erledigt werden.
+- `garden_transactions`: Ausgaben und Zahlungen fuer die Gartenabrechnung.
+- `garden_billing_settings`: Stundenlohn und Stunden-pro-Punkt.
+- `prevent_invalid_task_completion()`: verhindert Erledigungen durch nicht zugewiesene Personen und ausserhalb des ±7-Tage-Fensters.
