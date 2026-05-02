@@ -359,3 +359,66 @@ export async function deleteTaskAction(formData: FormData) {
   revalidatePath("/tasks");
   redirect("/tasks");
 }
+
+export async function createCompletedTaskAction(formData: FormData) {
+  const user = await requireUser();
+  const supabase = await createClient();
+
+  if (!supabase) {
+    throw new Error("Supabase ist nicht konfiguriert.");
+  }
+
+  const gardenId = readString(formData, "garden_id");
+  const title = readString(formData, "title");
+  const description = readString(formData, "description") || "Nachtraeglich erfasst";
+  const completedBy = readString(formData, "completed_by");
+  const completedOn = readString(formData, "completed_on");
+  const points = Number(readString(formData, "points"));
+
+  if (!gardenId || !title || !completedBy || !completedOn || !Number.isInteger(points) || points < 1 || points > 5) {
+    throw new Error("Nachtrag ist ungueltig.");
+  }
+
+  const role = await getUserGardenRole(supabase, gardenId, user.id);
+
+  if (!canManageGarden(role)) {
+    throw new Error("Nur Owner/Admin duerfen erledigte Aufgaben nachtragen.");
+  }
+
+  const completedAt = `${completedOn}T12:00:00.000Z`;
+  const { data: task, error } = await supabase
+    .from("tasks")
+    .insert({
+      garden_id: gardenId,
+      title,
+      description,
+      points,
+      due_date: completedOn,
+      assigned_to: completedBy,
+      original_assignee: completedBy,
+      completed_by: completedBy,
+      completed_at: completedAt,
+      status: "done",
+      created_by: user.id,
+    })
+    .select("id,garden_id")
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  await supabase.from("task_events").insert({
+    task_id: task.id,
+    garden_id: task.garden_id,
+    actor_id: user.id,
+    event_type: "completed",
+    to_user_id: completedBy,
+    points_delta: points,
+    note: "Erledigte Aufgabe nachtraeglich erfasst",
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath("/tasks");
+  redirect(`/tasks/${task.id}`);
+}
