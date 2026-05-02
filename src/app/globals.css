@@ -9,10 +9,12 @@
 body {
   margin: 0;
   background:
+    linear-gradient(180deg, rgba(247, 250, 241, 0.92), rgba(240, 246, 232, 0.92)),
     radial-gradient(circle at 15% 8%, rgba(98, 142, 74, 0.18), transparent 26rem),
+    radial-gradient(circle at 88% 16%, rgba(210, 162, 76, 0.14), transparent 24rem),
     linear-gradient(135deg, rgba(255, 255, 255, 0.78) 0 25%, transparent 25% 50%, rgba(255, 255, 255, 0.45) 50% 75%, transparent 75%),
     var(--background);
-  background-size: auto, 42px 42px, auto;
+  background-size: auto, auto, auto, 42px 42px, auto;
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
@@ -26,4 +28,77 @@ select {
 
 ::selection {
   background: #c8dfb7;
+}
+
+.mower-drive {
+  animation: mower-drive 1.8s ease-in-out infinite;
+}
+
+.grass-dots {
+  display: inline-flex;
+  gap: 0.25rem;
+}
+
+.grass-dots span {
+  animation: grass-pulse 1s ease-in-out infinite;
+  background: #2f6b3f;
+  border-radius: 999px;
+  display: block;
+  height: 0.45rem;
+  width: 0.45rem;
+}
+
+.grass-dots span:nth-child(2) {
+  animation-delay: 120ms;
+}
+
+.grass-dots span:nth-child(3) {
+  animation-delay: 240ms;
+}
+
+.race-lane {
+  animation: lane-grow 620ms ease-out both;
+}
+
+@keyframes mower-drive {
+  0% {
+    transform: translateX(-7rem);
+  }
+  52% {
+    transform: translateX(calc(100vw - 10rem));
+  }
+  100% {
+    transform: translateX(calc(100vw - 10rem));
+  }
+}
+
+@keyframes grass-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-0.15rem);
+  }
+}
+
+@keyframes lane-grow {
+  from {
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+  to {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mower-drive,
+  .grass-dots span,
+  .race-lane {
+    animation: none;
+  }
 }

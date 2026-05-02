@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AppShell } from "@/components/layout/app-shell";
 import { OwnerRecovery } from "@/components/dashboard/owner-recovery";
 import { ScorePie } from "@/components/dashboard/score-pie";
+import { ScoreRace } from "@/components/dashboard/score-race";
 import { ScoreTable } from "@/components/dashboard/score-table";
 import { TaskCard } from "@/components/tasks/task-card";
 import { Button } from "@/components/ui/button";
@@ -130,6 +131,9 @@ export default async function DashboardPage() {
           <ScoreTable scores={scores} />
           <div className="mt-3">
             <ScorePie scores={scores} />
+          </div>
+          <div className="mt-3">
+            <ScoreRace scores={scores} />
           </div>
           {suggestion ? (
             <p className="mt-3 rounded-lg bg-[#e7efe1] px-4 py-3 text-sm text-[#2f6b3f]">

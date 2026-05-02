@@ -8,6 +8,7 @@ import { getGardenMembers } from "@/lib/gardens/queries";
 import { canManageGarden, getUserGardenRole } from "@/lib/gardens/roles";
 import { createNotification } from "@/lib/notifications/send";
 import { suggestAssignee } from "@/lib/planning/fairness";
+import { assertCleanOptionalText, assertCleanText } from "@/lib/moderation/content";
 import { createClient } from "@/lib/supabase/server";
 import { calculateScores, getTasks } from "@/lib/tasks/queries";
 
@@ -34,6 +35,9 @@ export async function createTaskAction(formData: FormData) {
   if (!gardenId || !title || !Number.isInteger(points) || points < 1 || points > 5) {
     throw new Error("Bitte Titel, Garten und Punkte korrekt ausfuellen.");
   }
+
+  assertCleanText(title, "Aufgabentitel");
+  assertCleanOptionalText(description, "Aufgabenbeschreibung");
 
   if (!assignedTo) {
     const [members, tasks, availability] = await Promise.all([
@@ -178,6 +182,8 @@ export async function requestTakeoverAction(formData: FormData) {
     throw new Error("Aufgabe fehlt.");
   }
 
+  assertCleanOptionalText(note, "Begruendung");
+
   const { error } = await supabase.from("task_takeover_requests").insert({
     task_id: taskId,
     garden_id: gardenId,
@@ -292,6 +298,8 @@ export async function reopenTaskAction(formData: FormData) {
     throw new Error("Aufgabe fehlt.");
   }
 
+  assertCleanText(note, "Grund");
+
   const role = await getUserGardenRole(supabase, gardenId, user.id);
 
   if (!canManageGarden(role)) {
@@ -386,6 +394,9 @@ export async function createCompletedTaskAction(formData: FormData) {
   if (!gardenId || !title || !completedBy || !completedOn || !Number.isInteger(points) || points < 1 || points > 5) {
     throw new Error("Nachtrag ist ungueltig.");
   }
+
+  assertCleanText(title, "Aufgabentitel");
+  assertCleanText(description, "Aufgabenbeschreibung");
 
   const role = await getUserGardenRole(supabase, gardenId, user.id);
 

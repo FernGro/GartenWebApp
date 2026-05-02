@@ -13,9 +13,9 @@ Server Components laden Daten direkt ueber den Supabase Server Client. Schreibop
 
 ## MVP-Grenzen
 
-Gebaut sind Login, Garten-Onboarding, Aufgabenliste, Aufgabe erstellen, Aufgabe erledigen, Dashboard, Punkteuebersicht, Mitglieder-Invites, Abwesenheiten, Kommentare, Task Events, Notifications und saisonale Task-Erzeugung aus Templates.
+Gebaut sind Login, Garten-Onboarding, Aufgabenliste, Aufgabe erstellen, Aufgabe erledigen, Dashboard, Punkteuebersicht, Mitglieder-Invites, Abwesenheiten, Kommentare, Task Events, Notifications und saisonale Task-Erzeugung aus Templates. Das Dashboard zeigt Punkte klassisch als Tabelle/Diagramm und zusaetzlich als Rasenmaeher-Rennen mit Podest.
 
-Nicht gebaut sind WhatsApp, Service Worker und Push. Diese Bereiche sind dokumentiert und datenmodellseitig vorbereitet, werden aber nicht halb integriert.
+Nicht gebaut sind WhatsApp, Service Worker, Push und Foto-Nachweise. Diese Bereiche sind dokumentiert und datenmodellseitig vorbereitet, werden aber nicht halb integriert. Foto-Nachweise bleiben bewusst draussen, weil sie fuer den aktuellen Haushalt keinen Mehrwert bringen und spaeter Speicher-/Datenschutzfragen oeffnen wuerden.
 
 ## Update-Strategie
 
@@ -30,6 +30,17 @@ App-Code kann jederzeit ueber GitHub/Vercel aktualisiert werden. Persistente Dat
 Aufgaben duerfen nur von der zugewiesenen Person als erledigt markiert werden. Andere Mitglieder koennen eine Uebernahme anfragen. Die aktuelle Zuweisung oder Owner/Admins koennen diese Uebernahme bestaetigen. Erledigungen sind nur im Zeitfenster von sieben Tagen vor bis sieben Tagen nach Faelligkeit erlaubt.
 
 Owner/Admins koennen falsch erledigte Aufgaben wieder oeffnen. Der zentrale Log unter `/log` dokumentiert die Aktionen.
+
+Aufgaben, Uebernahmegruende und Kommentare laufen serverseitig durch eine einfache Inhaltspruefung unter `src/lib/moderation/content.ts`. Das ist kein vollwertiges Moderationssystem, verhindert aber offensichtliche unsachliche Eintraege ohne externe Dienste.
+
+## UI
+
+Die UI bleibt mobile-first und leichtgewichtig. Wiederkehrende Visuals werden ohne zusaetzliche Icon- oder Animationsbibliothek gebaut:
+
+- Task-Icons als lokale SVG-Komponenten
+- Rasenmaeher-Ladeanimation in `src/app/loading.tsx`
+- Punkte-/Fairness-Rennen in `src/components/dashboard/score-race.tsx`
+- reduzierbare Animationen via `prefers-reduced-motion`
 
 ## Benachrichtigungen
 

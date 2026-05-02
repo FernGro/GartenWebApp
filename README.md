@@ -9,12 +9,15 @@ MVP fuer eine Garten-Dienstplan-Web-App mit Next.js App Router, TypeScript, Tail
 - Aufgaben anlegen, zuweisen und als erledigt markieren
 - Punkteuebersicht aus erledigten Aufgaben, ohne gespeicherte Gesamtsummen
 - Fairness-Vorschlag nach niedrigsten Punkten und aeltestem letztem Dienst
+- Rasenmaeher-Rennen mit Podest als visuelle Fairness-/Punkteanzeige
 - Task-Icons fuer typische Gartenarbeiten
 - Kommentare und Event-Verlauf auf der Task-Detailseite
 - Abwesenheiten/Beschaeftigt-Zeiten mit Kalenderuebersicht
 - Mitgliederverwaltung mit Invite-Links
 - Lesbare In-App Notifications
 - Saisonaufgaben aus Templates erzeugen
+- einfache Inhaltspruefung fuer Aufgaben, Uebernahmegruende und Kommentare
+- Rasenmaeher-Ladeanimation bei Seitenwechseln
 - Installationshinweise fuer Handy/Startbildschirm unter `/install`
 - Row Level Security fuer Garten-Mitgliedschaft
 
@@ -33,7 +36,7 @@ supabase db push
 supabase db reset
 ```
 
-Alternativ kann `supabase/migrations/001_initial_schema.sql` im Supabase SQL Editor ausgefuehrt werden. Danach optional `supabase/seed.sql` fuer Standardvorlagen ausfuehren.
+Alternativ koennen alle Dateien aus `supabase/migrations/` der Reihenfolge nach im Supabase SQL Editor ausgefuehrt werden. Danach optional `supabase/seed.sql` fuer Standardvorlagen ausfuehren.
 
 3. `.env.local` anlegen:
 
@@ -114,6 +117,8 @@ Die Daten gehen bei App-Updates nicht verloren, solange sie in Supabase bleiben 
 - Garten-Daten sind an aktive Mitgliedschaft gebunden.
 - Invite-Annahme laeuft ueber eine serverseitige RPC-Funktion, nicht ueber oeffentliche Schreibrechte.
 - Punkte werden aus erledigten Aufgaben berechnet, nicht als manipulierbarer Kontostand gespeichert.
+- Owner/Admins koennen geloeschte Aufgaben im Log nachvollziehen.
+- Unpassende Texte werden serverseitig bei Aufgaben und Kommentaren geblockt.
 
 Vor Produktivbetrieb sinnvoll:
 

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth/session";
+import { assertCleanText } from "@/lib/moderation/content";
 import { createClient } from "@/lib/supabase/server";
 
 function readString(formData: FormData, key: string) {
@@ -24,6 +25,8 @@ export async function addTaskCommentAction(formData: FormData) {
   if (!taskId || !gardenId || !comment) {
     throw new Error("Kommentar darf nicht leer sein.");
   }
+
+  assertCleanText(comment, "Kommentar");
 
   const { error } = await supabase.from("task_comments").insert({
     task_id: taskId,
