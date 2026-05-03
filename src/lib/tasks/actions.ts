@@ -554,6 +554,88 @@ export async function restoreTaskAction(formData: FormData) {
   revalidatePath(`/tasks/${taskId}`);
 }
 
+export async function lockTaskAssignmentAction(formData: FormData) {
+  const user = await requireUser();
+  const supabase = await createClient();
+
+  if (!supabase) {
+    throw new Error("Supabase ist nicht konfiguriert.");
+  }
+
+  const taskId = readString(formData, "task_id");
+  const gardenId = readString(formData, "garden_id");
+
+  if (!taskId || !gardenId) {
+    throw new Error("Aufgabe fehlt.");
+  }
+
+  const { error } = await supabase
+    .from("tasks")
+    .update({ assignment_locked: true, locked_by: user.id, locked_at: new Date().toISOString() })
+    .eq("id", taskId)
+    .eq("garden_id", gardenId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  await supabase.from("task_events").insert({
+    task_id: taskId,
+    garden_id: gardenId,
+    actor_id: user.id,
+    event_type: "accepted",
+    note: "Zuweisung fixiert",
+  });
+
+  revalidatePath("/tasks");
+  revalidatePath("/forecast");
+  revalidatePath(`/tasks/${taskId}`);
+}
+
+export async function unlockTaskAssignmentAction(formData: FormData) {
+  const user = await requireUser();
+  const supabase = await createClient();
+
+  if (!supabase) {
+    throw new Error("Supabase ist nicht konfiguriert.");
+  }
+
+  const taskId = readString(formData, "task_id");
+  const gardenId = readString(formData, "garden_id");
+
+  if (!taskId || !gardenId) {
+    throw new Error("Aufgabe fehlt.");
+  }
+
+  const role = await getUserGardenRole(supabase, gardenId, user.id);
+
+  if (!canManageGarden(role)) {
+    throw new Error("Nur Owner/Admin duerfen Fixierungen loesen.");
+  }
+
+  const { error } = await supabase
+    .from("tasks")
+    .update({ assignment_locked: false, locked_by: null, locked_at: null })
+    .eq("id", taskId)
+    .eq("garden_id", gardenId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  await supabase.from("task_events").insert({
+    task_id: taskId,
+    garden_id: gardenId,
+    actor_id: user.id,
+    event_type: "reopened",
+    note: "Zuweisung wieder freigegeben",
+  });
+
+  revalidatePath("/tasks");
+  revalidatePath("/forecast");
+  revalidatePath(`/tasks/${taskId}`);
+}
+
 export async function createCompletedTaskAction(formData: FormData) {
   const user = await requireUser();
   const supabase = await createClient();

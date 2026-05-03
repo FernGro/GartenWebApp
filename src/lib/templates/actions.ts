@@ -4,28 +4,14 @@ import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth/session";
 import { getAvailability } from "@/lib/availability/queries";
 import { getGardenMembers } from "@/lib/gardens/queries";
+import { addDays, getCadenceRule } from "@/lib/planning/cadence";
 import { isTemplateInSeason, suggestAssignee } from "@/lib/planning/fairness";
 import { createClient } from "@/lib/supabase/server";
 import { calculateScores, getTaskTemplates, getTasks } from "@/lib/tasks/queries";
-import type { RecurrenceType } from "@/types/domain";
 
 function readString(formData: FormData, key: string) {
   const value = formData.get(key);
   return typeof value === "string" ? value.trim() : "";
-}
-
-function addInterval(date: Date, recurrenceType: RecurrenceType, interval: number) {
-  const next = new Date(date);
-
-  if (recurrenceType === "weekly") {
-    next.setDate(next.getDate() + interval * 7);
-  } else if (recurrenceType === "monthly" || recurrenceType === "seasonal") {
-    next.setMonth(next.getMonth() + interval);
-  } else {
-    next.setDate(next.getDate() + 14);
-  }
-
-  return next;
 }
 
 function toIsoDate(date: Date) {
@@ -60,7 +46,8 @@ export async function generateSeasonalTasksAction(formData: FormData) {
     .filter((template) => template.recurrence_type !== "none" && template.recurrence_type !== "on_demand")
     .filter((template) => isTemplateInSeason(month, template.season_start_month, template.season_end_month))
     .map((template) => {
-      const dueDate = toIsoDate(addInterval(now, template.recurrence_type, template.recurrence_interval));
+      const cadence = getCadenceRule(template);
+      const dueDate = toIsoDate(addDays(now, cadence.intervalDays));
       const assignee = suggestAssignee(scores, dueDate, availability);
 
       return {

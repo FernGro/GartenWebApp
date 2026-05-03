@@ -9,9 +9,9 @@ insert into public.task_templates (
   is_weather_dependent,
   is_active
 ) values
-  ('Rasenmaehen', 4, 60, 4, 9, 'weekly', 2, true, true),
-  ('Hecke schneiden', 5, 90, 3, 10, 'seasonal', 1, true, true),
-  ('Unkraut jaeten', 2, 30, 4, 9, 'monthly', 1, true, true),
+  ('Rasenmaehen mit Mulcher', 4, 60, 4, 10, 'weekly', 3, true, true),
+  ('Hecke schneiden', 5, 90, 5, 10, 'seasonal', 4, true, true),
+  ('Unkraut jaeten', 2, 30, 4, 9, 'monthly', 2, true, true),
   ('Blaetter entfernen', 2, 30, 10, 11, 'monthly', 1, true, true),
   ('Schneeschaufeln', 2, 25, 12, 2, 'on_demand', 1, true, true),
   ('Sonstiges klein', 1, 15, 1, 12, 'none', 1, false, true),

@@ -15,6 +15,20 @@ Die Implementierung speichert keine Ranking-Ergebnisse in der Datenbank. Sie ber
 
 Die Task-Erstellung nutzt diesen Algorithmus serverseitig, wenn keine Person manuell gewaehlt wurde. Dadurch werden Abwesenheiten auch dann beruecksichtigt, wenn ein Client manipuliert oder veraltet ist.
 
+## Garten-Kadenz
+
+Der Forecast nutzt zusaetzlich `src/lib/planning/cadence.ts`. Diese Schicht verhindert unsinnige Wiederholungen wie zweimal Unkraut jaeten innerhalb weniger Tage.
+
+Aktuelle MVP-Regeln:
+
+- Rasenmaehen mit Mulcher: alle 21 Tage, Mindestabstand 14 Tage, April bis Oktober.
+- Unkraut jaeten: alle 60 Tage, Mindestabstand 45 Tage, April bis September.
+- Blaetter entfernen: monatlich im Herbst.
+- Hecke schneiden: wenige gezielte Termine mit grossem Abstand.
+- Schnee bleibt `on_demand` und wird nicht automatisch geplant.
+
+Die Regeln ueberschreiben alte zu enge Template-Intervalle im Forecast, in der saisonalen Generierung und im Cron Job.
+
 ## Saisonlogik
 
 `isTemplateInSeason` unterstuetzt normale Saisonbereiche und Bereiche ueber den Jahreswechsel, z. B. Dezember bis Februar.
@@ -36,6 +50,8 @@ Die Seite `/forecast` zeigt eine unverbindliche Vorschau fuer die naechsten drei
 Forecast-Eintraege sind noch keine verbindlichen Aufgaben. Verbindlich werden sie erst, wenn Aufgaben erzeugt oder uebernommen werden.
 
 Aufgaben mit Status `pending_review` zaehlen noch nicht als erledigt. Sie beeinflussen Punktestand, Abrechnung und Fairness erst nach Owner/Admin-Bestaetigung als `done`.
+
+Forecast-Eintraege koennen jetzt eingeloggt werden. Dadurch entsteht eine echte Aufgabe mit `assignment_locked = true`. Fixierte Aufgaben werden bei `Fair neu zuweisen` nicht ueberschrieben.
 
 ## Visualisierung
 

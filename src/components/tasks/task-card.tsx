@@ -4,9 +4,11 @@ import {
   completeTaskAction,
   deleteTaskAction,
   rejectCompletionAction,
+  lockTaskAssignmentAction,
   requestTakeoverAction,
   reopenTaskAction,
   restoreTaskAction,
+  unlockTaskAssignmentAction,
 } from "@/lib/tasks/actions";
 import { formatDate } from "@/lib/format/date";
 import { daysUntilCompletionWindow, getCompletionWindow, isWithinCompletionWindow } from "@/lib/tasks/completion-window";
@@ -45,6 +47,7 @@ export function TaskCard({
               <span className="rounded-full bg-[#eef4e8] px-2 py-1">{task.points} Punkte</span>
               {task.due_date ? <span className="rounded-full bg-[#f4efe1] px-2 py-1">Faellig {formatDate(task.due_date)}</span> : null}
               {task.assigned_profile ? <span className="rounded-full bg-[#edf1e8] px-2 py-1">{task.assigned_profile.display_name}</span> : null}
+              {task.assignment_locked ? <span className="rounded-full bg-[#dff5e7] px-2 py-1 text-[#17653a]">fixiert</span> : null}
             </div>
           </div>
         </div>
@@ -101,6 +104,20 @@ export function TaskCard({
           <Button variant="secondary" type="submit">
             Uebernahme anfragen
           </Button>
+        </form>
+      ) : null}
+      {currentUserId === task.assigned_to && !task.assignment_locked && ["open", "assigned", "overdue", "postponed"].includes(task.status) ? (
+        <form action={lockTaskAssignmentAction} className="mt-3">
+          <input name="task_id" type="hidden" value={task.id} />
+          <input name="garden_id" type="hidden" value={task.garden_id} />
+          <Button variant="secondary" type="submit">Diesen Dienst fest einloggen</Button>
+        </form>
+      ) : null}
+      {canManage && task.assignment_locked ? (
+        <form action={unlockTaskAssignmentAction} className="mt-3">
+          <input name="task_id" type="hidden" value={task.id} />
+          <input name="garden_id" type="hidden" value={task.garden_id} />
+          <Button variant="ghost" type="submit">Fixierung loesen</Button>
         </form>
       ) : null}
       {task.status === "done" && canManage ? (

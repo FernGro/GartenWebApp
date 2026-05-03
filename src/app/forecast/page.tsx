@@ -5,6 +5,8 @@ import { applyPointAdjustments } from "@/lib/adjustments/scores";
 import { getAvailability } from "@/lib/availability/queries";
 import { formatDate } from "@/lib/format/date";
 import { getCurrentGarden, getGardenMembers } from "@/lib/gardens/queries";
+import { canManageGarden, getUserGardenRole } from "@/lib/gardens/roles";
+import { lockForecastTaskAction } from "@/lib/planning/actions";
 import { buildThreeMonthForecast } from "@/lib/planning/forecast";
 import { createClient } from "@/lib/supabase/server";
 import { calculateScores, getTaskTemplates, getTasks } from "@/lib/tasks/queries";
@@ -30,8 +32,11 @@ export default async function ForecastPage() {
     getAvailability(supabase, garden.id),
     getMemberAdjustments(supabase, garden.id),
   ]);
+  const user = (await supabase.auth.getUser()).data.user;
+  const role = user ? await getUserGardenRole(supabase, garden.id, user.id) : null;
+  const canManage = canManageGarden(role);
   const scores = applyPointAdjustments(calculateScores(tasks, members), adjustments);
-  const forecast = buildThreeMonthForecast(templates, scores, availability);
+  const forecast = buildThreeMonthForecast(templates, scores, availability, tasks);
 
   return (
     <AppShell>
@@ -44,11 +49,31 @@ export default async function ForecastPage() {
       </div>
       <div className="overflow-hidden rounded-lg border border-[#d7dfcf] bg-[#fffef9] shadow-sm shadow-[#4a5d3f]/5">
         {forecast.map((row) => (
-          <div className="grid gap-2 border-b border-[#e5ecdc] p-4 text-sm sm:grid-cols-[140px_1fr_160px_auto]" key={`${row.sourceTemplateId}-${row.dueDate}`}>
+          <div className="grid gap-2 border-b border-[#e5ecdc] p-4 text-sm lg:grid-cols-[120px_1fr_180px_120px_160px]" key={`${row.sourceTemplateId}-${row.dueDate}`}>
             <div className="font-semibold">{formatDate(row.dueDate)}</div>
-            <div className="font-bold">{row.title}</div>
+            <div>
+              <div className="font-bold">{row.title}</div>
+              <div className="mt-1 text-xs text-[#6d7669]">{row.cadenceLabel} · {row.reason}</div>
+            </div>
             <div className="text-[#42513d]">{row.suggestedName}</div>
             <div className="font-semibold text-[#2f6b3f]">{row.points} Punkte</div>
+            {row.suggestedUserId ? (
+              <form action={lockForecastTaskAction}>
+                <input name="garden_id" type="hidden" value={garden.id} />
+                <input name="template_id" type="hidden" value={row.sourceTemplateId} />
+                <input name="title" type="hidden" value={row.title} />
+                <input name="due_date" type="hidden" value={row.dueDate} />
+                <input name="assigned_to" type="hidden" value={row.suggestedUserId} />
+                <input name="points" type="hidden" value={row.points} />
+                <button
+                  className="min-h-10 rounded-lg bg-[#2f6b3f] px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                  disabled={row.suggestedUserId !== user?.id && !canManage}
+                  type="submit"
+                >
+                  Einloggen
+                </button>
+              </form>
+            ) : null}
           </div>
         ))}
         {forecast.length === 0 ? <div className="p-4"><EmptyState title="Kein Forecast">Keine saisonalen wiederkehrenden Vorlagen fuer die naechsten drei Monate.</EmptyState></div> : null}

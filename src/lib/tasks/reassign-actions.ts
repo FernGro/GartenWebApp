@@ -44,12 +44,22 @@ export async function reassignOpenTasksAction(formData: FormData) {
     getMemberAdjustments(supabase, gardenId),
   ]);
   const mutableScores = applyPointAdjustments(calculateScores(tasks, members), adjustments);
+  const plannedCounts = new Map<string, number>();
+  let previousAssignee: string | null = null;
   const candidates = tasks
-    .filter((task) => task.status === "open" || task.status === "assigned" || task.status === "overdue")
+    .filter((task) => !task.assignment_locked && (task.status === "open" || task.status === "assigned" || task.status === "overdue"))
     .sort((a, b) => (a.due_date ?? "9999-12-31").localeCompare(b.due_date ?? "9999-12-31"));
 
   for (const task of candidates) {
-    const suggestion = suggestAssignee(mutableScores, task.due_date, availability);
+    const ranked = [...mutableScores]
+      .map((score) => ({ ...score, plannedCount: plannedCounts.get(score.userId) ?? 0 }))
+      .sort((a, b) => a.points - b.points || a.plannedCount - b.plannedCount || (a.lastCompletedAt ?? "").localeCompare(b.lastCompletedAt ?? ""));
+    const preferred = ranked.length > 1
+      ? ranked.find((score) => score.userId !== previousAssignee)
+      : ranked[0];
+    const suggestion = preferred && !availability.some((entry) => entry.user_id === preferred.userId && task.due_date && entry.from_date <= task.due_date && entry.to_date >= task.due_date)
+      ? preferred
+      : suggestAssignee(mutableScores, task.due_date, availability);
 
     if (!suggestion || suggestion.userId === task.assigned_to) {
       continue;
@@ -89,8 +99,10 @@ export async function reassignOpenTasksAction(formData: FormData) {
     const score = mutableScores.find((row) => row.userId === suggestion.userId);
     if (score) {
       score.points += task.points;
-      score.lastCompletedAt = score.lastCompletedAt ?? task.due_date;
+      score.lastCompletedAt = task.due_date ?? new Date().toISOString().slice(0, 10);
     }
+    plannedCounts.set(suggestion.userId, (plannedCounts.get(suggestion.userId) ?? 0) + 1);
+    previousAssignee = suggestion.userId;
   }
 
   revalidatePath("/tasks");

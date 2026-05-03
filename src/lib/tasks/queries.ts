@@ -9,7 +9,7 @@ export async function getTasks(
   const { data, error } = await supabase
     .from("tasks")
     .select(
-      "id,garden_id,template_id,title,description,points,status,due_date,assigned_to,original_assignee,completed_by,completed_at,created_by,created_at,updated_at,assigned_profile:profiles!tasks_assigned_to_fkey(id,display_name),completed_profile:profiles!tasks_completed_by_fkey(id,display_name)",
+      "id,garden_id,template_id,title,description,points,status,due_date,assigned_to,original_assignee,completed_by,completed_at,created_by,assignment_locked,locked_by,locked_at,created_at,updated_at,assigned_profile:profiles!tasks_assigned_to_fkey(id,display_name),completed_profile:profiles!tasks_completed_by_fkey(id,display_name)",
     )
     .eq("garden_id", gardenId)
     .order("due_date", { ascending: true, nullsFirst: false })
@@ -38,7 +38,7 @@ export async function getTask(
   const { data, error } = await supabase
     .from("tasks")
     .select(
-      "id,garden_id,template_id,title,description,points,status,due_date,assigned_to,original_assignee,completed_by,completed_at,created_by,created_at,updated_at,assigned_profile:profiles!tasks_assigned_to_fkey(id,display_name),completed_profile:profiles!tasks_completed_by_fkey(id,display_name)",
+      "id,garden_id,template_id,title,description,points,status,due_date,assigned_to,original_assignee,completed_by,completed_at,created_by,assignment_locked,locked_by,locked_at,created_at,updated_at,assigned_profile:profiles!tasks_assigned_to_fkey(id,display_name),completed_profile:profiles!tasks_completed_by_fkey(id,display_name)",
     )
     .eq("id", taskId)
     .maybeSingle();

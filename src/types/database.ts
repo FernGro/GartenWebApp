@@ -85,6 +85,9 @@ export type Database = {
           completed_by: string | null;
           completed_at: string | null;
           created_by: string | null;
+          assignment_locked: boolean;
+          locked_by: string | null;
+          locked_at: string | null;
           created_at: string;
           updated_at: string;
         };

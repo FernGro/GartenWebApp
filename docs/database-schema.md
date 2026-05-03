@@ -67,3 +67,8 @@ Das erste Garten-Onboarding erfolgt ueber `public.create_garden_with_owner(name)
 
 - `web_push_subscriptions`: Browser Push Subscriptions pro User/Garten/Geraet.
 - RLS erlaubt jedem Mitglied nur eigene Push Subscriptions im eigenen Garten.
+
+`012_locked_task_assignments.sql` ergaenzt:
+
+- `tasks.assignment_locked`: fixierte Zuweisungen bleiben bei Neuplanung erhalten.
+- `tasks.locked_by` und `tasks.locked_at`: wer einen Dienst eingeloggt hat und wann.
