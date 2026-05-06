@@ -81,7 +81,18 @@ export async function getTaskTemplates(
     return [];
   }
 
-  return data ?? [];
+  const byTitle = new Map<string, TaskTemplate>();
+
+  for (const template of data ?? []) {
+    const key = template.title.toLowerCase().trim();
+    const existing = byTitle.get(key);
+
+    if (!existing || (!existing.garden_id && template.garden_id === gardenId)) {
+      byTitle.set(key, template);
+    }
+  }
+
+  return [...byTitle.values()].sort((a, b) => a.title.localeCompare(b.title));
 }
 
 export function calculateScores(tasks: Task[], members: { user_id: string; profiles?: { display_name: string } | null }[]): ScoreRow[] {

@@ -105,10 +105,24 @@ export default async function TemplatesPage() {
                 </p>
               </div>
             </div>
-            {garden && canManage && template.garden_id === garden.id ? (
+            {garden && canManage ? (
               <form action={updateTaskTemplateScheduleAction} className="mt-4 grid gap-3 border-t border-[#e5ecdc] pt-4 sm:grid-cols-3">
                 <input name="garden_id" type="hidden" value={garden.id} />
                 <input name="template_id" type="hidden" value={template.id} />
+                <label className="text-sm font-semibold">
+                  Titel
+                  <input className="mt-1 w-full rounded-lg border border-[#cbd8c1] px-3 py-2" name="title" defaultValue={template.title} />
+                </label>
+                <label className="text-sm font-semibold">
+                  Minuten
+                  <input className="mt-1 w-full rounded-lg border border-[#cbd8c1] px-3 py-2" name="estimated_minutes" type="number" defaultValue={template.estimated_minutes} min="1" />
+                </label>
+                <label className="text-sm font-semibold">
+                  Punkte
+                  <select className="mt-1 w-full rounded-lg border border-[#cbd8c1] bg-white px-3 py-2" name="default_points" defaultValue={template.default_points}>
+                    {[1, 2, 3, 4, 5].map((point) => <option key={point} value={point}>{point}</option>)}
+                  </select>
+                </label>
                 <label className="text-sm font-semibold">
                   alle x Tage
                   <input className="mt-1 w-full rounded-lg border border-[#cbd8c1] px-3 py-2" name="custom_interval_days" type="number" defaultValue={template.custom_interval_days ?? getCadenceRule(template).intervalDays} min="1" />
@@ -128,10 +142,16 @@ export default async function TemplatesPage() {
                   </div>
                 </label>
                 <label className="flex items-center gap-2 text-sm font-semibold">
+                  <input name="is_weather_dependent" type="checkbox" defaultChecked={template.is_weather_dependent} />
+                  wetterabhaengig
+                </label>
+                <label className="flex items-center gap-2 text-sm font-semibold">
                   <input name="is_active" type="checkbox" defaultChecked={template.is_active} />
                   aktiv
                 </label>
-                <Button className="sm:col-span-2" variant="secondary" type="submit">Zeitplan speichern</Button>
+                <Button className="sm:col-span-2" variant="secondary" type="submit">
+                  {template.garden_id === garden.id ? "Vorlage speichern" : "Als Garten-Anpassung speichern"}
+                </Button>
               </form>
             ) : null}
           </article>

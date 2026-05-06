@@ -199,27 +199,83 @@ export async function updateTaskTemplateScheduleAction(formData: FormData) {
 
   const gardenId = readString(formData, "garden_id");
   const templateId = readString(formData, "template_id");
+  const title = readString(formData, "title");
+  const defaultPoints = readNumber(formData, "default_points");
+  const estimatedMinutes = readNumber(formData, "estimated_minutes");
   const customIntervalDays = readNumber(formData, "custom_interval_days");
   const seasonStartMonth = readNumber(formData, "season_start_month");
   const seasonStartDay = readNumber(formData, "season_start_day");
   const seasonEndMonth = readNumber(formData, "season_end_month");
   const seasonEndDay = readNumber(formData, "season_end_day");
+  const isWeatherDependent = formData.get("is_weather_dependent") === "on";
   const isActive = formData.get("is_active") === "on";
 
-  if (!gardenId || !templateId || !customIntervalDays || !seasonStartMonth || !seasonStartDay || !seasonEndMonth || !seasonEndDay) {
+  if (
+    !gardenId ||
+    !templateId ||
+    !title ||
+    !defaultPoints ||
+    !estimatedMinutes ||
+    !customIntervalDays ||
+    !seasonStartMonth ||
+    !seasonStartDay ||
+    !seasonEndMonth ||
+    !seasonEndDay
+  ) {
     throw new Error("Vorlagen-Zeitplan ist unvollstaendig.");
   }
 
   await assertCanManage(gardenId, user.id);
 
+  const { data: template, error: readError } = await supabase
+    .from("task_templates")
+    .select("id,garden_id,title,recurrence_type,recurrence_interval")
+    .eq("id", templateId)
+    .maybeSingle();
+
+  if (readError || !template) {
+    throw new Error(readError?.message ?? "Vorlage wurde nicht gefunden.");
+  }
+
+  if (!template.garden_id) {
+    const { error } = await supabase.from("task_templates").insert({
+      garden_id: gardenId,
+      title,
+      default_points: defaultPoints,
+      estimated_minutes: estimatedMinutes,
+      season_start_month: seasonStartMonth,
+      season_start_day: seasonStartDay,
+      season_end_month: seasonEndMonth,
+      season_end_day: seasonEndDay,
+      recurrence_type: template.recurrence_type,
+      recurrence_interval: template.recurrence_interval,
+      custom_interval_days: customIntervalDays,
+      is_weather_dependent: isWeatherDependent,
+      is_active: isActive,
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    revalidatePath("/templates");
+    revalidatePath("/forecast");
+    revalidatePath("/calendar");
+    return;
+  }
+
   const { error } = await supabase
     .from("task_templates")
     .update({
+      title,
+      default_points: defaultPoints,
+      estimated_minutes: estimatedMinutes,
       custom_interval_days: customIntervalDays,
       season_start_month: seasonStartMonth,
       season_start_day: seasonStartDay,
       season_end_month: seasonEndMonth,
       season_end_day: seasonEndDay,
+      is_weather_dependent: isWeatherDependent,
       is_active: isActive,
     })
     .eq("id", templateId)
