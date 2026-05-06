@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { formatDate } from "@/lib/format/date";
+import type { ForecastTask } from "@/lib/planning/forecast";
 import type { AvailabilityWindow, TaskWithPeople } from "@/types/domain";
 
 function monthDays(year: number, month: number) {
@@ -19,13 +20,19 @@ function dayAvailability(day: string, entries: AvailabilityWindow[]) {
   return entries.filter((entry) => entry.from_date <= day && entry.to_date >= day);
 }
 
+function dayForecast(day: string, forecast: ForecastTask[]) {
+  return forecast.filter((entry) => entry.kind === "suggestion" && entry.dueDate === day);
+}
+
 export function GardenCalendar({
   tasks,
+  forecast = [],
   availability,
   year,
   month,
 }: {
   tasks: TaskWithPeople[];
+  forecast?: ForecastTask[];
   availability: AvailabilityWindow[];
   year: number;
   month: number;
@@ -58,6 +65,7 @@ export function GardenCalendar({
       <div className="grid gap-px bg-[#d7dfcf] sm:grid-cols-7">
         {days.map((day) => {
           const tasksForDay = dayTasks(day, tasks);
+          const forecastForDay = dayForecast(day, forecast);
           const blocked = dayAvailability(day, availability);
 
           return (
@@ -77,6 +85,11 @@ export function GardenCalendar({
                   </Link>
                 ))}
                 {tasksForDay.length > 3 ? <div className="text-xs text-[#6d7669]">+{tasksForDay.length - 3} weitere</div> : null}
+                {forecastForDay.slice(0, 2).map((entry) => (
+                  <div className="rounded-md border border-dashed border-[#8fb36b] bg-[#f8faf3] px-2 py-1 text-xs font-semibold text-[#405039]" key={`${entry.sourceTemplateId}-${entry.dueDate}`}>
+                    Forecast: {entry.title}
+                  </div>
+                ))}
                 {blocked.slice(0, 2).map((entry) => (
                   <div className="rounded-md bg-[#fff0d9] px-2 py-1 text-xs font-semibold text-[#915b10]" key={entry.id ?? `${entry.user_id}-${entry.from_date}`}>
                     {entry.profiles?.display_name ?? "Mitglied"} weg

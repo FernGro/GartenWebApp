@@ -46,6 +46,19 @@ export async function reassignOpenTasksAction(formData: FormData) {
   const mutableScores = applyPointAdjustments(calculateScores(tasks, members), adjustments);
   const plannedCounts = new Map<string, number>();
   let previousAssignee: string | null = null;
+  const fixedUpcoming = tasks
+    .filter((task) => task.assignment_locked && task.assigned_to && task.status !== "done" && task.status !== "cancelled")
+    .sort((a, b) => (a.due_date ?? "9999-12-31").localeCompare(b.due_date ?? "9999-12-31"));
+
+  for (const task of fixedUpcoming) {
+    const score = mutableScores.find((row) => row.userId === task.assigned_to);
+    if (score) {
+      score.points += task.points;
+      score.lastCompletedAt = task.due_date ?? score.lastCompletedAt;
+    }
+    plannedCounts.set(task.assigned_to as string, (plannedCounts.get(task.assigned_to as string) ?? 0) + 1);
+  }
+
   const candidates = tasks
     .filter((task) => !task.assignment_locked && (task.status === "open" || task.status === "assigned" || task.status === "overdue"))
     .sort((a, b) => (a.due_date ?? "9999-12-31").localeCompare(b.due_date ?? "9999-12-31"));
@@ -61,7 +74,19 @@ export async function reassignOpenTasksAction(formData: FormData) {
       ? preferred
       : suggestAssignee(mutableScores, task.due_date, availability);
 
-    if (!suggestion || suggestion.userId === task.assigned_to) {
+    if (!suggestion) {
+      continue;
+    }
+
+    const score = mutableScores.find((row) => row.userId === suggestion.userId);
+    if (score) {
+      score.points += task.points;
+      score.lastCompletedAt = task.due_date ?? new Date().toISOString().slice(0, 10);
+    }
+    plannedCounts.set(suggestion.userId, (plannedCounts.get(suggestion.userId) ?? 0) + 1);
+    previousAssignee = suggestion.userId;
+
+    if (suggestion.userId === task.assigned_to) {
       continue;
     }
 
@@ -96,13 +121,6 @@ export async function reassignOpenTasksAction(formData: FormData) {
       relatedTaskId: task.id,
     });
 
-    const score = mutableScores.find((row) => row.userId === suggestion.userId);
-    if (score) {
-      score.points += task.points;
-      score.lastCompletedAt = task.due_date ?? new Date().toISOString().slice(0, 10);
-    }
-    plannedCounts.set(suggestion.userId, (plannedCounts.get(suggestion.userId) ?? 0) + 1);
-    previousAssignee = suggestion.userId;
   }
 
   revalidatePath("/tasks");

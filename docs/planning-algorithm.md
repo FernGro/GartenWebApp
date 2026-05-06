@@ -55,6 +55,10 @@ Aufgaben mit Status `pending_review` zaehlen noch nicht als erledigt. Sie beeinf
 
 Forecast-Eintraege koennen jetzt eingeloggt werden. Dadurch entsteht eine echte Aufgabe mit `assignment_locked = true`. Fixierte Aufgaben werden bei `Fair neu zuweisen` nicht ueberschrieben.
 
+Forecast und Kalender verwenden dieselbe Planungsfunktion. Der Forecast zeigt echte Aufgaben und virtuelle Vorschlaege gemeinsam; der Kalender zeigt echte Aufgaben normal und virtuelle Forecast-Eintraege gestrichelt. Damit erklaert der Kalender, warum ein Vorschlag im Forecast existiert, ohne dass virtuelle Vorschlaege schon als echte Aufgaben gespeichert werden.
+
+`Fair neu zuweisen` loescht keine Aufgaben und erzeugt keine neuen Aufgaben. Es aendert nur `assigned_to` bei offenen, nicht fixierten Aufgaben. Fixierte Aufgaben und bereits vorhandene manuelle Aufgaben werden als Planungslast eingerechnet, damit neue Vorschlaege fairer verteilt werden.
+
 ## Visualisierung
 
 Das Dashboard zeigt Punkte nicht nur tabellarisch, sondern auch als Rasenmaeher-Rennen. Wichtig: Diese Visualisierung ist rein lesend. Sie veraendert keine Planung und speichert keine zusaetzlichen Punktestaende. Die faire Zuweisung bleibt weiterhin an den Algorithmus gebunden, der niedrigere Punktestaende bevorzugt.

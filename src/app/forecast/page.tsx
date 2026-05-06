@@ -57,10 +57,14 @@ export default async function ForecastPage() {
             </div>
             <div className="text-[#42513d]">{row.suggestedName}</div>
             <div className="font-semibold text-[#2f6b3f]">{row.points} Punkte</div>
-            {row.suggestedUserId ? (
+            {row.kind === "actual" && row.taskId ? (
+              <a className="text-sm font-semibold text-[#2f6b3f] underline" href={`/tasks/${row.taskId}`}>
+                Aufgabe
+              </a>
+            ) : row.suggestedUserId ? (
               <form action={lockForecastTaskAction}>
                 <input name="garden_id" type="hidden" value={garden.id} />
-                <input name="template_id" type="hidden" value={row.sourceTemplateId} />
+                <input name="template_id" type="hidden" value={row.sourceTemplateId ?? ""} />
                 <input name="title" type="hidden" value={row.title} />
                 <input name="due_date" type="hidden" value={row.dueDate} />
                 <input name="assigned_to" type="hidden" value={row.suggestedUserId} />
