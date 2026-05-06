@@ -29,6 +29,8 @@ Aktuelle MVP-Regeln:
 
 Die Regeln ueberschreiben alte zu enge Template-Intervalle im Forecast, in der saisonalen Generierung und im Cron Job.
 
+Aehnliche Vorlagennamen werden im Forecast zu Dienst-Kategorien zusammengefasst. Dadurch werden z. B. `Unkraut jaeten`, `Wildkraut entfernen` oder andere Beet-/Jaeten-Varianten nicht innerhalb weniger Tage doppelt geplant. Gleiches gilt fuer Hecken-, Rasen-, Laub- und Schnee-Kategorien. Freie sonstige Aufgaben bleiben dagegen nach konkretem Titel getrennt.
+
 ## Saisonlogik
 
 `isTemplateInSeason` unterstuetzt normale Saisonbereiche und Bereiche ueber den Jahreswechsel, z. B. Dezember bis Februar.

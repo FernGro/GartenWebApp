@@ -1,31 +1,34 @@
 import type { RecurrenceType, TaskTemplate } from "@/types/domain";
 
 export type CadenceRule = {
+  category: TaskCategory;
   intervalDays: number;
   minGapDays: number;
   label: string;
 };
 
+export type TaskCategory = "lawn" | "weeding" | "hedge" | "leaves" | "snow" | "other";
+
 const titleRules: Array<{ pattern: RegExp; rule: CadenceRule }> = [
   {
     pattern: /rasen|maeh|mäh|mulch/i,
-    rule: { intervalDays: 21, minGapDays: 14, label: "Mulcher: alle 2-3 Wochen in der Saison" },
+    rule: { category: "lawn", intervalDays: 21, minGapDays: 14, label: "Mulcher: alle 2-3 Wochen in der Saison" },
   },
   {
-    pattern: /unkraut|jäten|jaeten|beet/i,
-    rule: { intervalDays: 60, minGapDays: 45, label: "Unkraut: ca. alle 2 Monate" },
+    pattern: /unkraut|wildkraut|jäten|jaeten|beet/i,
+    rule: { category: "weeding", intervalDays: 60, minGapDays: 45, label: "Unkraut: ca. alle 2 Monate" },
   },
   {
     pattern: /blatt|laub/i,
-    rule: { intervalDays: 30, minGapDays: 21, label: "Laub: monatlich im Herbst" },
+    rule: { category: "leaves", intervalDays: 30, minGapDays: 21, label: "Laub: monatlich im Herbst" },
   },
   {
-    pattern: /hecke/i,
-    rule: { intervalDays: 120, minGapDays: 90, label: "Hecke: wenige gezielte Termine pro Saison" },
+    pattern: /hecke|hecken|schnitt/i,
+    rule: { category: "hedge", intervalDays: 120, minGapDays: 90, label: "Hecke: wenige gezielte Termine pro Saison" },
   },
   {
     pattern: /schnee/i,
-    rule: { intervalDays: 14, minGapDays: 7, label: "Schnee: nur bei Bedarf" },
+    rule: { category: "snow", intervalDays: 14, minGapDays: 7, label: "Schnee: nur bei Bedarf" },
   },
 ];
 
@@ -51,10 +54,15 @@ export function getCadenceRule(template: TaskTemplate): CadenceRule {
   const intervalDays = recurrenceDays(template.recurrence_type, template.recurrence_interval);
 
   return {
+    category: "other",
     intervalDays,
     minGapDays: Math.max(7, Math.floor(intervalDays * 0.7)),
     label: `${template.recurrence_interval} ${template.recurrence_type}`,
   };
+}
+
+export function getTaskCategory(title: string): TaskCategory {
+  return titleRules.find((entry) => entry.pattern.test(title))?.rule.category ?? "other";
 }
 
 export function addDays(date: Date, days: number) {

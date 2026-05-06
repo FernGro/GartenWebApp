@@ -1,5 +1,5 @@
 import { isTemplateInSeason, suggestAssignee } from "@/lib/planning/fairness";
-import { addDays, diffDays, getCadenceRule } from "@/lib/planning/cadence";
+import { addDays, diffDays, getCadenceRule, getTaskCategory, type TaskCategory } from "@/lib/planning/cadence";
 import type { AvailabilityWindow, ScoreRow, TaskTemplate, TaskWithPeople } from "@/types/domain";
 
 export type ForecastTask = {
@@ -9,6 +9,7 @@ export type ForecastTask = {
   suggestedUserId: string | null;
   suggestedName: string;
   sourceTemplateId: string;
+  category: TaskCategory;
   cadenceLabel: string;
   reason: string;
 };
@@ -28,13 +29,20 @@ function latestTemplateDate(template: TaskTemplate, tasks: TaskWithPeople[]) {
     .at(-1) ?? null;
 }
 
-function latestSimilarDate(title: string, tasks: TaskWithPeople[]) {
-  const normalized = title.toLowerCase();
+function latestCategoryDate(category: TaskCategory, tasks: TaskWithPeople[]) {
   return tasks
-    .filter((task) => task.due_date && task.status !== "cancelled" && task.title.toLowerCase() === normalized)
+    .filter((task) => task.due_date && task.status !== "cancelled" && getTaskCategory(task.title) === category)
     .map((task) => task.due_date as string)
     .sort()
     .at(-1) ?? null;
+}
+
+function planningKey(title: string, category: TaskCategory) {
+  if (category !== "other") {
+    return category;
+  }
+
+  return title.toLowerCase().replace(/\s+/g, " ").trim();
 }
 
 function scoreForForecast(
@@ -114,7 +122,15 @@ export function buildThreeMonthForecast(
     }
 
     const cadence = getCadenceRule(template);
-    const lastDate = latestTemplateDate(template, tasks) ?? latestSimilarDate(template.title, tasks);
+    const key = planningKey(template.title, cadence.category);
+    const lastDate = latestTemplateDate(template, tasks)
+      ?? (cadence.category === "other"
+        ? tasks
+          .filter((task) => task.due_date && task.status !== "cancelled" && planningKey(task.title, getTaskCategory(task.title)) === key)
+          .map((task) => task.due_date as string)
+          .sort()
+          .at(-1) ?? null
+        : latestCategoryDate(cadence.category, tasks));
     let cursor = lastDate
       ? addDays(new Date(`${lastDate}T00:00:00.000Z`), cadence.intervalDays)
       : addDays(new Date(startDate), Math.min(cadence.intervalDays, 21));
@@ -125,24 +141,33 @@ export function buildThreeMonthForecast(
       if (isTemplateInSeason(month, template.season_start_month, template.season_end_month)) {
         const dueDate = cursor.toISOString().slice(0, 10);
         const previous = [...candidates]
-          .filter((candidate) => candidate.sourceTemplateId === template.id || candidate.title === template.title)
+          .filter((candidate) => planningKey(candidate.title, candidate.category) === key)
           .map((candidate) => candidate.dueDate)
           .sort()
           .at(-1) ?? lastDate;
 
         if (!previous || diffDays(previous, dueDate) >= cadence.minGapDays) {
-          candidates.push({
-            title: template.title,
-            dueDate,
-            points: template.default_points,
-            suggestedUserId: null,
-            suggestedName: "Noch nicht berechnet",
-            sourceTemplateId: template.id,
-            cadenceLabel: cadence.label,
-            reason: previous
-              ? `${diffDays(previous, dueDate)} Tage Abstand zum letzten gleichen Dienst`
-              : "Erster sinnvoller Termin im Forecast",
-          });
+          const duplicateNearby = candidates.some(
+            (candidate) =>
+              planningKey(candidate.title, candidate.category) === key &&
+              Math.abs(diffDays(candidate.dueDate, dueDate)) < cadence.minGapDays,
+          );
+
+          if (!duplicateNearby) {
+            candidates.push({
+              title: template.title,
+              dueDate,
+              points: template.default_points,
+              suggestedUserId: null,
+              suggestedName: "Noch nicht berechnet",
+              sourceTemplateId: template.id,
+              category: cadence.category,
+              cadenceLabel: cadence.label,
+              reason: previous
+                ? `${diffDays(previous, dueDate)} Tage Abstand zum letzten Dienst dieser Art`
+                : "Erster sinnvoller Termin im Forecast",
+            });
+          }
         }
       }
 
