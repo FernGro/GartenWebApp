@@ -70,7 +70,7 @@ export async function getTaskTemplates(
   const { data, error } = await supabase
     .from("task_templates")
     .select(
-      "id,garden_id,title,default_points,estimated_minutes,season_start_month,season_end_month,recurrence_type,recurrence_interval,is_weather_dependent,is_active",
+      "id,garden_id,title,default_points,estimated_minutes,season_start_month,season_end_month,season_start_day,season_end_day,recurrence_type,recurrence_interval,custom_interval_days,is_weather_dependent,is_active",
     )
     .or(`garden_id.is.null,garden_id.eq.${gardenId}`)
     .eq("is_active", true)

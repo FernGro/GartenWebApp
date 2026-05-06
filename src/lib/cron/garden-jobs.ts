@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { getCadenceRule } from "@/lib/planning/cadence";
-import { isTemplateInSeason, suggestAssignee } from "@/lib/planning/fairness";
+import { getCadenceRule, isTemplateDateInSeason } from "@/lib/planning/cadence";
+import { suggestAssignee } from "@/lib/planning/fairness";
 import { calculateScores, getTaskTemplates, getTasks } from "@/lib/tasks/queries";
 import { getGardenMembers } from "@/lib/gardens/queries";
 import { getAvailability } from "@/lib/availability/queries";
@@ -24,7 +24,6 @@ export async function runGardenAutomation(supabase: SupabaseClient<Database>) {
   let createdNotifications = 0;
   const today = new Date().toISOString().slice(0, 10);
   const soon = addDays(new Date(), 7);
-  const month = new Date().getMonth() + 1;
 
   for (const garden of gardens ?? []) {
     const [templates, tasks, members, availability] = await Promise.all([
@@ -37,7 +36,6 @@ export async function runGardenAutomation(supabase: SupabaseClient<Database>) {
     const existingKeys = new Set(tasks.map((task) => `${task.template_id ?? task.title}:${task.due_date ?? ""}`));
     const templateRows = templates
       .filter((template) => template.recurrence_type !== "none" && template.recurrence_type !== "on_demand")
-      .filter((template) => isTemplateInSeason(month, template.season_start_month, template.season_end_month))
       .map((template) => {
         const cadence = getCadenceRule(template);
         const dueDate = addDays(new Date(), cadence.intervalDays);
@@ -55,6 +53,10 @@ export async function runGardenAutomation(supabase: SupabaseClient<Database>) {
           status: assignee ? "assigned" as const : "open" as const,
           created_by: null,
         };
+      })
+      .filter((row) => {
+        const template = templates.find((entry) => entry.id === row.template_id);
+        return template ? isTemplateDateInSeason(row.due_date, template) : true;
       })
       .filter((row) => !existingKeys.has(`${row.template_id}:${row.due_date}`));
 

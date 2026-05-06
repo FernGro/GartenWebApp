@@ -1,5 +1,5 @@
-import { isTemplateInSeason, suggestAssignee } from "@/lib/planning/fairness";
-import { addDays, diffDays, getCadenceRule, getTaskCategory, type TaskCategory } from "@/lib/planning/cadence";
+import { suggestAssignee } from "@/lib/planning/fairness";
+import { addDays, diffDays, getCadenceRule, getTaskCategory, isTemplateDateInSeason, type TaskCategory } from "@/lib/planning/cadence";
 import type { AvailabilityWindow, ScoreRow, TaskTemplate, TaskWithPeople } from "@/types/domain";
 
 export type ForecastTask = {
@@ -174,10 +174,9 @@ export function buildThreeMonthForecast(
       : addDays(new Date(startDate), Math.min(cadence.intervalDays, 21));
 
     while (cursor <= horizon) {
-      const month = cursor.getUTCMonth() + 1;
+      const dueDate = cursor.toISOString().slice(0, 10);
 
-      if (isTemplateInSeason(month, template.season_start_month, template.season_end_month)) {
-        const dueDate = cursor.toISOString().slice(0, 10);
+      if (isTemplateDateInSeason(dueDate, template)) {
         const plannedDates = candidates
           .filter((candidate) => planningKey(candidate.title, candidate.category) === key)
           .map((candidate) => candidate.dueDate)

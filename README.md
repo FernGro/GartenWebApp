@@ -12,6 +12,7 @@ MVP fuer eine Garten-Dienstplan-Web-App mit Next.js App Router, TypeScript, Tail
 - Punkteuebersicht aus erledigten Aufgaben, ohne gespeicherte Gesamtsummen
 - Fairness-Vorschlag nach niedrigsten Punkten und aeltestem letztem Dienst
 - smarter 3-Monats-Forecast mit sinnvollen Gartenabstaenden und fixierbaren Diensten
+- eigene Gartenvorlagen mit frei waehlbarem Intervall und Saisonfenster
 - Rasenmaeher-Rennen mit Podest als visuelle Fairness-/Punkteanzeige
 - Task-Icons fuer typische Gartenarbeiten
 - Kommentare und Event-Verlauf auf der Task-Detailseite

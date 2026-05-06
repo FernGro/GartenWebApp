@@ -56,6 +56,9 @@ export type Database = {
           season_end_month: number;
           recurrence_type: RecurrenceType;
           recurrence_interval: number;
+          custom_interval_days: number | null;
+          season_start_day: number;
+          season_end_day: number;
           is_weather_dependent: boolean;
           is_active: boolean;
           created_at: string;

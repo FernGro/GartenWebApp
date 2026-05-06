@@ -29,6 +29,8 @@ Aktuelle MVP-Regeln:
 
 Die Regeln ueberschreiben alte zu enge Template-Intervalle im Forecast, in der saisonalen Generierung und im Cron Job.
 
+Owner/Admins koennen unter `/templates` eigene Gartenvorlagen anlegen. Fuer diese Vorlagen hat `custom_interval_days` Vorrang vor den heuristischen Standardregeln. Dadurch sind Plaene wie `Winterdienst alle 3 Tage von 1.12. bis 28.2.` oder `Rasen alle 18 Tage von 1.4. bis 30.9.` direkt in der UI abbildbar.
+
 Aehnliche Vorlagennamen werden im Forecast zu Dienst-Kategorien zusammengefasst. Dadurch werden z. B. `Unkraut jaeten`, `Wildkraut entfernen` oder andere Beet-/Jaeten-Varianten nicht innerhalb weniger Tage doppelt geplant. Gleiches gilt fuer Hecken-, Rasen-, Laub- und Schnee-Kategorien. Freie sonstige Aufgaben bleiben dagegen nach konkretem Titel getrennt.
 
 ## Saisonlogik

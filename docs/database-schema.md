@@ -72,3 +72,8 @@ Das erste Garten-Onboarding erfolgt ueber `public.create_garden_with_owner(name)
 
 - `tasks.assignment_locked`: fixierte Zuweisungen bleiben bei Neuplanung erhalten.
 - `tasks.locked_by` und `tasks.locked_at`: wer einen Dienst eingeloggt hat und wann.
+
+`013_template_custom_schedule.sql` ergaenzt:
+
+- `task_templates.custom_interval_days`: frei waehlbare Intervalle wie alle 3, 14 oder 60 Tage.
+- `task_templates.season_start_day` und `task_templates.season_end_day`: genaue Saisonfenster mit Tag und Monat.

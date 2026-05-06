@@ -45,6 +45,16 @@ function recurrenceDays(type: RecurrenceType, interval: number) {
 }
 
 export function getCadenceRule(template: TaskTemplate): CadenceRule {
+  const category = getTaskCategory(template.title);
+  if (template.custom_interval_days) {
+    return {
+      category,
+      intervalDays: template.custom_interval_days,
+      minGapDays: Math.max(1, Math.floor(template.custom_interval_days * 0.7)),
+      label: `alle ${template.custom_interval_days} Tage`,
+    };
+  }
+
   const titleRule = titleRules.find((entry) => entry.pattern.test(template.title));
 
   if (titleRule) {
@@ -75,4 +85,22 @@ export function diffDays(a: string, b: string) {
   const first = new Date(`${a}T00:00:00.000Z`).getTime();
   const second = new Date(`${b}T00:00:00.000Z`).getTime();
   return Math.round((second - first) / (24 * 60 * 60 * 1000));
+}
+
+function monthDayValue(month: number, day: number) {
+  return month * 100 + day;
+}
+
+export function isTemplateDateInSeason(date: string, template: TaskTemplate) {
+  const month = Number(date.slice(5, 7));
+  const day = Number(date.slice(8, 10));
+  const current = monthDayValue(month, day);
+  const start = monthDayValue(template.season_start_month, template.season_start_day);
+  const end = monthDayValue(template.season_end_month, template.season_end_day);
+
+  if (start <= end) {
+    return current >= start && current <= end;
+  }
+
+  return current >= start || current <= end;
 }
