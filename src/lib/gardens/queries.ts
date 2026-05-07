@@ -7,7 +7,7 @@ export async function getCurrentGarden(
 ): Promise<Garden | null> {
   const { data, error } = await supabase
     .from("gardens")
-    .select("id,name,created_by")
+    .select("id,name,created_by,chat_retention_days")
     .order("created_at", { ascending: true })
     .limit(1)
     .maybeSingle();

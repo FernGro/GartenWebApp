@@ -5,6 +5,7 @@ import { calculateScores, getTaskTemplates, getTasks } from "@/lib/tasks/queries
 import { getGardenMembers } from "@/lib/gardens/queries";
 import { getAvailability } from "@/lib/availability/queries";
 import { createNotification } from "@/lib/notifications/send";
+import { hasCronMessageForTask, insertSystemChatMessage } from "@/lib/chat/queries";
 import type { Database } from "@/types/database";
 
 function addDays(date: Date, days: number) {
@@ -13,8 +14,14 @@ function addDays(date: Date, days: number) {
   return next.toISOString().slice(0, 10);
 }
 
+function daysDiff(fromIso: string, toIso: string): number {
+  return Math.round((new Date(toIso).getTime() - new Date(fromIso).getTime()) / 86_400_000);
+}
+
 export async function runGardenAutomation(supabase: SupabaseClient<Database>) {
-  const { data: gardens, error } = await supabase.from("gardens").select("id");
+  const { data: gardens, error } = await supabase
+    .from("gardens")
+    .select("id,chat_retention_days");
 
   if (error) {
     throw new Error(error.message);
@@ -24,6 +31,7 @@ export async function runGardenAutomation(supabase: SupabaseClient<Database>) {
   let createdNotifications = 0;
   const today = new Date().toISOString().slice(0, 10);
   const soon = addDays(new Date(), 7);
+  const since20h = new Date(Date.now() - 20 * 60 * 60 * 1000).toISOString();
 
   for (const garden of gardens ?? []) {
     const [templates, tasks, members, availability] = await Promise.all([
@@ -132,6 +140,96 @@ export async function runGardenAutomation(supabase: SupabaseClient<Database>) {
         relatedTaskId: notification.related_task_id,
       });
       createdNotifications += 1;
+    }
+
+    // --- Chat-Erinnerungen (privat, nur für zugewiesene Person sichtbar) ---
+    const reminderTriggerDays = [7, 3, 0];
+    for (const task of activeTasks) {
+      if (!task.due_date || !task.assigned_to) continue;
+      const daysLeft = daysDiff(today, task.due_date);
+      if (!reminderTriggerDays.includes(daysLeft)) continue;
+
+      const alreadyPosted = await hasCronMessageForTask(
+        supabase, garden.id, task.id, "system_reminder", since20h,
+      );
+      if (alreadyPosted) continue;
+
+      const content = daysLeft === 0
+        ? `⏰ Heute fällig: ${task.title}`
+        : `⏰ In ${daysLeft} Tagen fällig: ${task.title}`;
+
+      await insertSystemChatMessage(supabase, {
+        gardenId: garden.id,
+        content,
+        messageType: "system_reminder",
+        visibleToUserId: task.assigned_to as string,
+        relatedTaskId: task.id,
+      });
+    }
+
+    // --- Öffentliche Overdue-Alerts (ab 3 Tagen überfällig) ---
+    for (const task of overdue) {
+      if (!task.due_date) continue;
+      const daysLate = daysDiff(task.due_date, today);
+      if (daysLate < 3) continue;
+
+      const alreadyPosted = await hasCronMessageForTask(
+        supabase, garden.id, task.id, "system_overdue", "2000-01-01T00:00:00Z",
+      );
+      if (alreadyPosted) continue;
+
+      const suggested = suggestAssignee(scores, task.due_date, availability);
+      const currentName = members.find((m) => m.user_id === task.assigned_to)?.profiles?.display_name ?? "Unbekannt";
+      const sortedScores = [...scores].sort((a, b) => a.points - b.points);
+      const scoreList = sortedScores
+        .map((s) => `• ${s.displayName}: ${s.points} Pkt${s.userId === suggested?.userId ? " ← Empfehlung" : ""}`)
+        .join("\n");
+
+      const lines = [
+        `⚠️ "${task.title}" ist seit ${daysLate} Tagen überfällig.`,
+        `Zugewiesen: ${currentName}`,
+        ``,
+        `Punkte-Übersicht:`,
+        scoreList,
+      ];
+      if (suggested && suggested.userId !== task.assigned_to) {
+        lines.push(``, `@${suggested.displayName} könnte diese Aufgabe übernehmen.`);
+      }
+
+      await insertSystemChatMessage(supabase, {
+        gardenId: garden.id,
+        content: lines.join("\n"),
+        messageType: "system_overdue",
+        visibleToUserId: null,
+        relatedTaskId: task.id,
+      });
+
+      if (suggested && suggested.userId !== task.assigned_to) {
+        await createNotification(supabase, {
+          userId: suggested.userId,
+          gardenId: garden.id,
+          type: "chat_overdue_suggestion",
+          title: "Aufgabenübernahme empfohlen",
+          message: task.title,
+          relatedTaskId: task.id,
+        });
+        createdNotifications += 1;
+      }
+    }
+
+    // --- Retention-Cleanup ---
+    if (garden.chat_retention_days > 0) {
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - garden.chat_retention_days);
+      const { error: cleanupError } = await supabase
+        .from("garden_chat_messages")
+        .delete()
+        .eq("garden_id", garden.id)
+        .lt("created_at", cutoff.toISOString());
+
+      if (cleanupError) {
+        console.error("chat retention cleanup", cleanupError.message);
+      }
     }
   }
 

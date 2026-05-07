@@ -11,6 +11,7 @@ const navItems: NavItem[] = [
   { href: "/calendar", label: "Kalender" },
   { href: "/billing", label: "Abrechnung" },
   { href: "/notifications", label: "Meldungen" },
+  { href: "/chat", label: "Chat" },
   { href: "/log", label: "Log" },
   { href: "/settings/garden", label: "Garten" },
   { href: "/settings/members", label: "Mitglieder" },

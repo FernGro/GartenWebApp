@@ -35,6 +35,33 @@ export async function updateGardenAction(formData: FormData) {
   revalidatePath("/dashboard");
 }
 
+export async function updateChatSettingsAction(formData: FormData) {
+  await requireUser();
+  const supabase = await createClient();
+
+  if (!supabase) {
+    throw new Error("Supabase ist nicht konfiguriert.");
+  }
+
+  const gardenId = readString(formData, "garden_id");
+  const retentionRaw = readString(formData, "chat_retention_days");
+  const retentionDays = parseInt(retentionRaw, 10);
+
+  if (!gardenId) throw new Error("Garten fehlt.");
+  if (isNaN(retentionDays) || retentionDays < 0) throw new Error("Ungültige Angabe.");
+
+  const { error } = await supabase
+    .from("gardens")
+    .update({ chat_retention_days: retentionDays })
+    .eq("id", gardenId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/settings/garden");
+}
+
 export async function leaveGardenAction(formData: FormData) {
   await requireUser();
   const supabase = await createClient();

@@ -18,9 +18,9 @@ export type Database = {
         Update: { id?: string; display_name?: string; created_at?: string; updated_at?: string };
       };
       gardens: {
-        Row: { id: string; name: string; created_by: string | null; created_at: string; updated_at: string };
-        Insert: { id?: string; name: string; created_by?: string | null; created_at?: string; updated_at?: string };
-        Update: { id?: string; name?: string; created_by?: string | null; created_at?: string; updated_at?: string };
+        Row: { id: string; name: string; created_by: string | null; chat_retention_days: number; created_at: string; updated_at: string };
+        Insert: { id?: string; name: string; created_by?: string | null; chat_retention_days?: number; created_at?: string; updated_at?: string };
+        Update: { id?: string; name?: string; created_by?: string | null; chat_retention_days?: number; created_at?: string; updated_at?: string };
       };
       garden_members: {
         Row: { id: string; garden_id: string; user_id: string; role: GardenRole; is_active: boolean; joined_at: string };
@@ -227,6 +227,34 @@ export type Database = {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["member_adjustments"]["Row"]>;
+      };
+      garden_chat_messages: {
+        Row: {
+          id: string;
+          garden_id: string;
+          author_id: string | null;
+          content: string;
+          message_type: string;
+          visible_to_user_id: string | null;
+          related_task_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          garden_id: string;
+          author_id?: string | null;
+          content: string;
+          message_type?: string;
+          visible_to_user_id?: string | null;
+          related_task_id?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["garden_chat_messages"]["Row"]>;
+      };
+      garden_chat_mentions: {
+        Row: { id: string; message_id: string; user_id: string };
+        Insert: { id?: string; message_id: string; user_id: string };
+        Update: Partial<Database["public"]["Tables"]["garden_chat_mentions"]["Row"]>;
       };
       notification_contacts: {
         Row: {

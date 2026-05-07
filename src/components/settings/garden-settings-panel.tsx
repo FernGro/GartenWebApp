@@ -1,5 +1,5 @@
 import { updateProfileAction } from "@/lib/profiles/actions";
-import { updateGardenAction, leaveGardenAction, deleteGardenAction } from "@/lib/gardens/settings-actions";
+import { updateGardenAction, updateChatSettingsAction, leaveGardenAction, deleteGardenAction } from "@/lib/gardens/settings-actions";
 import type { Garden, GardenRole, Profile } from "@/types/domain";
 import { Button } from "@/components/ui/button";
 
@@ -33,6 +33,30 @@ export function GardenSettingsPanel({
           <Button className="mt-3" type="submit">Namen speichern</Button>
         </form>
       </section>
+      {(userRole === "owner" || userRole === "admin") && (
+        <section className="mb-4 rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
+          <h2 className="text-lg font-bold">Chat-Einstellungen</h2>
+          <form action={updateChatSettingsAction} className="mt-4">
+            <input name="garden_id" type="hidden" value={garden.id} />
+            <label className="block text-sm font-semibold">
+              Nachrichten automatisch löschen nach
+              <select
+                className="mt-1 w-full rounded-lg border border-[#cbd8c1] px-3 py-3 bg-white"
+                name="chat_retention_days"
+                defaultValue={String(garden.chat_retention_days)}
+              >
+                <option value="30">30 Tagen</option>
+                <option value="60">60 Tagen</option>
+                <option value="90">90 Tagen</option>
+                <option value="180">180 Tagen</option>
+                <option value="365">1 Jahr</option>
+                <option value="0">Nie löschen</option>
+              </select>
+            </label>
+            <Button className="mt-3" type="submit">Chat-Einstellungen speichern</Button>
+          </form>
+        </section>
+      )}
       <section className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4">
         <h2 className="text-lg font-bold text-red-800">Gefahrenzone</h2>
         <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:flex-wrap">

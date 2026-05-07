@@ -35,6 +35,22 @@ export type Garden = {
   id: string;
   name: string;
   created_by: string | null;
+  chat_retention_days: number;
+};
+
+export type ChatMessageType = "user" | "system_reminder" | "system_overdue";
+
+export type ChatMessage = {
+  id: string;
+  garden_id: string;
+  author_id: string | null;
+  content: string;
+  message_type: ChatMessageType;
+  visible_to_user_id: string | null;
+  related_task_id: string | null;
+  created_at: string;
+  author_profile?: Profile | null;
+  mentions?: { user_id: string; display_name: string }[];
 };
 
 export type GardenMember = {
