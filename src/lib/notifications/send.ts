@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 import { sendTelegramMessage } from "./telegram";
 import { sendWebPushToUser } from "./web-push";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 type NotificationInput = {
   userId: string;
@@ -42,7 +43,12 @@ export async function createNotification(
     }
   }
 
-  await sendWebPushToUser(supabase, input.userId, input.gardenId, {
+  // The RLS policy on web_push_subscriptions only allows reading own rows.
+  // Admin client is required to read subscriptions of OTHER users (e.g. when
+  // notifying the assignee of a task). Falls back to the caller's client when
+  // admin is not configured (only works for self-notifications in that case).
+  const pushClient = createAdminClient() ?? supabase;
+  await sendWebPushToUser(pushClient, input.userId, input.gardenId, {
     title: input.title,
     message: input.message,
     url: input.relatedTaskId ? `/tasks/${input.relatedTaskId}` : "/notifications",

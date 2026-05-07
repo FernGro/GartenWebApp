@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { ChatMessage, ChatMessageType, GardenMember } from "@/types/domain";
+import { markChatReadAction } from "@/lib/chat/actions";
 import { ChatMessageItem } from "@/components/chat/chat-message";
 import { ChatInput } from "@/components/chat/chat-input";
 
@@ -20,6 +21,12 @@ export function ChatView({
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const bottomRef = useRef<HTMLDivElement>(null);
   const memberMap = new Map(members.map((m) => [m.user_id, m.profiles ?? null]));
+
+  useEffect(() => {
+    // Mark chat as read so the nav badge resets on next page load
+    markChatReadAction(gardenId).catch(() => null);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });

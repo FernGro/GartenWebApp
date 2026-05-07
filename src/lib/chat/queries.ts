@@ -65,6 +65,35 @@ export async function getChatMessages(
     .reverse();
 }
 
+export async function getUnreadChatCount(
+  supabase: SupabaseClient<Database>,
+  gardenId: string,
+  userId: string,
+): Promise<number> {
+  const { data: member } = await supabase
+    .from("garden_members")
+    .select("last_chat_read_at")
+    .eq("garden_id", gardenId)
+    .eq("user_id", userId)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  const since = member?.last_chat_read_at;
+
+  let query = supabase
+    .from("garden_chat_messages")
+    .select("id", { count: "exact", head: true })
+    .eq("garden_id", gardenId)
+    .or(`visible_to_user_id.is.null,visible_to_user_id.eq.${userId}`);
+
+  if (since) {
+    query = query.gt("created_at", since);
+  }
+
+  const { count } = await query;
+  return count ?? 0;
+}
+
 export async function hasCronMessageForTask(
   supabase: SupabaseClient<Database>,
   gardenId: string,

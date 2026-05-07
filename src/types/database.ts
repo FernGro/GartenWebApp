@@ -23,9 +23,9 @@ export type Database = {
         Update: { id?: string; name?: string; created_by?: string | null; chat_retention_days?: number; created_at?: string; updated_at?: string };
       };
       garden_members: {
-        Row: { id: string; garden_id: string; user_id: string; role: GardenRole; is_active: boolean; joined_at: string };
-        Insert: { id?: string; garden_id: string; user_id: string; role?: GardenRole; is_active?: boolean; joined_at?: string };
-        Update: { id?: string; garden_id?: string; user_id?: string; role?: GardenRole; is_active?: boolean; joined_at?: string };
+        Row: { id: string; garden_id: string; user_id: string; role: GardenRole; is_active: boolean; joined_at: string; last_chat_read_at: string | null };
+        Insert: { id?: string; garden_id: string; user_id: string; role?: GardenRole; is_active?: boolean; joined_at?: string; last_chat_read_at?: string | null };
+        Update: { id?: string; garden_id?: string; user_id?: string; role?: GardenRole; is_active?: boolean; joined_at?: string; last_chat_read_at?: string | null };
       };
       garden_invites: {
         Row: {
