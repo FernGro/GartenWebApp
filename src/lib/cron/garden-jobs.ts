@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { getCadenceRule, isTemplateDateInSeason } from "@/lib/planning/cadence";
+import { diffDays, getCadenceRule, isTemplateDateInSeason } from "@/lib/planning/cadence";
 import { suggestAssignee } from "@/lib/planning/fairness";
 import { calculateScores, getTaskTemplates, getTasks } from "@/lib/tasks/queries";
 import { getGardenMembers } from "@/lib/gardens/queries";
@@ -41,7 +41,6 @@ export async function runGardenAutomation(supabase: SupabaseClient<Database>) {
       getAvailability(supabase, garden.id),
     ]);
     const scores = calculateScores(tasks, members);
-    const existingKeys = new Set(tasks.map((task) => `${task.template_id ?? task.title}:${task.due_date ?? ""}`));
     const templateRows = templates
       .filter((template) => template.recurrence_type !== "none" && template.recurrence_type !== "on_demand")
       .map((template) => {
@@ -66,7 +65,20 @@ export async function runGardenAutomation(supabase: SupabaseClient<Database>) {
         const template = templates.find((entry) => entry.id === row.template_id);
         return template ? isTemplateDateInSeason(row.due_date, template) : true;
       })
-      .filter((row) => !existingKeys.has(`${row.template_id}:${row.due_date}`));
+      .filter((row) => {
+        // Skip if an active task for this template already exists within minGapDays.
+        // Point-exact date matching caused daily duplicates (due_date shifts by 1 each cron run).
+        const template = templates.find((t) => t.id === row.template_id);
+        const { minGapDays } = template ? getCadenceRule(template) : { minGapDays: 1 };
+        return !tasks.some(
+          (t) =>
+            t.template_id === row.template_id &&
+            t.status !== "done" &&
+            t.status !== "cancelled" &&
+            t.due_date !== null &&
+            Math.abs(diffDays(t.due_date, row.due_date)) < minGapDays,
+        );
+      });
 
     if (templateRows.length > 0) {
       const { data: insertedTasks, error: taskError } = await supabase
