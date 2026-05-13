@@ -15,6 +15,7 @@ import { canManageGarden, getUserGardenRole } from "@/lib/gardens/roles";
 import { suggestAssignee } from "@/lib/planning/fairness";
 import { createClient } from "@/lib/supabase/server";
 import { calculateScores, getTasks } from "@/lib/tasks/queries";
+import { triggerTaskChatAutomationAction } from "@/lib/tasks/reminder-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -84,6 +85,10 @@ export default async function DashboardPage() {
   const today = todayIsoDate();
   const overdueTasks = openTasks.filter((task) => task.status === "overdue" || (task.due_date && task.due_date < today));
   const doneTasks = tasks.filter((task) => task.status === "done");
+  const nextTriggerTasks = [...openTasks]
+    .filter((task) => task.assigned_to)
+    .sort((a, b) => (a.due_date ?? "9999-12-31").localeCompare(b.due_date ?? "9999-12-31"))
+    .slice(0, 2);
 
   return (
     <AppShell>
@@ -111,6 +116,28 @@ export default async function DashboardPage() {
           </div>
         ))}
       </section>
+      {canManage && nextTriggerTasks.length > 0 ? (
+        <section className="mt-6 rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-lg font-bold">Chat-Test fuer Owner/Admin</h2>
+              <p className="text-sm text-[#5a6655]">Prueft die naechsten zwei Dienste und schreibt je nach Status eine Erinnerung oder einen Uebernahme-Aufruf in den Chat.</p>
+            </div>
+            <Link className="text-sm font-semibold text-[#2f6b3f]" href="/chat">Zum Chat</Link>
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            {nextTriggerTasks.map((task) => (
+              <form action={triggerTaskChatAutomationAction} className="rounded-lg bg-[#f8faf3] p-3" key={task.id}>
+                <input name="task_id" type="hidden" value={task.id} />
+                <input name="garden_id" type="hidden" value={task.garden_id} />
+                <div className="text-sm font-semibold text-[#172016]">{task.title}</div>
+                <div className="mt-1 text-xs text-[#6d7669]">{task.due_date ? `Faellig ${task.due_date}` : "Ohne Faelligkeit"}</div>
+                <Button className="mt-3 w-full" variant="secondary" type="submit">Chat-Check ausloesen</Button>
+              </form>
+            ))}
+          </div>
+        </section>
+      ) : null}
       <section className="mt-6 grid gap-6 lg:grid-cols-[1fr_360px]">
         <div>
           <div className="mb-3 flex items-center justify-between">

@@ -1,4 +1,4 @@
-type WetterOnlineDay = {
+export type WetterOnlineDay = {
   date: string;
   label: string;
   minTemperature: number | null;
@@ -14,7 +14,7 @@ export type WeatherForecast = {
   note?: string;
 };
 
-type WeatherRating = WetterOnlineDay & {
+export type WeatherRating = WetterOnlineDay & {
   score: number;
   summary: string;
   rainRisk: "niedrig" | "mittel" | "hoch";
@@ -225,6 +225,19 @@ function rateDay(day: WetterOnlineDay, kind: ReturnType<typeof taskKind>): Weath
     snowRisk: snow,
     summary: reasons.length > 0 ? reasons.join(", ") : "neutral",
   };
+}
+
+export function rateWeatherDayForTask(day: WetterOnlineDay, taskTitle: string): WeatherRating {
+  return rateDay(day, taskKind(taskTitle));
+}
+
+export function weatherSymbol(day: Pick<WeatherRating, "rainRisk" | "snowRisk" | "sunHours">) {
+  if (day.snowRisk === "hoch") return "❄";
+  if (day.snowRisk === "moeglich") return "☃";
+  if (day.rainRisk === "hoch") return "☔";
+  if (day.rainRisk === "mittel") return "☁";
+  if ((day.sunHours ?? 0) >= 5) return "☀";
+  return "◐";
 }
 
 export function formatWeatherRecommendation(params: {

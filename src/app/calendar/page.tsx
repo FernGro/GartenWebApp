@@ -8,6 +8,7 @@ import { getCurrentGarden, getGardenMembers } from "@/lib/gardens/queries";
 import { buildThreeMonthForecast } from "@/lib/planning/forecast";
 import { createClient } from "@/lib/supabase/server";
 import { calculateScores, getTaskTemplates, getTasks } from "@/lib/tasks/queries";
+import { getWetterOnlineForecast } from "@/lib/weather/wetteronline";
 
 export const dynamic = "force-dynamic";
 
@@ -41,6 +42,7 @@ export default async function CalendarPage({
   const scores = applyPointAdjustments(calculateScores(tasks, members), adjustments);
   const monthStart = new Date(Date.UTC(year, month - 1, 1));
   const forecast = buildThreeMonthForecast(templates, scores, availability, tasks, monthStart);
+  const weather = await getWetterOnlineForecast(garden.weather_location ?? garden.name);
 
   return (
     <AppShell>
@@ -49,7 +51,7 @@ export default async function CalendarPage({
         <h1 className="text-3xl font-bold">Kalender</h1>
         <p className="mt-2 text-sm text-[#5a6655]">Aufgaben und Abwesenheiten in einer Monatsuebersicht.</p>
       </div>
-      <GardenCalendar tasks={tasks} forecast={forecast} availability={availability} year={year} month={month} />
+      <GardenCalendar tasks={tasks} forecast={forecast} availability={availability} weather={weather} year={year} month={month} />
     </AppShell>
   );
 }

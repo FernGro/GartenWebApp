@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { formatDate } from "@/lib/format/date";
 import type { ForecastTask } from "@/lib/planning/forecast";
+import { rateWeatherDayForTask, weatherSymbol, type WeatherForecast, type WeatherRating } from "@/lib/weather/wetteronline";
 import type { AvailabilityWindow, TaskWithPeople } from "@/types/domain";
 
 function monthDays(year: number, month: number) {
@@ -24,20 +25,37 @@ function dayForecast(day: string, forecast: ForecastTask[]) {
   return forecast.filter((entry) => entry.kind === "suggestion" && entry.dueDate === day);
 }
 
+function addDays(date: string, days: number) {
+  const next = new Date(`${date}T00:00:00Z`);
+  next.setUTCDate(next.getUTCDate() + days);
+  return next.toISOString().slice(0, 10);
+}
+
+function dayWeather(day: string, weather: WeatherForecast | null | undefined, tasks: TaskWithPeople[]): WeatherRating | null {
+  const entry = weather?.days.find((weatherDay) => weatherDay.date === day);
+  if (!entry) return null;
+  const title = tasks[0]?.title ?? "Gartenarbeit";
+  return rateWeatherDayForTask(entry, title);
+}
+
 export function GardenCalendar({
   tasks,
   forecast = [],
   availability,
+  weather,
   year,
   month,
 }: {
   tasks: TaskWithPeople[];
   forecast?: ForecastTask[];
   availability: AvailabilityWindow[];
+  weather?: WeatherForecast | null;
   year: number;
   month: number;
 }) {
   const days = monthDays(year, month);
+  const today = new Date().toISOString().slice(0, 10);
+  const weatherEnd = addDays(today, 14);
   const prev = month === 1 ? { year: year - 1, month: 12 } : { year, month: month - 1 };
   const next = month === 12 ? { year: year + 1, month: 1 } : { year, month: month + 1 };
   const label = new Intl.DateTimeFormat("de-DE", { month: "long", year: "numeric", timeZone: "UTC" }).format(
@@ -67,14 +85,40 @@ export function GardenCalendar({
           const tasksForDay = dayTasks(day, tasks);
           const forecastForDay = dayForecast(day, forecast);
           const blocked = dayAvailability(day, availability);
+          const weatherForDay = day >= today && day <= weatherEnd ? dayWeather(day, weather, tasksForDay) : null;
 
           return (
             <div className="min-h-28 bg-[#fffef9] p-2" key={day}>
               <div className="mb-2 flex items-center justify-between gap-2">
                 <span className="font-bold text-[#172016]">{day.slice(-2)}</span>
-                <span className="text-[11px] text-[#6d7669]">{formatDate(day).slice(0, 6)}</span>
+                <span className="flex items-center gap-1 text-[11px] text-[#6d7669]">
+                  {weatherForDay ? (
+                    <span className="rounded-full bg-[#eef6e8] px-1.5 py-0.5 text-sm text-[#2f6b3f]" title={weatherForDay.summary}>
+                      {weatherSymbol(weatherForDay)}
+                    </span>
+                  ) : null}
+                  {formatDate(day).slice(0, 6)}
+                </span>
               </div>
               <div className="space-y-1">
+                {weatherForDay ? (
+                  <details className="rounded-md border border-[#d7dfcf] bg-white px-2 py-1 text-xs text-[#405039]">
+                    <summary className="cursor-pointer font-semibold text-[#2f6b3f]">
+                      {weatherSymbol(weatherForDay)} Wetter {weatherForDay.score}/100
+                    </summary>
+                    <div className="mt-2 space-y-1">
+                      <div>
+                        {weatherForDay.minTemperature ?? "?"}-{weatherForDay.maxTemperature ?? "?"}C, {weatherForDay.precipitationProbability ?? "?"}% Regen, Schnee {weatherForDay.snowRisk}, {weatherForDay.sunHours ?? "?"}h Sonne
+                      </div>
+                      <div>{weatherForDay.summary}</div>
+                      {tasksForDay.length > 0 ? (
+                        <div>
+                          Dienst: {tasksForDay.map((task) => task.title).join(", ")}
+                        </div>
+                      ) : null}
+                    </div>
+                  </details>
+                ) : null}
                 {tasksForDay.slice(0, 3).map((task) => (
                   <Link
                     className="block rounded-md bg-[#e7efe1] px-2 py-1 text-xs font-semibold text-[#2f6b3f]"
