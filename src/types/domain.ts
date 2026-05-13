@@ -36,6 +36,7 @@ export type Garden = {
   name: string;
   created_by: string | null;
   chat_retention_days: number;
+  weather_location: string | null;
 };
 
 export type ChatMessageType = "user" | "system_reminder" | "system_overdue";

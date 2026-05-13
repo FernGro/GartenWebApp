@@ -6,6 +6,7 @@ import { getGardenMembers } from "@/lib/gardens/queries";
 import { getAvailability } from "@/lib/availability/queries";
 import { createNotification } from "@/lib/notifications/send";
 import { hasCronMessageForTask, hasTakeoverCallForTask, insertSystemChatMessage } from "@/lib/chat/queries";
+import { formatWeatherRecommendation, getWetterOnlineForecast, type WeatherForecast } from "@/lib/weather/wetteronline";
 import type { Database } from "@/types/database";
 import type { AvailabilityWindow, GardenMember, ScoreRow, TaskWithPeople } from "@/types/domain";
 
@@ -52,10 +53,11 @@ async function postTakeoverCall(params: {
   members: GardenMember[];
   scores: ScoreRow[];
   availability: AvailabilityWindow[];
+  weatherForecast: WeatherForecast | null;
   today: string;
   reason: "overdue" | "postponed";
 }) {
-  const { supabase, gardenId, task, members, scores, availability, today, reason } = params;
+  const { supabase, gardenId, task, members, scores, availability, weatherForecast, today, reason } = params;
   const alreadyPosted = await hasTakeoverCallForTask(supabase, gardenId, task.id);
   if (alreadyPosted) return false;
 
@@ -83,6 +85,14 @@ async function postTakeoverCall(params: {
       candidateList,
       "",
       topLine,
+      "",
+      formatWeatherRecommendation({
+        forecast: weatherForecast,
+        taskTitle: task.title,
+        dueDate: task.due_date,
+        today,
+      }),
+      "",
       "Jede Person kann die Aufgabe ueber den Uebernahme-Button akzeptieren.",
     ].join("\n"),
     messageType: "system_overdue",
@@ -108,7 +118,7 @@ async function postTakeoverCall(params: {
 export async function runGardenAutomation(supabase: SupabaseClient<Database>) {
   const { data: gardens, error } = await supabase
     .from("gardens")
-    .select("id,chat_retention_days");
+    .select("id,name,chat_retention_days,weather_location");
 
   if (error) {
     throw new Error(error.message);
@@ -128,6 +138,7 @@ export async function runGardenAutomation(supabase: SupabaseClient<Database>) {
       getAvailability(supabase, garden.id),
     ]);
     const scores = calculateScores(tasks, members);
+    const weatherForecast = await getWetterOnlineForecast(garden.weather_location ?? garden.name, today);
     const templateRows = templates
       .filter((template) => template.recurrence_type !== "none" && template.recurrence_type !== "on_demand")
       .map((template) => {
@@ -261,10 +272,16 @@ export async function runGardenAutomation(supabase: SupabaseClient<Database>) {
       const content = daysLeft === 0
         ? `⏰ ${assigneeMention} heute fällig: ${task.title}`
         : `⏰ ${assigneeMention} in ${daysLeft} Tagen fällig: ${task.title}`;
+      const weatherRecommendation = formatWeatherRecommendation({
+        forecast: weatherForecast,
+        taskTitle: task.title,
+        dueDate: task.due_date,
+        today,
+      });
 
       await insertSystemChatMessage(supabase, {
         gardenId: garden.id,
-        content,
+        content: `${content}\n\n${weatherRecommendation}`,
         messageType: "system_reminder",
         visibleToUserId: null,
         relatedTaskId: task.id,
@@ -296,6 +313,7 @@ export async function runGardenAutomation(supabase: SupabaseClient<Database>) {
         members,
         scores,
         availability,
+        weatherForecast,
         today,
         reason: isPostponed ? "postponed" : "overdue",
       });

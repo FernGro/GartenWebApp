@@ -18,9 +18,9 @@ export type Database = {
         Update: { id?: string; display_name?: string; created_at?: string; updated_at?: string };
       };
       gardens: {
-        Row: { id: string; name: string; created_by: string | null; chat_retention_days: number; created_at: string; updated_at: string };
-        Insert: { id?: string; name: string; created_by?: string | null; chat_retention_days?: number; created_at?: string; updated_at?: string };
-        Update: { id?: string; name?: string; created_by?: string | null; chat_retention_days?: number; created_at?: string; updated_at?: string };
+        Row: { id: string; name: string; created_by: string | null; chat_retention_days: number; weather_location: string | null; created_at: string; updated_at: string };
+        Insert: { id?: string; name: string; created_by?: string | null; chat_retention_days?: number; weather_location?: string | null; created_at?: string; updated_at?: string };
+        Update: { id?: string; name?: string; created_by?: string | null; chat_retention_days?: number; weather_location?: string | null; created_at?: string; updated_at?: string };
       };
       garden_members: {
         Row: { id: string; garden_id: string; user_id: string; role: GardenRole; is_active: boolean; joined_at: string; last_chat_read_at: string | null };

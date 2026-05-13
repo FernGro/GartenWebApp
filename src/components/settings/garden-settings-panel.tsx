@@ -1,5 +1,5 @@
 import { updateProfileAction } from "@/lib/profiles/actions";
-import { updateGardenAction, updateChatSettingsAction, leaveGardenAction, deleteGardenAction } from "@/lib/gardens/settings-actions";
+import { updateGardenAction, updateChatSettingsAction, updateWeatherSettingsAction, leaveGardenAction, deleteGardenAction } from "@/lib/gardens/settings-actions";
 import type { Garden, GardenRole, Profile } from "@/types/domain";
 import { Button } from "@/components/ui/button";
 
@@ -34,11 +34,11 @@ export function GardenSettingsPanel({
         </form>
       </section>
       {(userRole === "owner" || userRole === "admin") && (
-        <section className="mb-4 rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
-          <h2 className="text-lg font-bold">Chat-Einstellungen</h2>
-          <form action={updateChatSettingsAction} className="mt-4">
+        <section className="mb-4 grid gap-4 lg:grid-cols-2">
+          <form action={updateChatSettingsAction} className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
+            <h2 className="text-lg font-bold">Chat-Einstellungen</h2>
             <input name="garden_id" type="hidden" value={garden.id} />
-            <label className="block text-sm font-semibold">
+            <label className="mt-4 block text-sm font-semibold">
               Nachrichten automatisch löschen nach
               <select
                 className="mt-1 w-full rounded-lg border border-[#cbd8c1] px-3 py-3 bg-white"
@@ -54,6 +54,20 @@ export function GardenSettingsPanel({
               </select>
             </label>
             <Button className="mt-3" type="submit">Chat-Einstellungen speichern</Button>
+          </form>
+          <form action={updateWeatherSettingsAction} className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
+            <h2 className="text-lg font-bold">Wetter</h2>
+            <input name="garden_id" type="hidden" value={garden.id} />
+            <label className="mt-4 block text-sm font-semibold">
+              WetterOnline-Ort
+              <input
+                className="mt-1 w-full rounded-lg border border-[#cbd8c1] px-3 py-3"
+                name="weather_location"
+                defaultValue={garden.weather_location ?? ""}
+                placeholder="z. B. Berlin oder wetter/berlin"
+              />
+            </label>
+            <Button className="mt-3" type="submit">Wetter speichern</Button>
           </form>
         </section>
       )}

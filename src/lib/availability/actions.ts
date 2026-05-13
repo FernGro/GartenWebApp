@@ -9,6 +9,7 @@ import { hasTakeoverCallForTask, insertSystemChatMessage } from "@/lib/chat/quer
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { calculateScores, getTasks } from "@/lib/tasks/queries";
+import { formatWeatherRecommendation, getWetterOnlineForecast } from "@/lib/weather/wetteronline";
 import type { AvailabilityWindow, ScoreRow } from "@/types/domain";
 
 function readString(formData: FormData, key: string) {
@@ -68,13 +69,15 @@ export async function createAvailabilityAction(formData: FormData) {
 
   const admin = createAdminClient();
   if (admin) {
-    const [tasks, members, availability] = await Promise.all([
+    const [tasks, members, availability, gardenResult] = await Promise.all([
       getTasks(admin, gardenId),
       getGardenMembers(admin, gardenId),
       getAvailability(admin, gardenId),
+      admin.from("gardens").select("name,weather_location").eq("id", gardenId).maybeSingle(),
     ]);
     const scores = calculateScores(tasks, members);
     const userName = members.find((member) => member.user_id === user.id)?.profiles?.display_name ?? "Jemand";
+    const weatherForecast = await getWetterOnlineForecast(gardenResult.data?.weather_location ?? gardenResult.data?.name);
     const affectedTasks = tasks.filter(
       (task) =>
         task.assigned_to === user.id &&
@@ -121,6 +124,13 @@ export async function createAvailabilityAction(formData: FormData) {
           topCandidate
             ? `${mentionName(topCandidate.displayName)} ist nach Score aktuell der sinnvollste Vorschlag.`
             : "Bitte klaert im Chat, wer den Dienst uebernimmt.",
+          "",
+          formatWeatherRecommendation({
+            forecast: weatherForecast,
+            taskTitle: task.title,
+            dueDate: task.due_date,
+          }),
+          "",
           "Jede Person kann die Aufgabe ueber den Uebernahme-Button akzeptieren.",
         ].filter(Boolean).join("\n"),
         messageType: "system_overdue",

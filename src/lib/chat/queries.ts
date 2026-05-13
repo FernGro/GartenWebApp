@@ -148,7 +148,7 @@ export async function insertSystemChatMessage(
     .insert({
       garden_id: params.gardenId,
       author_id: null,
-      content: params.content,
+      content: params.content.length > 2000 ? `${params.content.slice(0, 1990)}...` : params.content,
       message_type: params.messageType,
       visible_to_user_id: params.visibleToUserId,
       related_task_id: params.relatedTaskId,

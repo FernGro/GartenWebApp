@@ -62,6 +62,31 @@ export async function updateChatSettingsAction(formData: FormData) {
   revalidatePath("/settings/garden");
 }
 
+export async function updateWeatherSettingsAction(formData: FormData) {
+  await requireUser();
+  const supabase = await createClient();
+
+  if (!supabase) {
+    throw new Error("Supabase ist nicht konfiguriert.");
+  }
+
+  const gardenId = readString(formData, "garden_id");
+  const weatherLocation = readString(formData, "weather_location") || null;
+
+  if (!gardenId) throw new Error("Garten fehlt.");
+
+  const { error } = await supabase
+    .from("gardens")
+    .update({ weather_location: weatherLocation })
+    .eq("id", gardenId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/settings/garden");
+}
+
 export async function leaveGardenAction(formData: FormData) {
   await requireUser();
   const supabase = await createClient();
