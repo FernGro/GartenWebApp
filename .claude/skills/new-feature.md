@@ -110,11 +110,13 @@ Wenn kritische Funde: zurück zu Phase 2/3/4
 ### Phase 7 — Testing (Tester-Agent)
 
 **Aufgaben:**
-1. `npm run typecheck` — muss sauber sein
-2. `npm run build` — muss erfolgreich sein
-3. Feature-spezifische manuelle Tests aus `.claude/rules/06-testing.md`
-4. Regressionstest für benachbarte Features
-5. Edge Cases manuell testen
+1. `npm run test:unit` — muss sauber sein
+2. `npm run test:integration` — muss sauber sein oder externer Ausfall ist dokumentiert
+3. `npm run typecheck` — muss sauber sein
+4. `npm run build` — muss erfolgreich sein
+5. Feature-spezifische manuelle Tests aus `.claude/rules/06-testing.md`
+6. Regressionstest für benachbarte Features
+7. Edge Cases manuell testen
 
 **Checkpoint:** Alle Tests bestanden → Phase 8
 
@@ -126,7 +128,8 @@ Wenn kritische Funde: zurück zu Phase 2/3/4
 1. Wenn neue Migration: `docs/beginner-deployment.md` aktualisieren
 2. Wenn neue RPC: `CLAUDE.md` aktualisieren (RPC-Liste)
 3. Wenn Architekturänderung: `docs/architecture.md` aktualisieren
-4. `.claude/transfer.md` auf aktuellen Stand bringen
+4. Wenn neue oder geänderte User-Funktion: `src/lib/help/content.ts` aktualisieren
+5. `.claude/transfer.md` auf aktuellen Stand bringen
 
 **Checkpoint:** Dokumentation vollständig → Phase 9
 
@@ -136,6 +139,8 @@ Wenn kritische Funde: zurück zu Phase 2/3/4
 
 ```bash
 npm run typecheck   # muss sauber sein
+npm run test:unit   # muss sauber sein
+npm run test:integration # muss sauber sein oder externer Ausfall dokumentiert
 npm run build       # muss erfolgreich sein
 git status          # prüfen was committed wird
 git add <dateien>   # spezifisch, kein -A ohne Prüfung

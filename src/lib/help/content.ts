@@ -77,7 +77,7 @@ export const helpItems: HelpItem[] = [
       "Wetter-Symbol am Tag ansehen.",
       "Wetter-Details aufklappen und Dienste fuer den Tag vergleichen.",
     ],
-    note: "WetterOnline liefert ueber die inoffizielle Schnittstelle nicht immer volle 14 Tage.",
+    note: "WetterOnline bleibt die erste Quelle. Wenn keine auswertbare Tagesvorschau kommt, nutzt die App Open-Meteo als 14-Tage-Fallback.",
   },
   {
     role: "Alle",
@@ -112,6 +112,7 @@ export const helpItems: HelpItem[] = [
       "Bei WetterOnline-Ort z. B. Murnau am Staffelsee eintragen.",
       "Wenn keine Daten erscheinen, den WetterOnline-URL-Teil wie wetter/murnau-am-staffelsee eintragen.",
     ],
+    note: "Wenn WetterOnline keine Tabelle liefert, wird automatisch Open-Meteo fuer 14 Tage genutzt.",
   },
   {
     role: "Owner/Admin",

@@ -5,6 +5,7 @@ export type WetterOnlineDay = {
   maxTemperature: number | null;
   sunHours: number | null;
   precipitationProbability: number | null;
+  snowfallCm?: number | null;
 };
 
 export type WeatherForecast = {
@@ -24,6 +25,28 @@ export type WeatherRating = WetterOnlineDay & {
 const REQUEST_HEADERS = {
   "user-agent": "Mozilla/5.0 (compatible; GartenDienstplan/1.0)",
   accept: "text/html,application/json;q=0.9,*/*;q=0.8",
+};
+
+type OpenMeteoGeocode = {
+  results?: {
+    name: string;
+    latitude: number;
+    longitude: number;
+    country?: string;
+    admin1?: string;
+    timezone?: string;
+  }[];
+};
+
+type OpenMeteoForecast = {
+  daily?: {
+    time?: string[];
+    temperature_2m_min?: number[];
+    temperature_2m_max?: number[];
+    precipitation_probability_max?: number[];
+    sunshine_duration?: number[];
+    snowfall_sum?: number[];
+  };
 };
 
 function addDays(date: string, days: number) {
@@ -59,6 +82,25 @@ async function fetchText(url: string) {
     return await response.text();
   } catch (error) {
     console.error("wetteronline fetch", error);
+    return null;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function fetchJson<T>(url: string): Promise<T | null> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 6000);
+  try {
+    const response = await fetch(url, {
+      headers: REQUEST_HEADERS,
+      signal: controller.signal,
+      next: { revalidate: 60 * 60 },
+    });
+    if (!response.ok) return null;
+    return await response.json() as T;
+  } catch (error) {
+    console.error("weather fetch json", error);
     return null;
   } finally {
     clearTimeout(timeout);
@@ -123,6 +165,63 @@ function findLocationUrl(markup: string) {
   return cleaned.startsWith("wetter/") || cleaned.startsWith("?gid") ? cleaned : null;
 }
 
+function locationNameFromPath(location: string) {
+  return location
+    .replace(/^wetter\//, "")
+    .replace(/-/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+async function getOpenMeteoFallback(location: string, today: string, previousNote?: string): Promise<WeatherForecast> {
+  const searchName = location.startsWith("wetter/") ? locationNameFromPath(location) : location;
+  const geocodeUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(searchName)}&count=1&language=de&format=json`;
+  const geocode = await fetchJson<OpenMeteoGeocode>(geocodeUrl);
+  const place = geocode?.results?.[0];
+
+  if (!place) {
+    return {
+      location,
+      sourceUrl: "https://www.wetteronline.de",
+      days: [],
+      note: previousNote ?? "WetterOnline und Fallback konnten den Ort nicht zuordnen.",
+    };
+  }
+
+  const forecastUrl = new URL("https://api.open-meteo.com/v1/forecast");
+  forecastUrl.searchParams.set("latitude", String(place.latitude));
+  forecastUrl.searchParams.set("longitude", String(place.longitude));
+  forecastUrl.searchParams.set("forecast_days", "14");
+  forecastUrl.searchParams.set("timezone", place.timezone ?? "Europe/Berlin");
+  forecastUrl.searchParams.set("daily", [
+    "temperature_2m_max",
+    "temperature_2m_min",
+    "precipitation_probability_max",
+    "sunshine_duration",
+    "snowfall_sum",
+  ].join(","));
+
+  const forecast = await fetchJson<OpenMeteoForecast>(forecastUrl.toString());
+  const daily = forecast?.daily;
+  const times = daily?.time ?? [];
+  const days: WetterOnlineDay[] = times.map((date, index) => ({
+    date,
+    label: new Intl.DateTimeFormat("de-DE", { weekday: "short", day: "2-digit", month: "2-digit", timeZone: "UTC" }).format(new Date(`${date}T00:00:00Z`)),
+    minTemperature: daily?.temperature_2m_min?.[index] ?? null,
+    maxTemperature: daily?.temperature_2m_max?.[index] ?? null,
+    sunHours: daily?.sunshine_duration?.[index] !== undefined ? Math.round((daily.sunshine_duration[index] ?? 0) / 3600) : null,
+    precipitationProbability: daily?.precipitation_probability_max?.[index] ?? null,
+    snowfallCm: daily?.snowfall_sum?.[index] ?? null,
+  })).filter((day) => day.date >= today);
+
+  return {
+    location: [place.name, place.admin1, place.country].filter(Boolean).join(", "),
+    sourceUrl: forecastUrl.toString(),
+    days,
+    note: previousNote ? `${previousNote} Fallback: Open-Meteo.` : "Fallback: Open-Meteo.",
+  };
+}
+
 export async function getWetterOnlineForecast(location: string | null | undefined, today = new Date().toISOString().slice(0, 10)): Promise<WeatherForecast | null> {
   const configuredLocation = (location || process.env.WETTERONLINE_LOCATION || "").trim();
   if (!configuredLocation) return null;
@@ -134,31 +233,24 @@ export async function getWetterOnlineForecast(location: string | null | undefine
   }
 
   if (!locationUrl) {
-    return {
-      location: configuredLocation,
-      sourceUrl: "https://www.wetteronline.de",
-      days: [],
-      note: "WetterOnline konnte den Wetterort nicht zuordnen.",
-    };
+    return getOpenMeteoFallback(configuredLocation, today, "WetterOnline konnte den Wetterort nicht zuordnen.");
   }
 
   const sourceUrl = `https://www.wetteronline.de/${locationUrl}`;
   const markup = await fetchText(sourceUrl);
   if (!markup) {
-    return {
-      location: configuredLocation,
-      sourceUrl,
-      days: [],
-      note: "WetterOnline ist gerade nicht erreichbar.",
-    };
+    return getOpenMeteoFallback(configuredLocation, today, "WetterOnline ist gerade nicht erreichbar.");
   }
 
   const days = parseForecast(decodeHtml(markup), today);
+  if (days.length === 0) {
+    return getOpenMeteoFallback(configuredLocation, today, "WetterOnline lieferte keine auswertbare Tagesvorschau.");
+  }
+
   return {
     location: configuredLocation,
     sourceUrl,
     days,
-    note: days.length === 0 ? "WetterOnline lieferte keine auswertbare Tagesvorschau." : undefined,
   };
 }
 
@@ -182,6 +274,8 @@ function snowRisk(day: WetterOnlineDay) {
   const precipitation = day.precipitationProbability ?? 0;
   const max = day.maxTemperature ?? 99;
   const min = day.minTemperature ?? 99;
+  if ((day.snowfallCm ?? 0) >= 2) return "hoch";
+  if ((day.snowfallCm ?? 0) > 0) return "moeglich";
   if (precipitation >= 60 && max <= 2) return "hoch";
   if (precipitation >= 40 && min <= 1) return "moeglich";
   return "niedrig";

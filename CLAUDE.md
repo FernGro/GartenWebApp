@@ -37,6 +37,7 @@ src/
     api/cron/garden-jobs/    # Cron: Aufgaben generieren, overdue markieren, Reminder
     auth/callback/           # Supabase Auth Redirect-Handler
     dashboard/               # Hauptseite (Aufgaben + Punkte + Owner-Recovery)
+    help/                    # Bedienhilfe nach Rolle mit Suche
     install/                 # PWA-Installationsanleitung
     invite/[token]/          # Einladungslink annehmen
     login/                   # Login-Seite
@@ -52,6 +53,7 @@ src/
     auth/login-form.tsx      # Client Component (benötigt useState)
     availability/            # Verfügbarkeits-Kalender
     dashboard/               # ScoreTable, OwnerRecovery
+    help/                    # HelpBrowser
     layout/app-shell.tsx     # Navigation (Header + Mobile Bottom Nav)
     members/invite-panel.tsx # Mitgliederliste + Einladungs-UI
     settings/                # GardenSettingsPanel
@@ -78,6 +80,7 @@ src/
       config.ts              # isSupabaseConfigured, getSupabaseConfig
     tasks/                   # actions.ts, queries.ts, comment-actions.ts, comments.ts
     templates/actions.ts     # Template CRUD
+    weather/wetteronline.ts  # WetterOnline + Open-Meteo-Fallback fuer Dienstempfehlungen
     cron/garden-jobs.ts      # Cron-Logik
     format/date.ts           # todayIsoDate, Datumsformatierung
 
@@ -88,6 +91,10 @@ src/
 supabase/
   migrations/                # 001–006 SQL (additive, idempotent via CREATE OR REPLACE)
   seed.sql                   # Standard-Aufgabenvorlagen
+
+tests/
+  unit/                      # Node Test Runner: reine Logik
+  integration/               # Node Test Runner: integrierte/externe Pfade
 
 docs/                        # Menschenlesbare Dokumentation
   beginner-deployment.md     # Schritt-für-Schritt Deployment
@@ -142,6 +149,8 @@ notifications     — In-App-Benachrichtigungen
 6. **Keine Kommentare außer bei nicht-offensichtlichem WHY.** Code ist selbstdokumentierend.
 7. **Fehler werden geworfen, nicht verschluckt.** Queries loggen per `console.error` und geben `[]`/`null` zurück; Actions werfen für Next.js-Error-Handling.
 8. **Kein over-engineering.** Keine Abstraktionen für hypothetische Anforderungen.
+9. **Tests vor Release.** Vor jedem Commit laufen `npm run test:unit`, `npm run test:integration`, `npm run typecheck`, `npm run build`.
+10. **Hilfe aktuell halten.** Jede sichtbare neue oder geänderte Funktion wird in `src/lib/help/content.ts` dokumentiert.
 
 ---
 

@@ -7,6 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test:unit": "node --test --experimental-strip-types tests/unit/*.test.mjs",
+    "test:integration": "node --test --experimental-strip-types tests/integration/*.test.mjs",
+    "test": "npm run test:unit && npm run test:integration",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

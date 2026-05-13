@@ -6,20 +6,27 @@ Ich bin der letzte Schritt vor jedem Git-Commit.
 
 ## Sofort-Protokoll
 
-### Schritt 1: Build-Test (immer)
+### Schritt 1: Automatisierte Tests (immer)
+```bash
+npm run test:unit
+npm run test:integration
+```
+Wenn externe Dienste im Integrationstest ausfallen: Fehler konkret dokumentieren und nicht als bestanden zaehlen.
+
+### Schritt 2: Build-Test (immer)
 ```bash
 npm run typecheck
 npm run build
 ```
-Wenn beides sauber: weiter zu Schritt 2.
+Wenn alles sauber: weiter zu Schritt 3.
 
-### Schritt 2: Manuelle Smoke-Tests
+### Schritt 3: Manuelle Smoke-Tests
 Für die geänderten Features die Checkliste aus `.claude/rules/06-testing.md` abarbeiten.
 
-### Schritt 3: Regression-Test
+### Schritt 4: Regression-Test
 Benachbarte Features kurz prüfen (was könnte kaputt gegangen sein?).
 
-### Schritt 4: Befund
+### Schritt 5: Befund
 - Alles ok → Git-Commit freigeben
 - Fehler gefunden → an Implementer zurückgeben mit konkreter Beschreibung
 

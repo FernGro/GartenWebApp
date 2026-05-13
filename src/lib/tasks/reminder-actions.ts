@@ -7,6 +7,7 @@ import { insertSystemChatMessage } from "@/lib/chat/queries";
 import { getGardenMembers } from "@/lib/gardens/queries";
 import { canManageGarden, getUserGardenRole } from "@/lib/gardens/roles";
 import { createNotification } from "@/lib/notifications/send";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { calculateScores, getTasks } from "@/lib/tasks/queries";
 import { formatWeatherRecommendation, getWetterOnlineForecast } from "@/lib/weather/wetteronline";
@@ -62,12 +63,17 @@ export async function triggerTaskChatAutomationAction(formData: FormData) {
     throw new Error("Nur Owner/Admin duerfen Chat-Erinnerungen manuell ausloesen.");
   }
 
-  const { data: garden } = await supabase
+  const admin = createAdminClient();
+  if (!admin) {
+    throw new Error("Admin-Client fehlt. SUPABASE_SERVICE_ROLE_KEY muss serverseitig gesetzt sein.");
+  }
+
+  const { data: garden } = await admin
     .from("gardens")
     .select("name,weather_location")
     .eq("id", gardenId)
     .maybeSingle();
-  const { data: task, error: taskError } = await supabase
+  const { data: task, error: taskError } = await admin
     .from("tasks")
     .select("id,garden_id,title,status,due_date,assigned_to")
     .eq("id", taskId)
@@ -84,9 +90,9 @@ export async function triggerTaskChatAutomationAction(formData: FormData) {
 
   const today = new Date().toISOString().slice(0, 10);
   const [tasks, members, availability, weatherForecast] = await Promise.all([
-    getTasks(supabase, gardenId),
-    getGardenMembers(supabase, gardenId),
-    getAvailability(supabase, gardenId),
+    getTasks(admin, gardenId),
+    getGardenMembers(admin, gardenId),
+    getAvailability(admin, gardenId),
     getWetterOnlineForecast(garden?.weather_location ?? garden?.name, today),
   ]);
   const scores = calculateScores(tasks, members);
@@ -107,7 +113,7 @@ export async function triggerTaskChatAutomationAction(formData: FormData) {
       ? candidates.map((score, index) => `${index + 1}. ${score.displayName}: ${score.points} Pkt.`).join("\n")
       : "Keine passende Vertretung gefunden.";
 
-    await insertSystemChatMessage(supabase, {
+    await insertSystemChatMessage(admin, {
       gardenId,
       content: [
         task.status === "postponed"
@@ -133,7 +139,7 @@ export async function triggerTaskChatAutomationAction(formData: FormData) {
     });
 
     for (const member of members.filter((member) => member.user_id !== task.assigned_to)) {
-      await createNotification(supabase, {
+      await createNotification(admin, {
         userId: member.user_id,
         gardenId,
         type: "manual_task_takeover_needed",
@@ -151,7 +157,7 @@ export async function triggerTaskChatAutomationAction(formData: FormData) {
         ? `⏰ ${assigneeMention} in ${daysLeft} Tagen fällig: ${task.title}`
         : `⏰ ${assigneeMention} Erinnerung: ${task.title}`;
 
-    await insertSystemChatMessage(supabase, {
+    await insertSystemChatMessage(admin, {
       gardenId,
       content: `${headline}\n\n${weatherBlock}`,
       messageType: "system_reminder",
@@ -160,7 +166,7 @@ export async function triggerTaskChatAutomationAction(formData: FormData) {
       mentionedUserIds: [task.assigned_to],
     });
 
-    await createNotification(supabase, {
+    await createNotification(admin, {
       userId: task.assigned_to,
       gardenId,
       type: "manual_chat_task_reminder",

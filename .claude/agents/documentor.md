@@ -49,6 +49,16 @@ Ich sorge dafür, dass alles für Menschen (nicht nur Maschinen) lesbar ist.
 - [ ] RPC-Funktionsliste aktuell?
 - [ ] Schlüsselprinzipien noch zutreffend?
 
+### `src/lib/help/content.ts`
+**Zielgruppe:** Endnutzer in der App.
+**Prüfen nach:** Jeder neuen oder geänderten sichtbaren Funktion.
+
+**Checkliste:**
+- [ ] Funktion nach Rolle einsortiert?
+- [ ] App-Ort (`Dashboard`, `Kalender`, `Garten`, ...) stimmt?
+- [ ] Suchbegriffe enthalten typische Nutzerworte?
+- [ ] Kurze Schrittfolge beschreibt, wie man die Funktion nutzt/testet?
+
 ### `.claude/transfer.md`
 **Prüfen nach jeder Session:** Template-Block mit aktuellem Stand aktualisieren.
 
@@ -79,6 +89,7 @@ Diese Dinge sind Indikatoren für veraltete Dokumentation:
 3. Ein neues Verzeichnis existiert aber fehlt in der Struktur-Übersicht
 4. Eine Designentscheidung wurde geändert aber noch als "gültig" dokumentiert
 5. `transfer.md` zeigt einen Stand von vor mehr als einer Session
+6. Eine sichtbare Funktion existiert, fehlt aber in `/help`
 
 ---
 

@@ -4,19 +4,29 @@
 
 ## Aktueller Stand
 
-**Kein automatisiertes Test-Framework ist installiert.**
-Aktuell wird manuell getestet. Die Checklisten unten sind verbindlich.
+Automatisierte Smoke-Tests laufen ueber Node Test Runner:
+- Unit: `npm run test:unit`
+- Integration: `npm run test:integration`
+- Gesamt: `npm run test`
 
-Zukünftige Automation: Playwright für E2E, Vitest für Unit-Tests.
-Wenn ein Test-Framework eingeführt wird: diese Datei aktualisieren.
+Zukünftige UI-Automation: Playwright fuer echte Browser-E2E-Tests.
+Wenn ein weiteres Test-Framework eingefuehrt wird: diese Datei aktualisieren.
 
 ---
 
 ## Manuelle Pflicht-Checkliste (vor jedem Commit)
 
 ### Build
+- [ ] `npm run test:unit` — kein Fehler
+- [ ] `npm run test:integration` — kein Fehler oder bewusst dokumentierter externer Ausfall
 - [ ] `npm run typecheck` — kein Fehler
 - [ ] `npm run build` — erfolgreich
+
+### Vor Release oder Git-Commit
+- [ ] Tester-Agent wurde ausgefuehrt.
+- [ ] Neue Business-Logik hat Unit-Tests oder eine dokumentierte Begruendung, warum sie nicht sinnvoll isolierbar ist.
+- [ ] Neue Server-Action/API/Cron-Logik hat Integrationstest oder eine dokumentierte manuelle Testanweisung.
+- [ ] Kein Commit, wenn Unit-, Integration-, Typecheck- oder Build-Fehler offen sind.
 
 ### Auth-Flow
 - [ ] Nicht eingeloggter Nutzer wird zu `/login` weitergeleitet

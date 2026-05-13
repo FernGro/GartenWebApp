@@ -118,7 +118,8 @@ export function GardenCalendar({
                     </summary>
                     <div className="mt-2 space-y-1">
                       <div>
-                        {weatherForDay.minTemperature ?? "?"}-{weatherForDay.maxTemperature ?? "?"}C, {weatherForDay.precipitationProbability ?? "?"}% Regen, Schnee {weatherForDay.snowRisk}, {weatherForDay.sunHours ?? "?"}h Sonne
+                        {weatherForDay.minTemperature ?? "?"}-{weatherForDay.maxTemperature ?? "?"}C, {weatherForDay.precipitationProbability ?? "?"}% Regen, Schnee {weatherForDay.snowRisk}
+                        {weatherForDay.snowfallCm ? ` (${weatherForDay.snowfallCm} cm)` : ""}, {weatherForDay.sunHours ?? "?"}h Sonne
                       </div>
                       <div>{weatherForDay.summary}</div>
                       {tasksForDay.length > 0 ? (
