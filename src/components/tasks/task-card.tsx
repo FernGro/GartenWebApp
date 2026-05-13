@@ -33,6 +33,7 @@ export function TaskCard({
   const completionWindow = task.due_date ? getCompletionWindow(task.due_date) : null;
   const daysUntilWindow = task.due_date ? daysUntilCompletionWindow(task.due_date) : 0;
   const canRequestTakeover = currentUserId && task.assigned_to !== currentUserId && ["open", "assigned", "overdue", "postponed"].includes(task.status);
+  const canAcceptTakeoverDirectly = task.status === "overdue" || task.status === "postponed";
 
   return (
     <article className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
@@ -102,7 +103,7 @@ export function TaskCard({
             placeholder="Warum willst du uebernehmen?"
           />
           <Button variant="secondary" type="submit">
-            Uebernahme anfragen
+            {canAcceptTakeoverDirectly ? "Dienst uebernehmen" : "Uebernahme anfragen"}
           </Button>
         </form>
       ) : null}

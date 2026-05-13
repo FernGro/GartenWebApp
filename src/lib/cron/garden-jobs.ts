@@ -5,8 +5,9 @@ import { calculateScores, getTaskTemplates, getTasks } from "@/lib/tasks/queries
 import { getGardenMembers } from "@/lib/gardens/queries";
 import { getAvailability } from "@/lib/availability/queries";
 import { createNotification } from "@/lib/notifications/send";
-import { hasCronMessageForTask, insertSystemChatMessage } from "@/lib/chat/queries";
+import { hasCronMessageForTask, hasTakeoverCallForTask, insertSystemChatMessage } from "@/lib/chat/queries";
 import type { Database } from "@/types/database";
+import type { AvailabilityWindow, GardenMember, ScoreRow, TaskWithPeople } from "@/types/domain";
 
 function addDays(date: Date, days: number) {
   const next = new Date(date);
@@ -16,6 +17,92 @@ function addDays(date: Date, days: number) {
 
 function daysDiff(fromIso: string, toIso: string): number {
   return Math.round((new Date(toIso).getTime() - new Date(fromIso).getTime()) / 86_400_000);
+}
+
+function mentionName(name: string) {
+  return `@${name.trim().replace(/\s+/g, "_")}`;
+}
+
+function isUnavailable(userId: string, dueDate: string | null, availability: AvailabilityWindow[]) {
+  if (!dueDate) return false;
+  return availability.some((entry) => entry.user_id === userId && entry.from_date <= dueDate && entry.to_date >= dueDate);
+}
+
+function rankedTakeoverCandidates(
+  scores: ScoreRow[],
+  currentAssignee: string | null,
+  dueDate: string | null,
+  availability: AvailabilityWindow[],
+) {
+  return [...scores]
+    .filter((score) => score.userId !== currentAssignee)
+    .filter((score) => !isUnavailable(score.userId, dueDate, availability))
+    .sort((a, b) => {
+      if (a.points !== b.points) return a.points - b.points;
+      if (!a.lastCompletedAt && b.lastCompletedAt) return -1;
+      if (a.lastCompletedAt && !b.lastCompletedAt) return 1;
+      return (a.lastCompletedAt ?? "").localeCompare(b.lastCompletedAt ?? "");
+    });
+}
+
+async function postTakeoverCall(params: {
+  supabase: SupabaseClient<Database>;
+  gardenId: string;
+  task: TaskWithPeople;
+  members: GardenMember[];
+  scores: ScoreRow[];
+  availability: AvailabilityWindow[];
+  today: string;
+  reason: "overdue" | "postponed";
+}) {
+  const { supabase, gardenId, task, members, scores, availability, today, reason } = params;
+  const alreadyPosted = await hasTakeoverCallForTask(supabase, gardenId, task.id);
+  if (alreadyPosted) return false;
+
+  const candidates = rankedTakeoverCandidates(scores, task.assigned_to, task.due_date, availability);
+  const currentName = members.find((m) => m.user_id === task.assigned_to)?.profiles?.display_name ?? "Unbekannt";
+  const candidateList = candidates.length > 0
+    ? candidates.map((s, index) => `${index + 1}. ${s.displayName}: ${s.points} Pkt.`).join("\n")
+    : "Keine passende Vertretung gefunden.";
+  const topCandidate = candidates[0] ?? null;
+  const daysLate = task.due_date ? daysDiff(task.due_date, today) : 0;
+  const intro = reason === "postponed"
+    ? `⚠️ "${task.title}" wurde von ${currentName} abgegeben.`
+    : `⚠️ "${task.title}" ist seit ${daysLate} Tagen überfällig und noch nicht erledigt markiert.`;
+  const topLine = topCandidate
+    ? `${mentionName(topCandidate.displayName)} ist nach Score aktuell der sinnvollste Vorschlag.`
+    : "Bitte klaert im Chat, wer den Dienst uebernimmt.";
+
+  await insertSystemChatMessage(supabase, {
+    gardenId,
+    content: [
+      intro,
+      `Bisher zugewiesen: ${currentName}`,
+      "",
+      "Vorschlag nach Score:",
+      candidateList,
+      "",
+      topLine,
+      "Jede Person kann die Aufgabe ueber den Uebernahme-Button akzeptieren.",
+    ].join("\n"),
+    messageType: "system_overdue",
+    visibleToUserId: null,
+    relatedTaskId: task.id,
+    mentionedUserIds: topCandidate ? [topCandidate.userId] : [],
+  });
+
+  for (const member of members.filter((m) => m.user_id !== task.assigned_to)) {
+    await createNotification(supabase, {
+      userId: member.user_id,
+      gardenId,
+      type: reason === "postponed" ? "task_takeover_needed" : "task_overdue_takeover_needed",
+      title: "Dienst sucht Uebernahme",
+      message: task.title,
+      relatedTaskId: task.id,
+    });
+  }
+
+  return true;
 }
 
 export async function runGardenAutomation(supabase: SupabaseClient<Database>) {
@@ -115,12 +202,15 @@ export async function runGardenAutomation(supabase: SupabaseClient<Database>) {
       }
     }
 
-    const activeTasks = tasks.filter((task) => task.assigned_to && (task.status === "open" || task.status === "assigned"));
+    const activeTasks = tasks.filter((task) =>
+      task.assigned_to && ["open", "assigned", "overdue", "postponed"].includes(task.status),
+    );
     const overdue = activeTasks.filter((task) => task.due_date && task.due_date < today);
-    const dueSoon = activeTasks.filter((task) => task.due_date && task.due_date >= today && task.due_date <= soon);
+    const newlyOverdue = overdue.filter((task) => task.status === "open" || task.status === "assigned");
+    const dueSoon = activeTasks.filter((task) => task.status !== "postponed" && task.due_date && task.due_date >= today && task.due_date <= soon);
 
-    if (overdue.length > 0) {
-      await supabase.from("tasks").update({ status: "overdue" }).in("id", overdue.map((task) => task.id));
+    if (newlyOverdue.length > 0) {
+      await supabase.from("tasks").update({ status: "overdue" }).in("id", newlyOverdue.map((task) => task.id));
     }
 
     const reminderRows = [
@@ -154,10 +244,10 @@ export async function runGardenAutomation(supabase: SupabaseClient<Database>) {
       createdNotifications += 1;
     }
 
-    // --- Chat-Erinnerungen (privat, nur für zugewiesene Person sichtbar) ---
+    // --- Chat-Erinnerungen mit @Mention an die zugewiesene Person ---
     const reminderTriggerDays = [7, 3, 0];
     for (const task of activeTasks) {
-      if (!task.due_date || !task.assigned_to) continue;
+      if (!task.due_date || !task.assigned_to || task.status === "postponed") continue;
       const daysLeft = daysDiff(today, task.due_date);
       if (!reminderTriggerDays.includes(daysLeft)) continue;
 
@@ -166,66 +256,51 @@ export async function runGardenAutomation(supabase: SupabaseClient<Database>) {
       );
       if (alreadyPosted) continue;
 
+      const assigneeName = members.find((m) => m.user_id === task.assigned_to)?.profiles?.display_name ?? "du";
+      const assigneeMention = mentionName(assigneeName);
       const content = daysLeft === 0
-        ? `⏰ Heute fällig: ${task.title}`
-        : `⏰ In ${daysLeft} Tagen fällig: ${task.title}`;
+        ? `⏰ ${assigneeMention} heute fällig: ${task.title}`
+        : `⏰ ${assigneeMention} in ${daysLeft} Tagen fällig: ${task.title}`;
 
       await insertSystemChatMessage(supabase, {
         gardenId: garden.id,
         content,
         messageType: "system_reminder",
-        visibleToUserId: task.assigned_to as string,
-        relatedTaskId: task.id,
-      });
-    }
-
-    // --- Öffentliche Overdue-Alerts (ab 3 Tagen überfällig) ---
-    for (const task of overdue) {
-      if (!task.due_date) continue;
-      const daysLate = daysDiff(task.due_date, today);
-      if (daysLate < 3) continue;
-
-      const alreadyPosted = await hasCronMessageForTask(
-        supabase, garden.id, task.id, "system_overdue", "2000-01-01T00:00:00Z",
-      );
-      if (alreadyPosted) continue;
-
-      const suggested = suggestAssignee(scores, task.due_date, availability);
-      const currentName = members.find((m) => m.user_id === task.assigned_to)?.profiles?.display_name ?? "Unbekannt";
-      const sortedScores = [...scores].sort((a, b) => a.points - b.points);
-      const scoreList = sortedScores
-        .map((s) => `• ${s.displayName}: ${s.points} Pkt${s.userId === suggested?.userId ? " ← Empfehlung" : ""}`)
-        .join("\n");
-
-      const lines = [
-        `⚠️ "${task.title}" ist seit ${daysLate} Tagen überfällig.`,
-        `Zugewiesen: ${currentName}`,
-        ``,
-        `Punkte-Übersicht:`,
-        scoreList,
-      ];
-      if (suggested && suggested.userId !== task.assigned_to) {
-        lines.push(``, `@${suggested.displayName} könnte diese Aufgabe übernehmen.`);
-      }
-
-      await insertSystemChatMessage(supabase, {
-        gardenId: garden.id,
-        content: lines.join("\n"),
-        messageType: "system_overdue",
         visibleToUserId: null,
         relatedTaskId: task.id,
+        mentionedUserIds: [task.assigned_to as string],
       });
 
-      if (suggested && suggested.userId !== task.assigned_to) {
-        await createNotification(supabase, {
-          userId: suggested.userId,
-          gardenId: garden.id,
-          type: "chat_overdue_suggestion",
-          title: "Aufgabenübernahme empfohlen",
-          message: task.title,
-          relatedTaskId: task.id,
-        });
-        createdNotifications += 1;
+      await createNotification(supabase, {
+        userId: task.assigned_to as string,
+        gardenId: garden.id,
+        type: "chat_task_reminder",
+        title: daysLeft === 0 ? "Dienst heute faellig" : `Dienst in ${daysLeft} Tagen`,
+        message: task.title,
+        relatedTaskId: task.id,
+      });
+      createdNotifications += 1;
+    }
+
+    // --- Öffentliche Übernahme-Aufrufe (ab 5 Tagen überfällig oder direkt bei "verschoben") ---
+    for (const task of activeTasks) {
+      const isPostponed = task.status === "postponed";
+      if (!isPostponed && !task.due_date) continue;
+      const daysLate = task.due_date ? daysDiff(task.due_date, today) : 0;
+      if (!isPostponed && daysLate < 5) continue;
+
+      const posted = await postTakeoverCall({
+        supabase,
+        gardenId: garden.id,
+        task,
+        members,
+        scores,
+        availability,
+        today,
+        reason: isPostponed ? "postponed" : "overdue",
+      });
+      if (posted) {
+        createdNotifications += Math.max(0, members.filter((m) => m.user_id !== task.assigned_to).length);
       }
     }
 

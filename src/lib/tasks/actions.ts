@@ -315,40 +315,86 @@ export async function requestTakeoverAction(formData: FormData) {
 
   assertCleanOptionalText(note, "Begruendung");
 
+  const { data: task, error: taskError } = await supabase
+    .from("tasks")
+    .select("id,title,status,assigned_to")
+    .eq("id", taskId)
+    .eq("garden_id", gardenId)
+    .maybeSingle();
+
+  if (taskError || !task) {
+    throw new Error(taskError?.message ?? "Aufgabe wurde nicht gefunden.");
+  }
+
+  if (task.assigned_to === user.id) {
+    throw new Error("Diese Aufgabe ist dir bereits zugewiesen.");
+  }
+
+  const canAcceptDirectly = task.status === "overdue" || task.status === "postponed";
+
   const { error } = await supabase.from("task_takeover_requests").insert({
     task_id: taskId,
     garden_id: gardenId,
     requested_by: user.id,
-    current_assignee: currentAssignee,
+    current_assignee: task.assigned_to ?? currentAssignee,
     note,
+    status: canAcceptDirectly ? "approved" : "pending",
+    decided_by: canAcceptDirectly ? user.id : null,
+    decided_at: canAcceptDirectly ? new Date().toISOString() : null,
   });
 
   if (error) {
     throw new Error(error.message);
   }
 
+  if (canAcceptDirectly) {
+    const { error: updateError } = await supabase
+      .from("tasks")
+      .update({ assigned_to: user.id, status: "assigned" })
+      .eq("id", taskId)
+      .eq("garden_id", gardenId);
+
+    if (updateError) {
+      throw new Error(updateError.message);
+    }
+  }
+
   await supabase.from("task_events").insert({
     task_id: taskId,
     garden_id: gardenId,
     actor_id: user.id,
-    event_type: "accepted",
-    from_user_id: currentAssignee,
+    event_type: canAcceptDirectly ? "reassigned" : "accepted",
+    from_user_id: task.assigned_to ?? currentAssignee,
     to_user_id: user.id,
-    note: "Uebernahme angefragt",
+    note: canAcceptDirectly ? "Uebernahme direkt akzeptiert" : "Uebernahme angefragt",
   });
 
-  if (currentAssignee) {
+  if (canAcceptDirectly) {
     await createNotification(supabase, {
-      userId: currentAssignee,
+      userId: user.id,
       gardenId,
-      type: "task_takeover_requested",
-      title: "Uebernahme angefragt",
-      message: "Jemand moechte deine Aufgabe uebernehmen.",
+      type: "task_takeover_accepted",
+      title: "Dienst uebernommen",
+      message: task.title,
+      relatedTaskId: taskId,
+    });
+  }
+
+  const previousAssignee = task.assigned_to ?? currentAssignee;
+  if (previousAssignee && previousAssignee !== user.id) {
+    await createNotification(supabase, {
+      userId: previousAssignee,
+      gardenId,
+      type: canAcceptDirectly ? "task_takeover_accepted_by_other" : "task_takeover_requested",
+      title: canAcceptDirectly ? "Dienst wurde uebernommen" : "Uebernahme angefragt",
+      message: canAcceptDirectly ? task.title : "Jemand moechte deine Aufgabe uebernehmen.",
       relatedTaskId: taskId,
     });
   }
 
   revalidatePath(`/tasks/${taskId}`);
+  revalidatePath("/tasks");
+  revalidatePath("/dashboard");
 }
 
 export async function decideTakeoverAction(formData: FormData) {

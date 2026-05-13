@@ -114,6 +114,24 @@ export async function hasCronMessageForTask(
   return data !== null;
 }
 
+export async function hasTakeoverCallForTask(
+  supabase: SupabaseClient<Database>,
+  gardenId: string,
+  taskId: string,
+): Promise<boolean> {
+  const { data } = await supabase
+    .from("garden_chat_messages")
+    .select("id")
+    .eq("garden_id", gardenId)
+    .eq("related_task_id", taskId)
+    .eq("message_type", "system_overdue")
+    .ilike("content", "%Jede Person kann die Aufgabe%")
+    .limit(1)
+    .maybeSingle();
+
+  return data !== null;
+}
+
 export async function insertSystemChatMessage(
   supabase: SupabaseClient<Database>,
   params: {
@@ -122,18 +140,38 @@ export async function insertSystemChatMessage(
     messageType: "system_reminder" | "system_overdue";
     visibleToUserId: string | null;
     relatedTaskId: string | null;
+    mentionedUserIds?: string[];
   },
 ): Promise<void> {
-  const { error } = await supabase.from("garden_chat_messages").insert({
-    garden_id: params.gardenId,
-    author_id: null,
-    content: params.content,
-    message_type: params.messageType,
-    visible_to_user_id: params.visibleToUserId,
-    related_task_id: params.relatedTaskId,
-  });
+  const { data: message, error } = await supabase
+    .from("garden_chat_messages")
+    .insert({
+      garden_id: params.gardenId,
+      author_id: null,
+      content: params.content,
+      message_type: params.messageType,
+      visible_to_user_id: params.visibleToUserId,
+      related_task_id: params.relatedTaskId,
+    })
+    .select("id")
+    .single();
 
   if (error) {
     console.error("insertSystemChatMessage", error.message);
+    return;
+  }
+
+  const mentionedUserIds = [...new Set(params.mentionedUserIds ?? [])];
+  if (message && mentionedUserIds.length > 0) {
+    const { error: mentionError } = await supabase.from("garden_chat_mentions").insert(
+      mentionedUserIds.map((userId) => ({
+        message_id: message.id,
+        user_id: userId,
+      })),
+    );
+
+    if (mentionError) {
+      console.error("insertSystemChatMessage mentions", mentionError.message);
+    }
   }
 }
