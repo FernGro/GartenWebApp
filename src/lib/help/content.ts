@@ -17,6 +17,7 @@ export const helpItems: HelpItem[] = [
     keywords: ["dashboard", "uebersicht", "punkte", "offen", "ueberfaellig"],
     steps: [
       "Offene, eigene, zu pruefende, ueberfaellige und erledigte Dienste oben vergleichen.",
+      "Auf eine Kennzahl klicken, um die passende Aufgabenuebersicht darunter zu sehen.",
       "Naechste Aufgaben direkt aus der Liste oeffnen.",
       "Punktestand und Fairness-Hinweis rechts pruefen.",
     ],
@@ -29,6 +30,7 @@ export const helpItems: HelpItem[] = [
     steps: [
       "Eigene zugewiesene Aufgabe oeffnen.",
       "Im erlaubten Zeitraum auf Dienst als erfuellt bestaetigen klicken.",
+      "Ueberfaellige oder verschobene eigene Dienste koennen ebenfalls gemeldet werden.",
       "Owner/Admin bestaetigt danach die Erledigung.",
     ],
     note: "Punkte zaehlen erst nach Owner/Admin-Bestaetigung.",

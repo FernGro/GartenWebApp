@@ -125,7 +125,8 @@ export async function completeTaskAction(formData: FormData) {
     throw new Error("Nur die zugewiesene Person kann diese Aufgabe erledigen. Bitte erst Uebernahme anfragen.");
   }
 
-  if (existingTask.due_date) {
+  const isOverdueOrPostponed = existingTask.status === "overdue" || existingTask.status === "postponed";
+  if (existingTask.due_date && !isOverdueOrPostponed) {
     const today = new Date().toISOString().slice(0, 10);
     const { earliest, latest } = getCompletionWindow(existingTask.due_date);
 

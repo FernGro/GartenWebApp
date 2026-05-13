@@ -28,7 +28,7 @@ export function TaskCard({
   currentUserId?: string;
   canManage?: boolean;
 }) {
-  const canComplete = currentUserId && task.assigned_to === currentUserId && task.status === "assigned";
+  const canComplete = currentUserId && task.assigned_to === currentUserId && ["assigned", "overdue", "postponed"].includes(task.status);
   const isCompletionWindowOpen = !task.due_date || isWithinCompletionWindow(task.due_date);
   const completionWindow = task.due_date ? getCompletionWindow(task.due_date) : null;
   const daysUntilWindow = task.due_date ? daysUntilCompletionWindow(task.due_date) : 0;
