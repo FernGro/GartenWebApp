@@ -23,12 +23,12 @@ export const helpItems: HelpItem[] = [
   },
   {
     role: "Alle",
-    title: "Dienst erledigt melden",
+    title: "Dienst als erfuellt bestaetigen",
     location: "Aufgaben oder Dashboard",
     keywords: ["erledigt", "bestaetigung", "dienst", "aufgabe"],
     steps: [
       "Eigene zugewiesene Aufgabe oeffnen.",
-      "Im erlaubten Zeitraum auf Erledigung melden klicken.",
+      "Im erlaubten Zeitraum auf Dienst als erfuellt bestaetigen klicken.",
       "Owner/Admin bestaetigt danach die Erledigung.",
     ],
     note: "Punkte zaehlen erst nach Owner/Admin-Bestaetigung.",

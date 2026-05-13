@@ -61,7 +61,7 @@ export function TaskCard({
           <input name="garden_id" type="hidden" value={task.garden_id} />
           <input name="points" type="hidden" value={task.points} />
           <Button className="w-full sm:w-auto" type="submit">
-            Erledigung melden
+            Dienst als erfuellt bestaetigen
           </Button>
         </form>
       ) : null}
