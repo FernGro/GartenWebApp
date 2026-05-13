@@ -17,6 +17,7 @@ const baseNavItems: NavItem[] = [
   { href: "/log", label: "Log" },
   { href: "/settings/garden", label: "Garten" },
   { href: "/settings/members", label: "Mitglieder" },
+  { href: "/help", label: "Hilfe" },
   { href: "/install", label: "Install" },
 ];
 
@@ -64,6 +65,16 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
       <main className="mx-auto max-w-6xl px-4 py-6 pb-24">{children}</main>
+      <footer className="border-t border-[#d7dfcf] bg-[#f8faf3]">
+        <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-5 text-sm text-[#5a6655] sm:flex-row sm:items-center sm:justify-between">
+          <span>Garten Dienstplan</span>
+          <div className="flex flex-wrap gap-3 font-semibold">
+            <Link className="text-[#2f6b3f]" href="/help">Hilfe</Link>
+            <Link className="text-[#2f6b3f]" href="/install">Installieren</Link>
+            <Link className="text-[#2f6b3f]" href="/settings/garden">Einstellungen</Link>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

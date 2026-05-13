@@ -75,6 +75,16 @@ export function GardenCalendar({
           </Link>
         </div>
       </div>
+      {weather && weather.days.length === 0 ? (
+        <div className="border-b border-[#d7dfcf] bg-[#fff7e8] px-4 py-3 text-sm text-[#915b10]">
+          Wetter: {weather.note ?? "Keine auswertbaren Daten."}
+        </div>
+      ) : null}
+      {!weather ? (
+        <div className="border-b border-[#d7dfcf] bg-[#fff7e8] px-4 py-3 text-sm text-[#915b10]">
+          Wetter: kein WetterOnline-Ort konfiguriert.
+        </div>
+      ) : null}
       <div className="grid grid-cols-7 gap-px bg-[#d7dfcf] text-xs font-bold uppercase text-[#5a6655]">
         {["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"].map((weekday) => (
           <div className="bg-[#f8faf3] px-2 py-2 text-center" key={weekday}>{weekday}</div>
