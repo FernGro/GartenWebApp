@@ -49,9 +49,10 @@ export const helpItems: HelpItem[] = [
     location: "Login",
     keywords: ["login", "anmelden", "magic link", "passwort", "konto"],
     steps: [
-      "E-Mail eingeben und Magic Link anfordern oder mit Passwort anmelden.",
-      "Den Link in der E-Mail auf demselben Geraet oeffnen.",
-      "Du landest auf der Uebersicht deines Gartens.",
+      "Am einfachsten: E-Mail eingeben und Magic-Link anfordern. Das klappt auch ohne Konto und ohne Passwort.",
+      "Den Link in der E-Mail auf demselben Geraet oeffnen. Absender ist noreply@mail.app.supabase.io.",
+      "Wer lieber ein Passwort nutzt: Registrieren, dann zuerst den Link in der Bestaetigungs-Mail klicken. Erst danach klappt Login mit Passwort.",
+      "Keine Mail bekommen? Spam-Ordner pruefen oder Bestaetigungs-Mail erneut senden (nach 60 Sekunden).",
     ],
     note: "Wurdest du vorab angelegt, melde dich einfach mit der E-Mail an, die der Admin eingetragen hat. Deine Punkte und Dienste sind dann schon da.",
   },

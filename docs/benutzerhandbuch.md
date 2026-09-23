@@ -59,8 +59,11 @@ flowchart LR
 
 ### Anmelden
 1. Seite öffnen und **E-Mail** eingeben.
-2. Entweder **Magic Link** anfordern und den Link aus der E-Mail öffnen, oder unter **Login** mit Passwort anmelden.
-3. Du landest auf der **Übersicht**.
+2. **Am einfachsten: Magic-Link.** Link anfordern und aus der E-Mail öffnen, fertig. Das klappt auch ganz ohne Konto und ohne Passwort.
+3. **Mit Passwort:** Zuerst **Registrieren**, dann den Link in der **Bestätigungs-Mail** klicken. Erst danach klappt „Login“ mit Passwort. Vorher meldet die App „E-Mail noch nicht bestätigt“.
+4. Du landest auf der **Übersicht** bzw. wieder auf der Einladung.
+
+Die Mails kommen von `noreply@mail.app.supabase.io`. Bei GMX, Web.de und Outlook landen sie oft im **Spam-Ordner**. Über „Bestätigungs-Mail erneut senden“ kommt eine neue, frühestens nach 60 Sekunden.
 
 ### Einladung annehmen
 1. Einladungslink öffnen.
@@ -293,7 +296,8 @@ Du bist vermutlich als ausgezogen markiert. Ein Admin kann dich unter Mitglieder
 | Problem | Lösung |
 |---|---|
 | Roter Hinweis unter einem Formular | Er nennt den Grund, z. B. fehlende Rechte oder „der letzte Owner kann nicht herabgestuft werden“. |
-| Magic Link kommt nicht an | Spam-Ordner prüfen. Link auf demselben Gerät öffnen. |
+| Magic-Link oder Bestätigungs-Mail kommt nicht an | Spam-Ordner prüfen (Absender `noreply@mail.app.supabase.io`), 1 Minute warten, dann „erneut senden“. Link auf demselben Gerät öffnen. Admin-Notlösung: siehe Abschnitt „E-Mail manuell bestätigen“ in `docs/beginner-deployment.md`. |
+| „E-Mail oder Passwort stimmen nicht“ direkt nach dem Registrieren | Zuerst den Link in der Bestätigungs-Mail klicken, oder per Magic-Link anmelden. |
 | Keine Push-Nachrichten | App auf den Startbildschirm legen und in den Einstellungen Push aktivieren. Beim iPhone mindestens iOS 16.4. |
 | Seite lädt ewig | Neu laden. Bei Offline-Verbindung zeigt die App den Rasenmäher-Ladebildschirm. |
 | Wetter fehlt | Admin: Wetterort unter Einstellungen prüfen. |

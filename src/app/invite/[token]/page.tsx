@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
+import { buttonClass } from "@/components/ui/button-styles";
 import { acceptInviteAction } from "@/lib/gardens/invite-actions";
 import { createClient } from "@/lib/supabase/server";
 import { ActionForm } from "@/components/ui/action-form";
@@ -26,10 +27,13 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
             <Button type="submit">Einladung annehmen</Button>
           </ActionForm>
         ) : (
-          <div className="mt-5 rounded-lg bg-[#f2f7ec] p-4">
-            <p className="text-sm text-[#42513d]">Melde dich erst an. Danach kommst du automatisch hierher zurueck.</p>
-            <Link className="mt-3 inline-flex rounded-lg bg-[#2f6b3f] px-4 py-3 font-semibold text-white" href={`/login?next=/invite/${token}`}>
-              Einloggen und Einladung annehmen
+          <div className="mt-5 rounded-xl bg-[#f2f7ec] p-4">
+            <p className="text-sm text-[#42513d]">
+              Melde dich zuerst an, danach kommst du automatisch hierher zurueck. Am einfachsten geht es per Magic-Link:
+              E-Mail eingeben, Link aus der Mail oeffnen, fertig. Das klappt auch ohne bestehendes Konto und ohne Passwort.
+            </p>
+            <Link className={buttonClass("primary", "mt-3")} href={`/login?next=/invite/${token}`}>
+              Anmelden und Einladung annehmen
             </Link>
           </div>
         )}

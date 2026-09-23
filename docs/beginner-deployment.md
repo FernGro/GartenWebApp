@@ -373,3 +373,21 @@ Er laeuft laut `vercel.json` taeglich um 06:00 UTC und:
 - erzeugt Erinnerungs-Notifications
 
 Dafuer muss `CRON_SECRET` in Vercel gesetzt sein. Vercel sendet dieses Secret als Schutz an die Cron-Route.
+
+
+## E-Mails bei Anmeldung und Registrierung
+
+Supabase verschickt Magic-Links und Bestaetigungs-Mails ueber den eingebauten Mail-Dienst (`noreply@mail.app.supabase.io`).
+Dieser ist nur fuer Tests gedacht: wenige Mails pro Stunde, und GMX/Web.de/Outlook sortieren sie oft als Spam aus.
+
+**Dauerhaft besser:** In Supabase unter *Authentication → Emails → SMTP Settings* einen eigenen Mail-Versand eintragen,
+z. B. Brevo oder Resend (beide kostenlos fuer kleine Mengen). Absender z. B. `garten@eure-domain.de`.
+
+**Notloesung, wenn jemand die Bestaetigungs-Mail nicht bekommt:** Im Supabase SQL Editor ausfuehren
+(E-Mail anpassen). Danach kann sich die Person mit ihrem Passwort anmelden:
+
+```sql
+update auth.users
+set email_confirmed_at = now()
+where email = 'name@example.com' and email_confirmed_at is null;
+```

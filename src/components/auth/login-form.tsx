@@ -9,14 +9,51 @@ import { Button } from "@/components/ui/button";
 
 type Mode = "magic" | "password" | "signup";
 
+type Notice = { tone: "info" | "success" | "error"; text: string } | null;
+
+function authMessage(message: string) {
+  if (/Email not confirmed/i.test(message)) {
+    return "Deine E-Mail ist noch nicht bestaetigt. Oeffne den Link in der Bestaetigungs-Mail (auch im Spam-Ordner schauen) oder melde dich per Magic-Link an.";
+  }
+  if (/Invalid login credentials/i.test(message)) {
+    return "E-Mail oder Passwort stimmen nicht. Noch kein Konto? Dann auf Registrieren. Frisch registriert? Dann zuerst die E-Mail bestaetigen.";
+  }
+  const wait = message.match(/after (\d+) seconds/i);
+  if (wait || /rate limit|too many/i.test(message)) {
+    return `Bitte kurz warten${wait ? ` (${wait[1]} Sekunden)` : ""} und dann erneut versuchen. Die Mail ist meist schon unterwegs.`;
+  }
+  if (/already registered|already been registered/i.test(message)) {
+    return "Fuer diese E-Mail gibt es schon ein Konto. Bitte auf Login gehen oder den Magic-Link nutzen.";
+  }
+  if (/Password should be/i.test(message)) {
+    return "Das Passwort muss mindestens 8 Zeichen haben.";
+  }
+  return message;
+}
+
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const rawNextPath = searchParams.get("next") ?? "/dashboard";
   const nextPath = rawNextPath.startsWith("/") && !rawNextPath.startsWith("//") ? rawNextPath : "/dashboard";
   const [mode, setMode] = useState<Mode>("magic");
-  const [message, setMessage] = useState<string | null>(null);
+  const [notice, setNotice] = useState<Notice>(null);
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const setMessage = (text: string | null, tone: "info" | "success" | "error" = "error") => setNotice(text ? { tone, text } : null);
+
+  async function resendConfirmation() {
+    if (!pendingEmail) return;
+    setLoading(true);
+    const supabase = createClient();
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: pendingEmail,
+      options: { emailRedirectTo: `${getBrowserAppUrl()}/auth/callback?next=${encodeURIComponent(nextPath)}` },
+    });
+    setLoading(false);
+    setMessage(error ? authMessage(error.message) : `Bestaetigungs-Mail an ${pendingEmail} erneut gesendet.`, error ? "error" : "success");
+  }
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -45,16 +82,16 @@ export function LoginForm() {
         });
 
         if (error) {
-          setMessage(error.message);
+          setMessage(authMessage(error.message));
           return;
         }
 
-        setMessage("Magic-Link wurde versendet.");
+        setMessage(`Wir haben dir einen Anmelde-Link an ${email} geschickt. Oeffne ihn auf diesem Geraet. Absender ist noreply@mail.app.supabase.io, schau notfalls im Spam-Ordner.`, "success");
         return;
       }
 
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -64,18 +101,31 @@ export function LoginForm() {
         });
 
         if (error) {
-          setMessage(error.message);
+          setMessage(authMessage(error.message));
           return;
         }
 
-        setMessage("Account angelegt. Bitte bestaetige ggf. die E-Mail.");
+        if (data.session) {
+          router.push(nextPath);
+          router.refresh();
+          return;
+        }
+
+        if (data.user && data.user.identities?.length === 0) {
+          setMessage("Fuer diese E-Mail gibt es schon ein Konto. Bitte auf Login gehen oder den Magic-Link nutzen.");
+          return;
+        }
+
+        setPendingEmail(email);
+        setMessage(`Fast geschafft: Wir haben eine Bestaetigungs-Mail an ${email} geschickt. Klicke auf den Link darin, danach bist du angemeldet. Absender ist noreply@mail.app.supabase.io. Nichts gekommen? Schau im Spam-Ordner.`, "success");
         return;
       }
 
       const { error } = await supabase.auth.signInWithPassword({ email, password });
 
       if (error) {
-        setMessage(error.message);
+        if (/Email not confirmed/i.test(error.message)) setPendingEmail(email);
+        setMessage(authMessage(error.message));
         return;
       }
 
@@ -97,7 +147,10 @@ export function LoginForm() {
           <button
             className={`rounded-md px-3 py-2 ${mode === value ? "bg-[#fffef9] text-[#172016] shadow-sm" : "text-[#5a6655]"}`}
             key={value}
-            onClick={() => setMode(value as Mode)}
+            onClick={() => {
+              setMode(value as Mode);
+              setNotice(null);
+            }}
             type="button"
           >
             {label}
@@ -130,7 +183,21 @@ export function LoginForm() {
         <Button className="w-full" disabled={loading} type="submit">
           {loading ? "Bitte warten..." : "Weiter"}
         </Button>
-        {message ? <p className="text-sm text-[#42513d]">{message}</p> : null}
+        {notice ? (
+          <p
+            className={`rounded-xl px-3 py-2 text-sm ${
+              notice.tone === "error" ? "border border-red-200 bg-red-50 text-red-800" : "bg-[#e7efe1] text-[#2f6b3f]"
+            }`}
+            role={notice.tone === "error" ? "alert" : "status"}
+          >
+            {notice.text}
+          </p>
+        ) : null}
+        {pendingEmail ? (
+          <button className="press text-sm font-semibold text-[#2f6b3f] underline" disabled={loading} onClick={resendConfirmation} type="button">
+            Bestaetigungs-Mail erneut senden
+          </button>
+        ) : null}
       </form>
     </div>
   );

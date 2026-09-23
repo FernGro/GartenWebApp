@@ -287,6 +287,12 @@ Benachrichtigung → `revalidatePath()` → optional `redirect()`.
 
 ### Login
 
+> E-Mail-Versand: Supabase-Standard-SMTP (`noreply@mail.app.supabase.io`), nur für Tests gedacht (Rate-Limit, oft Spam).
+> Empfehlung: eigenes SMTP (Brevo/Resend). `src/components/auth/login-form.tsx` übersetzt Auth-Fehler
+> („Email not confirmed“, „Invalid login credentials“, Rate-Limit, „already registered“) ins Deutsche und bietet
+> „Bestätigungs-Mail erneut senden“ (`auth.resend`). Liefert `signUp` direkt eine Session (Bestätigung deaktiviert),
+> wird sofort weitergeleitet.
+
 `src/components/auth/login-form.tsx` bietet drei Wege:
 1. **Magic Link:** `signInWithOtp` mit `emailRedirectTo = <Site-URL>/auth/callback?next=…`.
 2. **Registrieren:** `signUp` mit E-Mail + Passwort (Bestätigungsmail führt ebenfalls über `/auth/callback`).
