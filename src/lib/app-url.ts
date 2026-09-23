@@ -1,5 +1,6 @@
 export function getPublicAppUrl() {
-  return (process.env.NEXT_PUBLIC_SITE_URL ?? "").replace(/\/$/, "");
+  // Trimmed because a stray space in the env value breaks Supabase email links ("first path segment cannot contain colon").
+  return (process.env.NEXT_PUBLIC_SITE_URL ?? "").trim().replace(/\/$/, "");
 }
 
 export function getBrowserAppUrl() {

@@ -377,11 +377,26 @@ Dafuer muss `CRON_SECRET` in Vercel gesetzt sein. Vercel sendet dieses Secret al
 
 ## E-Mails bei Anmeldung und Registrierung
 
+**Wichtig:** In Supabase unter *Authentication → URL Configuration* muss die **Site URL** exakt
+`https://garten-web-app.vercel.app` lauten, ohne Leerzeichen davor oder dahinter. Unter *Redirect URLs*
+`https://garten-web-app.vercel.app/**` eintragen. Dasselbe gilt fuer die Vercel-Variable `NEXT_PUBLIC_SITE_URL`.
+Ein Leerzeichen fuehrt dazu, dass Bestaetigungs- und Magic-Links mit einem Fehler enden
+("first path segment in URL cannot contain colon").
+
 Supabase verschickt Magic-Links und Bestaetigungs-Mails ueber den eingebauten Mail-Dienst (`noreply@mail.app.supabase.io`).
 Dieser ist nur fuer Tests gedacht: wenige Mails pro Stunde, und GMX/Web.de/Outlook sortieren sie oft als Spam aus.
 
 **Dauerhaft besser:** In Supabase unter *Authentication → Emails → SMTP Settings* einen eigenen Mail-Versand eintragen,
 z. B. Brevo oder Resend (beide kostenlos fuer kleine Mengen). Absender z. B. `garten@eure-domain.de`.
+
+**Notloesung, wenn jemand sein Passwort nicht mehr weiss:** Im SQL Editor ein vorlaeufiges Passwort setzen
+und es der Person mitteilen:
+
+```sql
+update auth.users
+set encrypted_password = extensions.crypt('Vorlaeufig-2026!', extensions.gen_salt('bf'))
+where email = 'name@example.com';
+```
 
 **Notloesung, wenn jemand die Bestaetigungs-Mail nicht bekommt:** Im Supabase SQL Editor ausfuehren
 (E-Mail anpassen). Danach kann sich die Person mit ihrem Passwort anmelden:
