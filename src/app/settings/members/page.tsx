@@ -26,7 +26,7 @@ export default async function MembersSettingsPage() {
     <AppShell>
       <h1 className="mb-6 text-3xl font-bold">Mitglieder</h1>
       {garden ? (
-        <InvitePanel gardenId={garden.id} members={members} invites={invites} origin={origin} canManage={canManage} isOwner={myMembership?.role === "owner"} />
+        <InvitePanel gardenId={garden.id} members={members} invites={invites} origin={origin} canManage={canManage} />
       ) : (
         <EmptyState title="Kein Garten">Lege zuerst einen Garten im Dashboard an.</EmptyState>
       )}

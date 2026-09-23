@@ -89,7 +89,7 @@ src/
     domain.ts                # App-Domänentypen: Garden, GardenMember, Task, …
 
 supabase/
-  migrations/                # 001–022 SQL (additiv, idempotent, manuell im SQL Editor ausführen)
+  migrations/                # 001–023 SQL (additiv, idempotent, manuell im SQL Editor ausführen)
   seed.sql                   # Standard-Aufgabenvorlagen
 
 tests/

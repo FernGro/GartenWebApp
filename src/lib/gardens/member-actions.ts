@@ -35,7 +35,6 @@ async function assertMayChangeMember(
   gardenId: string,
   memberId: string,
   userId: string,
-  nextRole?: GardenRole,
 ) {
   const [callerRole, { data: target, error }] = await Promise.all([
     getUserGardenRole(supabase, gardenId, userId),
@@ -48,10 +47,6 @@ async function assertMayChangeMember(
 
   if (callerRole !== "owner" && callerRole !== "admin") {
     throw new Error("Nur Owner/Admin duerfen Mitglieder verwalten.");
-  }
-
-  if (callerRole !== "owner" && (target.role === "owner" || nextRole === "owner")) {
-    throw new Error("Nur Owner duerfen Owner-Rechte vergeben oder Owner aendern.");
   }
 
   return target.role;
@@ -74,7 +69,7 @@ export async function updateMemberRoleAction(formData: FormData) {
       throw new Error("Mitgliedsdaten sind ungueltig.");
     }
 
-    const currentRole = await assertMayChangeMember(supabase, gardenId, memberId, user.id, role);
+    const currentRole = await assertMayChangeMember(supabase, gardenId, memberId, user.id);
 
     if (currentRole === "owner" && role !== "owner" && (await activeOwnerCount(gardenId)) <= 1) {
       throw new Error("Der letzte Owner kann nicht heruntergestuft werden.");

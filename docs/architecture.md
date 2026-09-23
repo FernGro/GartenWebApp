@@ -1,6 +1,6 @@
 # Architektur-Bericht – Garten Dienstplan
 
-Stand: 2026-09-23 · Grundlage: Code-Stand nach Commit `31e23ac` und Migrationen `001`–`022`.
+Stand: 2026-09-23 · Grundlage: Code-Stand nach Commit `31e23ac` und Migrationen `001`–`023`.
 
 Dieses Dokument beschreibt, wie die App aufgebaut ist, wie Daten fließen und warum Dinge so gelöst sind.
 Es richtet sich an Betreiber ohne tiefe Entwicklerkenntnisse, bleibt aber technisch präzise. Jede Aussage
@@ -304,6 +304,10 @@ Benachrichtigung → `revalidatePath()` → optional `redirect()`.
 
 `garden_role` = `owner` | `admin` | `member` (Rang 3/2/1 über `role_rank`, Migration 004).
 
+Seit Migration 023 haben **Admins dieselben Rechte wie Owner**. Der Owner unterscheidet sich nur noch darin, dass
+jeder Garten mindestens einen aktiven Owner behalten muss (Trigger `prevent_last_owner_loss`) und dass der
+Garten-Ersteller sich per `restore_garden_creator_owner` wieder zum Owner machen kann, falls keiner mehr aktiv ist.
+
 | Aktion | Member | Admin | Owner | Durchgesetzt in |
 |---|:-:|:-:|:-:|---|
 | Aufgaben sehen, kommentieren | ✓ | ✓ | ✓ | RLS `tasks read members`, `task comments insert members` |
@@ -321,10 +325,10 @@ Benachrichtigung → `revalidatePath()` → optional `redirect()`.
 | Abrechnungseinstellungen, Ausgleiche, Abrechnung abschließen | – | ✓ | ✓ | `src/lib/billing/actions.ts`, RPC `close_billing_period` |
 | Gartenname, Chat-Aufbewahrung, Wetterort | – | ✓ | ✓ | RLS `gardens update admins` |
 | Einladen, Person vorab anlegen (Rolle admin/member) | – | ✓ | ✓ | RLS + `add_prepared_garden_member` |
-| Owner einladen / Owner ersetzen / Owner-Rechte vergeben oder ändern | – | – | ✓ | Guard-Trigger 018/019, Policy `garden invites create admins` |
-| Mitglieder deaktivieren, Rollen ändern | – | ✓ (nicht Owner) | ✓ | `src/lib/gardens/member-actions.ts` + Trigger |
+| Owner einladen / Owner ersetzen / Owner-Rechte vergeben oder ändern | – | ✓ | ✓ | Guard-Trigger 018/019 (seit 023 Owner **und** Admin) |
+| Mitglieder deaktivieren, Rollen ändern | – | ✓ | ✓ | `src/lib/gardens/member-actions.ts` + Trigger (letzter Owner geschützt) |
 | Garten verlassen | ✓ | ✓ | ✓ (nicht letzter Owner) | RPC `leave_garden` + Trigger `prevent_last_owner_loss` |
-| Garten löschen | – | – | ✓ | RPC `delete_garden` |
+| Garten löschen (mit Bestätigung „LOESCHEN“) | – | ✓ | ✓ | RPC `delete_garden` (seit 023 auch Admin) |
 | Owner-Rolle wiederherstellen | nur Garten-Ersteller | | | RPC `restore_garden_creator_owner` |
 | Chat schreiben, eigene Nachricht löschen | ✓ | ✓ | ✓ | RLS Chat-Policies (014) |
 | Fremde Chat-Nachricht löschen | – | ✓ | ✓ | RLS `chat delete own or admin` |
@@ -351,13 +355,13 @@ flowchart LR
    `replace_garden_member` ist eine interne Hilfsfunktion; `execute` ist für `authenticated` entzogen (019/020).
 4. **Guard-Trigger** (Migration `018_harden_member_and_task_permissions.sql`) schließen Lücken, die ein Nutzer mit
    eigenem JWT direkt über die REST-API (PostgREST) an den Server Actions vorbei ausnutzen könnte:
-   - `guard_garden_member_owner_changes`: Nur Owner dürfen Owner-Rollen vergeben, ändern oder deaktivieren
-     (Ausnahme: Garten-Ersteller legt sich selbst als Owner an).
+   - `guard_garden_member_owner_changes`: Nur Owner und Admins (seit 023; vorher nur Owner) dürfen Owner-Rollen
+     vergeben, ändern oder deaktivieren (Ausnahme: Garten-Ersteller legt sich selbst als Owner an).
    - `guard_member_task_updates`: Members dürfen Titel, Punkte, Fälligkeit usw. nicht ändern, fremde Aufgaben nur
      über Übernahme bekommen, nur eigene Aufgaben fixieren und nichts wieder öffnen oder stornieren.
    - Policy-Verschärfungen: Admins dürfen keine Owner-Einladungen erzeugen; Übernahme-Anfragen dürfen nur bei
      `overdue`/`postponed` direkt als `approved` angelegt werden.
-   - `guard_invite_replacement` (019): „Ersetzt“ muss Mitglied desselben Gartens sein; einen Owner ersetzen nur Owner.
+   - `guard_invite_replacement` (019/023): „Ersetzt“ muss Mitglied desselben Gartens sein; einen Owner ersetzen dürfen Owner und Admins.
 
    Die Guard-Funktionen sind **security invoker** und prüfen `if current_user <> 'authenticated' then return …`.
    Dadurch greifen sie nur für normale Nutzeranfragen. Security-Definer-RPCs (laufen als Funktionseigentümer),
@@ -626,6 +630,7 @@ erDiagram
 | 018 | Guard-Trigger und verschärfte Policies |
 | 019 | Plätze/Teams, Ein-/Auszug, `billing_periods`, Ersetzen, vorab angelegte Personen |
 | 020 | Fixes zu 019: FK entfernt, Owner-Übergabe beim Ersetzen, Abschluss endet gestern, deutsche Zeit |
+| 023 | Admins haben dieselben Rechte wie Owner (Owner-Rollen, Owner ersetzen, Garten löschen); Schutz „mindestens ein aktiver Owner“ bleibt |
 | 022 | Admins dürfen Korrekturen löschen; Einladungen mit E-Mail gelten nur für genau diese E-Mail |
 | 021 | Namen Ausgezogener bleiben sichtbar, „Garten verlassen“ markiert als ausgezogen statt zu löschen, Meldungen nur noch serverseitig für andere, erster Zeitraum beginnt beim frühesten Dienst |
 
@@ -1060,7 +1065,7 @@ Oberfläche ab. Diese werden nach der Checkliste in
 
 ### Migrations-Workflow
 
-1. Neue Datei `supabase/migrations/NNN_thema.sql`, fortlaufend nummeriert (nächste: `023_…`).
+1. Neue Datei `supabase/migrations/NNN_thema.sql`, fortlaufend nummeriert (nächste: `024_…`).
 2. Additiv und idempotent: `create … if not exists`, `create or replace function`, `drop trigger if exists` vor `create trigger`,
    `grant`/`revoke execute` nach jeder Funktion.
 3. `src/types/database.ts` (Tabellen und `Functions`) anpassen.

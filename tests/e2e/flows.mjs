@@ -155,10 +155,10 @@ const errText = async (page) => { const t = await page.evaluate(() => document.b
     if (c2 !== c1) throw new Error(`${c1} -> ${c2}`);
     return `${c1} tasks`;
   });
-  await step("admin has no owner role option", async () => {
+  await step("admin can grant owner role", async () => {
     await go(page, `/settings/members`);
     const n = await page.locator("option[value=owner]").count();
-    return `owner options visible: ${n} (only on owner row expected)`;
+    if (n < 2) throw new Error(`owner option only on ${n} rows`);
   });
   await step("admin prepares member", async () => {
     await page.getByText("Vorab anlegen").click();
@@ -284,6 +284,24 @@ let token;
     const btn = page.getByRole("button", { name: "Gelesen" });
     if (!(await btn.count())) return "no notifications";
     await submitAndWait(page, btn.first()); await errText(page);
+  });
+  await context.close();
+}
+{
+  const { context, page } = await login(browser, "admin");
+  await step("admin replaces the owner via invite", async () => {
+    await go(page, `/settings/members`);
+    const form = page.locator("form").filter({ hasText: "Link erstellen" });
+    await form.locator("select[name=replaces_user_id]").selectOption(ids.owner);
+    await submitAndWait(page, form.getByRole("button", { name: "Link erstellen" })); await errText(page);
+    const { data } = await db.from("garden_invites").select("token").eq("replaces_user_id", ids.owner).is("accepted_at", null).limit(1).single();
+    const { context: c2, page: p2 } = await login(browser, "stranger");
+    await p2.goto(`${BASE}/invite/${data.token}`);
+    await Promise.all([p2.waitForURL(/dashboard/, { timeout: 15000 }), p2.getByRole("button", { name: "Einladung annehmen" }).click()]);
+    await c2.close();
+    const { data: m } = await db.from("garden_members").select("user_id,role,is_active").in("user_id", [ids.owner, ids.stranger]);
+    const oldOwner = m.find((x) => x.user_id === ids.owner); const successor = m.find((x) => x.user_id === ids.stranger);
+    if (oldOwner.is_active || successor?.role !== "owner") throw new Error(JSON.stringify(m));
   });
   await context.close();
 }

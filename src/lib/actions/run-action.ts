@@ -7,7 +7,7 @@ export type ActionResult = { error: string } | { redirectTo: string } | undefine
 // Database guards raise English messages; members should see what to do instead.
 const friendlyMessages: [RegExp, string][] = [
   [/A garden must keep at least one active owner/i, "Der Garten braucht mindestens einen aktiven Owner. Mache zuerst eine andere Person zum Owner."],
-  [/Only owners can (change owner memberships|grant owner role|replace an owner)/i, "Das duerfen nur Owner."],
+  [/Only owners can (change owner memberships|grant owner role|replace an owner)|Only owners and admins can delete/i, "Das duerfen nur Owner und Admins."],
   [/Only owners\/admins can edit task details/i, "Aufgaben-Details duerfen nur Owner und Admins aendern."],
   [/Only owners\/admins can reopen or cancel tasks/i, "Nur Owner und Admins duerfen Aufgaben wieder oeffnen oder abbrechen."],
   [/Task can only be taken over via takeover request/i, "Diesen Dienst kannst du nur ueber eine Uebernahme-Anfrage bekommen."],

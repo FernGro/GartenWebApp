@@ -50,10 +50,10 @@ flowchart LR
 | Vorlagen, Saisonaufgaben, Wetterort, Chat-Aufbewahrung, Gartenname | – | ✅ | ✅ |
 | Mitglieder einladen, vorab anlegen, Auszug/Einzug eintragen, Rollen (bis Admin) | – | ✅ | ✅ |
 | Punktwert, Korrekturen, Abrechnung abschließen | – | ✅ | ✅ |
-| Owner-Rechte vergeben/entziehen, einen Owner ersetzen | – | – | ✅ |
-| Garten löschen | – | – | ✅ |
+| Owner-Rechte vergeben/entziehen, einen Owner ersetzen | – | ✅ | ✅ |
+| Garten löschen | – | ✅ | ✅ |
 
-> Ein Garten braucht immer mindestens einen aktiven Owner. Der letzte Owner kann weder herabgestuft werden noch austreten.
+> **Admin und Owner dürfen alles.** Der einzige Unterschied: Ein Garten braucht immer mindestens einen aktiven Owner. Der letzte Owner kann weder herabgestuft werden noch austreten. Zieht er aus, ersetzt man ihn per Einladung, dann wird der Nachfolger automatisch Owner.
 
 ## 3. Erste Schritte
 
@@ -236,7 +236,7 @@ flowchart TD
 | Wieder aktivieren | Bei Ausgezogen → **Wieder aktivieren** |
 | Rolle ändern | Person → *Bearbeiten* → Rolle → **Rolle speichern** |
 
-**Nur Owner:** Owner-Rechte vergeben und entziehen, einen Owner ersetzen. Zur **Übergabe** zuerst die neue Person zum Owner machen, danach die eigene Rolle herabsetzen. Wird der letzte Owner per Einladung ersetzt, bekommt der Nachfolger die Owner-Rolle automatisch.
+**Owner übergeben oder ersetzen** (Admins und Owner): Zur Übergabe zuerst die neue Person zum Owner machen, danach die alte Owner-Rolle herabsetzen. Zieht der Owner aus, eine Einladung mit „Ersetzt: bisheriger Owner“ erstellen. Der Nachfolger wird automatisch Owner.
 
 > Das **Einzugsdatum** bestimmt den Anteil an der Abrechnung. Wer von Anfang an dabei war, sollte das Datum des Zeitraumbeginns haben.
 
@@ -258,7 +258,7 @@ flowchart TD
 | Wetterort | Admin/Owner | Wetter, z. B. „Murnau am Staffelsee“ |
 | Chat-Aufbewahrung | Admin/Owner | Chat-Einstellungen |
 | Garten verlassen | alle außer letzter Owner | Gefahrenzone |
-| Garten löschen | Owner | Gefahrenzone (löscht alles endgültig) |
+| Garten löschen | Admin/Owner | Gefahrenzone, mit „LOESCHEN“ bestätigen (löscht alles endgültig) |
 
 **Garten verlassen:** Du wirst als ausgezogen geführt, deine offenen Dienste werden frei und du bleibst bis zum Abschluss in der Abrechnung.
 

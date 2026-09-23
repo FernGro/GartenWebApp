@@ -139,6 +139,10 @@ export async function deleteGardenAction(formData: FormData) {
       throw new Error("Garten fehlt.");
     }
 
+    if (readString(formData, "confirm") !== "LOESCHEN") {
+      throw new Error("Bitte zur Bestaetigung LOESCHEN eintippen.");
+    }
+
     const { error } = await supabase.rpc("delete_garden", { target_garden_id: gardenId });
 
     if (error) {

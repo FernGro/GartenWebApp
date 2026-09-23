@@ -31,14 +31,12 @@ export function InvitePanel({
   invites,
   origin,
   canManage,
-  isOwner,
 }: {
   gardenId: string;
   members: GardenMember[];
   invites: GardenInvite[];
   origin: string;
   canManage: boolean;
-  isOwner: boolean;
 }) {
   const activeMembers = members.filter((member) => member.is_active);
   const formerMembers = members.filter((member) => !member.is_active);
@@ -91,7 +89,7 @@ export function InvitePanel({
                             <select className={inputClass} defaultValue={member.role} name="role">
                               <option value="member">Mitglied</option>
                               <option value="admin">Admin</option>
-                              {isOwner || member.role === "owner" ? <option value="owner">Owner</option> : null}
+                              <option value="owner">Owner</option>
                             </select>
                           </label>
                           <Button type="submit" variant="secondary">Rolle speichern</Button>

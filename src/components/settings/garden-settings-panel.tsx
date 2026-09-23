@@ -74,35 +74,30 @@ export function GardenSettingsPanel({
           </ActionForm>
         </section>
       )}
-      <section className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4">
+      <section className="mb-4 rounded-2xl border border-red-200 bg-red-50 p-4">
         <h2 className="text-lg font-bold text-red-800">Gefahrenzone</h2>
-        <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-          <ActionForm action={leaveGardenAction}>
+        <div className="mt-3 grid gap-4 sm:grid-cols-2">
+          <ActionForm action={leaveGardenAction} className="space-y-2">
             <input name="garden_id" type="hidden" value={garden.id} />
-            <button
-              className="rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-100"
-              type="submit"
-            >
-              Garten verlassen
-            </button>
+            <p className="text-sm text-red-800">
+              Du wirst als ausgezogen gefuehrt, deine offenen Dienste werden frei. Bis zum Abschluss bleibst du in der Abrechnung.
+            </p>
+            <Button type="submit" variant="secondary">Garten verlassen</Button>
           </ActionForm>
-          {userRole === "owner" && (
-            <ActionForm action={deleteGardenAction}>
+          {userRole === "owner" || userRole === "admin" ? (
+            <ActionForm action={deleteGardenAction} className="space-y-2">
               <input name="garden_id" type="hidden" value={garden.id} />
-              <button
-                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
-                type="submit"
-              >
-                Garten loeschen
-              </button>
+              <p className="text-sm text-red-800">
+                Loescht alle Aufgaben, Mitglieder, Chats und Abrechnungen endgueltig. Das kann nicht rueckgaengig gemacht werden.
+              </p>
+              <label className="block text-sm font-semibold text-red-800">
+                Zur Bestaetigung LOESCHEN eintippen
+                <input autoComplete="off" className="mt-1 w-full rounded-xl border border-red-300 bg-white px-3 py-3" name="confirm" required />
+              </label>
+              <Button type="submit" variant="danger">Garten loeschen</Button>
             </ActionForm>
-          )}
+          ) : null}
         </div>
-        <p className="mt-3 text-xs text-red-600">
-          {userRole === "owner"
-            ? "Beim Loeschen werden alle Aufgaben, Mitglieder und Daten dauerhaft entfernt. Das kann nicht rueckgaengig gemacht werden."
-            : "Du verlaessl den Garten dauerhaft. Der letzte Owner kann den Garten nicht verlassen."}
-        </p>
       </section>
     </>
   );
