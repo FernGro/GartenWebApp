@@ -2,6 +2,7 @@ import { updateProfileAction } from "@/lib/profiles/actions";
 import { updateGardenAction, updateChatSettingsAction, updateWeatherSettingsAction, leaveGardenAction, deleteGardenAction } from "@/lib/gardens/settings-actions";
 import type { Garden, GardenRole, Profile } from "@/types/domain";
 import { Button } from "@/components/ui/button";
+import { ActionForm } from "@/components/ui/action-form";
 
 export function GardenSettingsPanel({
   garden,
@@ -16,7 +17,7 @@ export function GardenSettingsPanel({
     <>
       <section className="mb-4 grid gap-4 lg:grid-cols-2">
         {userRole === "owner" || userRole === "admin" ? (
-        <form action={updateGardenAction} className="rounded-2xl border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-[0_2px_0_#d7dfcf]">
+        <ActionForm action={updateGardenAction} className="rounded-2xl border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-[0_2px_0_#d7dfcf]">
           <h2 className="text-lg font-bold">Gartenname</h2>
           <input name="garden_id" type="hidden" value={garden.id} />
           <label className="mt-4 block text-sm font-semibold">
@@ -24,20 +25,20 @@ export function GardenSettingsPanel({
             <input className="mt-1 w-full rounded-xl border border-[#cbd8c1] px-3 py-3" name="name" defaultValue={garden.name} required />
           </label>
           <Button className="mt-3" type="submit">Garten speichern</Button>
-        </form>
+        </ActionForm>
         ) : null}
-        <form action={updateProfileAction} className="rounded-2xl border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-[0_2px_0_#d7dfcf]">
+        <ActionForm action={updateProfileAction} className="rounded-2xl border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-[0_2px_0_#d7dfcf]">
           <h2 className="text-lg font-bold">Mein Anzeigename</h2>
           <label className="mt-4 block text-sm font-semibold">
             Name
             <input className="mt-1 w-full rounded-xl border border-[#cbd8c1] px-3 py-3" name="display_name" defaultValue={profile?.display_name ?? ""} required />
           </label>
           <Button className="mt-3" type="submit">Namen speichern</Button>
-        </form>
+        </ActionForm>
       </section>
       {(userRole === "owner" || userRole === "admin") && (
         <section className="mb-4 grid gap-4 lg:grid-cols-2">
-          <form action={updateChatSettingsAction} className="rounded-2xl border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-[0_2px_0_#d7dfcf]">
+          <ActionForm action={updateChatSettingsAction} className="rounded-2xl border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-[0_2px_0_#d7dfcf]">
             <h2 className="text-lg font-bold">Chat-Einstellungen</h2>
             <input name="garden_id" type="hidden" value={garden.id} />
             <label className="mt-4 block text-sm font-semibold">
@@ -56,8 +57,8 @@ export function GardenSettingsPanel({
               </select>
             </label>
             <Button className="mt-3" type="submit">Chat-Einstellungen speichern</Button>
-          </form>
-          <form action={updateWeatherSettingsAction} className="rounded-2xl border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-[0_2px_0_#d7dfcf]">
+          </ActionForm>
+          <ActionForm action={updateWeatherSettingsAction} className="rounded-2xl border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-[0_2px_0_#d7dfcf]">
             <h2 className="text-lg font-bold">Wetter</h2>
             <input name="garden_id" type="hidden" value={garden.id} />
             <label className="mt-4 block text-sm font-semibold">
@@ -70,13 +71,13 @@ export function GardenSettingsPanel({
               />
             </label>
             <Button className="mt-3" type="submit">Wetter speichern</Button>
-          </form>
+          </ActionForm>
         </section>
       )}
       <section className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4">
         <h2 className="text-lg font-bold text-red-800">Gefahrenzone</h2>
         <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-          <form action={leaveGardenAction}>
+          <ActionForm action={leaveGardenAction}>
             <input name="garden_id" type="hidden" value={garden.id} />
             <button
               className="rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-100"
@@ -84,9 +85,9 @@ export function GardenSettingsPanel({
             >
               Garten verlassen
             </button>
-          </form>
+          </ActionForm>
           {userRole === "owner" && (
-            <form action={deleteGardenAction}>
+            <ActionForm action={deleteGardenAction}>
               <input name="garden_id" type="hidden" value={garden.id} />
               <button
                 className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
@@ -94,7 +95,7 @@ export function GardenSettingsPanel({
               >
                 Garten loeschen
               </button>
-            </form>
+            </ActionForm>
           )}
         </div>
         <p className="mt-3 text-xs text-red-600">

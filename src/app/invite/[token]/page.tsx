@@ -3,6 +3,7 @@ import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
 import { acceptInviteAction } from "@/lib/gardens/invite-actions";
 import { createClient } from "@/lib/supabase/server";
+import { ActionForm } from "@/components/ui/action-form";
 
 export const dynamic = "force-dynamic";
 
@@ -20,10 +21,10 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
           einen eigenen neuen Garten zu erstellen.
         </p>
         {user ? (
-          <form action={acceptInviteAction} className="mt-5">
+          <ActionForm action={acceptInviteAction} className="mt-5">
             <input name="token" type="hidden" value={token} />
             <Button type="submit">Einladung annehmen</Button>
-          </form>
+          </ActionForm>
         ) : (
           <div className="mt-5 rounded-lg bg-[#f2f7ec] p-4">
             <p className="text-sm text-[#42513d]">Melde dich erst an. Danach kommst du automatisch hierher zurueck.</p>

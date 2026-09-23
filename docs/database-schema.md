@@ -59,7 +59,7 @@ Das erste Garten-Onboarding erfolgt ueber `public.create_garden_with_owner(name)
 
 `010_task_review_and_trash.sql` ergaenzt:
 
-- `pending_review` als neuen Aufgabenstatus.
+- `pending_review` als Aufgabenstatus (seit Migration 017 nicht mehr verwendet; bestehende Eintraege wurden zu `done`).
 - Mitglieder melden Erledigungen nur zur Pruefung.
 - Punkte und Abrechnung zaehlen weiterhin ausschliesslich Aufgaben mit Status `done`.
 
@@ -86,3 +86,10 @@ Das erste Garten-Onboarding erfolgt ueber `public.create_garden_with_owner(name)
 - `billing_periods` — Abrechnungszeitraeume; genau einer pro Garten ist offen (`ends_on is null`). Abgeschlossene enthalten `snapshot` (Ergebnis zum Abschluss).
 - RPCs: `add_prepared_garden_member` (vorab angelegte Person aufnehmen), `close_billing_period` (Zeitraum abschliessen). Intern: `replace_garden_member` (nicht fuer Clients freigegeben).
 - Rechenweg: `src/lib/billing/teams.ts`, Spec: `docs/superpowers/specs/2026-09-23-mitbewohner-wechsel-design.md`.
+
+## Migration 021
+
+- `profiles read garden peers`: Namen ausgezogener Mitglieder bleiben fuer aktive Mitglieder desselben Gartens lesbar.
+- `leave_garden`: setzt `is_active = false` und `left_on` statt die Mitgliedschaft zu loeschen; offene Dienste werden frei.
+- `notifications insert own`: Mitglieder duerfen nur eigene Meldungen anlegen; Meldungen fuer andere legt der Server mit service_role an.
+- Der erste offene Abrechnungszeitraum beginnt beim fruehesten erledigten Dienst bzw. der fruehesten Buchung.

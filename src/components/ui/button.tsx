@@ -2,6 +2,7 @@
 
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { useFormStatus } from "react-dom";
+import { useActionPending } from "@/components/ui/action-form";
 import { buttonClass, type ButtonVariant } from "@/components/ui/button-styles";
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -11,7 +12,8 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 export function Button({ children, className = "", variant = "primary", type = "button", disabled, ...props }: ButtonProps) {
   const { pending } = useFormStatus();
-  const isSubmitting = pending && type === "submit";
+  const actionPending = useActionPending();
+  const isSubmitting = (pending || actionPending) && type === "submit";
 
   return (
     <button

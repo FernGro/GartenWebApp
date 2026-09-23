@@ -1,5 +1,6 @@
 "use server";
 
+import { runAction } from "@/lib/actions/run-action";
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth/session";
 import { getGardenMembers } from "@/lib/gardens/queries";
@@ -39,145 +40,149 @@ function rankedCandidates(scores: ScoreRow[], skippedUserId: string, dueDate: st
 }
 
 export async function createAvailabilityAction(formData: FormData) {
-  const user = await requireUser();
-  const supabase = await createClient();
+  return runAction(async () => {
+    const user = await requireUser();
+    const supabase = await createClient();
 
-  if (!supabase) {
-    throw new Error("Supabase ist nicht konfiguriert.");
-  }
+    if (!supabase) {
+      throw new Error("Supabase ist nicht konfiguriert.");
+    }
 
-  const gardenId = readString(formData, "garden_id");
-  const fromDate = readString(formData, "from_date");
-  const toDate = readString(formData, "to_date");
-  const reason = readString(formData, "reason") || null;
+    const gardenId = readString(formData, "garden_id");
+    const fromDate = readString(formData, "from_date");
+    const toDate = readString(formData, "to_date");
+    const reason = readString(formData, "reason") || null;
 
-  if (!gardenId || !fromDate || !toDate || fromDate > toDate) {
-    throw new Error("Bitte gueltige Abwesenheitsdaten eintragen.");
-  }
+    if (!gardenId || !fromDate || !toDate || fromDate > toDate) {
+      throw new Error("Bitte gueltige Abwesenheitsdaten eintragen.");
+    }
 
-  const { error } = await supabase.from("availability").insert({
-    garden_id: gardenId,
-    user_id: user.id,
-    from_date: fromDate,
-    to_date: toDate,
-    reason,
-  });
+    const { error } = await supabase.from("availability").insert({
+      garden_id: gardenId,
+      user_id: user.id,
+      from_date: fromDate,
+      to_date: toDate,
+      reason,
+    });
 
-  if (error) {
-    throw new Error(error.message);
-  }
+    if (error) {
+      throw new Error(error.message);
+    }
 
-  const admin = createAdminClient();
-  if (admin) {
-    const [tasks, members, availability, gardenResult] = await Promise.all([
-      getTasks(admin, gardenId),
-      getGardenMembers(admin, gardenId),
-      getAvailability(admin, gardenId),
-      admin.from("gardens").select("name,weather_location").eq("id", gardenId).maybeSingle(),
-    ]);
-    const scores = calculateScores(tasks, members, await getGardenMembers(admin, gardenId, true));
-    const userName = members.find((member) => member.user_id === user.id)?.profiles?.display_name ?? "Jemand";
-    const weatherForecast = await getWetterOnlineForecast(gardenResult.data?.weather_location ?? gardenResult.data?.name);
-    const affectedTasks = tasks.filter(
-      (task) =>
-        task.assigned_to === user.id &&
-        task.due_date !== null &&
-        task.due_date >= fromDate &&
-        task.due_date <= toDate &&
-        ["open", "assigned", "overdue"].includes(task.status),
-    );
+    const admin = createAdminClient();
+    if (admin) {
+      const [tasks, members, availability, gardenResult] = await Promise.all([
+        getTasks(admin, gardenId),
+        getGardenMembers(admin, gardenId),
+        getAvailability(admin, gardenId),
+        admin.from("gardens").select("name,weather_location").eq("id", gardenId).maybeSingle(),
+      ]);
+      const scores = calculateScores(tasks, members, await getGardenMembers(admin, gardenId, true));
+      const userName = members.find((member) => member.user_id === user.id)?.profiles?.display_name ?? "Jemand";
+      const weatherForecast = await getWetterOnlineForecast(gardenResult.data?.weather_location ?? gardenResult.data?.name);
+      const affectedTasks = tasks.filter(
+        (task) =>
+          task.assigned_to === user.id &&
+          task.due_date !== null &&
+          task.due_date >= fromDate &&
+          task.due_date <= toDate &&
+          ["open", "assigned", "overdue"].includes(task.status),
+      );
 
-    for (const task of affectedTasks) {
-      const alreadyPosted = await hasTakeoverCallForTask(admin, gardenId, task.id);
-      if (alreadyPosted) continue;
+      for (const task of affectedTasks) {
+        const alreadyPosted = await hasTakeoverCallForTask(admin, gardenId, task.id);
+        if (alreadyPosted) continue;
 
-      await admin
-        .from("tasks")
-        .update({ status: "postponed" })
-        .eq("id", task.id)
-        .eq("garden_id", gardenId);
+        await admin
+          .from("tasks")
+          .update({ status: "postponed" })
+          .eq("id", task.id)
+          .eq("garden_id", gardenId);
 
-      await admin.from("task_events").insert({
-        task_id: task.id,
-        garden_id: gardenId,
-        actor_id: user.id,
-        event_type: "postponed",
-        from_user_id: user.id,
-        note: reason ? `Abwesenheit eingetragen: ${reason}` : "Abwesenheit eingetragen",
-      });
-
-      const candidates = rankedCandidates(scores, user.id, task.due_date, availability);
-      const topCandidate = candidates[0] ?? null;
-      const candidateList = candidates.length > 0
-        ? candidates.map((score, index) => `${index + 1}. ${score.displayName}: ${score.points} Pkt.`).join("\n")
-        : "Keine passende Vertretung gefunden.";
-
-      await insertSystemChatMessage(admin, {
-        gardenId,
-        content: [
-          `⚠️ "${task.title}" wurde von ${userName} spontan abgegeben.`,
-          reason ? `Grund: ${reason}` : null,
-          "",
-          "Vorschlag nach Score:",
-          candidateList,
-          "",
-          topCandidate
-            ? `${mentionName(topCandidate.displayName)} ist nach Score aktuell der sinnvollste Vorschlag.`
-            : "Bitte klaert im Chat, wer den Dienst uebernimmt.",
-          "",
-          formatWeatherRecommendation({
-            forecast: weatherForecast,
-            taskTitle: task.title,
-            dueDate: task.due_date,
-          }),
-          "",
-          "Jede Person kann die Aufgabe ueber den Uebernahme-Button akzeptieren.",
-        ].filter(Boolean).join("\n"),
-        messageType: "system_overdue",
-        visibleToUserId: null,
-        relatedTaskId: task.id,
-        mentionedUserIds: topCandidate ? [topCandidate.userId] : [],
-      });
-
-      for (const member of members.filter((member) => member.user_id !== user.id)) {
-        await createNotification(admin, {
-          userId: member.user_id,
-          gardenId,
-          type: "task_takeover_needed",
-          title: "Dienst sucht Uebernahme",
-          message: task.title,
-          relatedTaskId: task.id,
+        await admin.from("task_events").insert({
+          task_id: task.id,
+          garden_id: gardenId,
+          actor_id: user.id,
+          event_type: "postponed",
+          from_user_id: user.id,
+          note: reason ? `Abwesenheit eingetragen: ${reason}` : "Abwesenheit eingetragen",
         });
+
+        const candidates = rankedCandidates(scores, user.id, task.due_date, availability);
+        const topCandidate = candidates[0] ?? null;
+        const candidateList = candidates.length > 0
+          ? candidates.map((score, index) => `${index + 1}. ${score.displayName}: ${score.points} Pkt.`).join("\n")
+          : "Keine passende Vertretung gefunden.";
+
+        await insertSystemChatMessage(admin, {
+          gardenId,
+          content: [
+            `⚠️ "${task.title}" wurde von ${userName} spontan abgegeben.`,
+            reason ? `Grund: ${reason}` : null,
+            "",
+            "Vorschlag nach Score:",
+            candidateList,
+            "",
+            topCandidate
+              ? `${mentionName(topCandidate.displayName)} ist nach Score aktuell der sinnvollste Vorschlag.`
+              : "Bitte klaert im Chat, wer den Dienst uebernimmt.",
+            "",
+            formatWeatherRecommendation({
+              forecast: weatherForecast,
+              taskTitle: task.title,
+              dueDate: task.due_date,
+            }),
+            "",
+            "Jede Person kann die Aufgabe ueber den Uebernahme-Button akzeptieren.",
+          ].filter(Boolean).join("\n"),
+          messageType: "system_overdue",
+          visibleToUserId: null,
+          relatedTaskId: task.id,
+          mentionedUserIds: topCandidate ? [topCandidate.userId] : [],
+        });
+
+        for (const member of members.filter((member) => member.user_id !== user.id)) {
+          await createNotification(admin, {
+            userId: member.user_id,
+            gardenId,
+            type: "task_takeover_needed",
+            title: "Dienst sucht Uebernahme",
+            message: task.title,
+            relatedTaskId: task.id,
+          });
+        }
       }
     }
-  }
 
-  revalidatePath("/settings/garden");
-  revalidatePath("/tasks/new");
-  revalidatePath("/tasks");
-  revalidatePath("/chat");
+    revalidatePath("/settings/garden");
+    revalidatePath("/tasks/new");
+    revalidatePath("/tasks");
+    revalidatePath("/chat");
+  });
 }
 
 export async function deleteAvailabilityAction(formData: FormData) {
-  await requireUser();
-  const supabase = await createClient();
+  return runAction(async () => {
+    await requireUser();
+    const supabase = await createClient();
 
-  if (!supabase) {
-    throw new Error("Supabase ist nicht konfiguriert.");
-  }
+    if (!supabase) {
+      throw new Error("Supabase ist nicht konfiguriert.");
+    }
 
-  const id = readString(formData, "id");
+    const id = readString(formData, "id");
 
-  if (!id) {
-    throw new Error("Abwesenheit fehlt.");
-  }
+    if (!id) {
+      throw new Error("Abwesenheit fehlt.");
+    }
 
-  const { error } = await supabase.from("availability").delete().eq("id", id);
+    const { error } = await supabase.from("availability").delete().eq("id", id);
 
-  if (error) {
-    throw new Error(error.message);
-  }
+    if (error) {
+      throw new Error(error.message);
+    }
 
-  revalidatePath("/settings/garden");
-  revalidatePath("/tasks/new");
+    revalidatePath("/settings/garden");
+    revalidatePath("/tasks/new");
+  });
 }

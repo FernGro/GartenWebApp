@@ -1,5 +1,6 @@
 "use server";
 
+import { runAction } from "@/lib/actions/run-action";
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth/session";
 import { getAvailability } from "@/lib/availability/queries";
@@ -39,208 +40,137 @@ async function assertCanManage(gardenId: string, userId: string) {
 }
 
 export async function generateSeasonalTasksAction(formData: FormData) {
-  const user = await requireUser();
-  const supabase = await createClient();
+  return runAction(async () => {
+    const user = await requireUser();
+    const supabase = await createClient();
 
-  if (!supabase) {
-    throw new Error("Supabase ist nicht konfiguriert.");
-  }
+    if (!supabase) {
+      throw new Error("Supabase ist nicht konfiguriert.");
+    }
 
-  const gardenId = readString(formData, "garden_id");
+    const gardenId = readString(formData, "garden_id");
 
-  if (!gardenId) {
-    throw new Error("Garten fehlt.");
-  }
+    if (!gardenId) {
+      throw new Error("Garten fehlt.");
+    }
 
-  await assertCanManage(gardenId, user.id);
+    await assertCanManage(gardenId, user.id);
 
-  const [templates, tasks, members, availability] = await Promise.all([
-    getTaskTemplates(supabase, gardenId),
-    getTasks(supabase, gardenId),
-    getGardenMembers(supabase, gardenId),
-    getAvailability(supabase, gardenId),
-  ]);
-  const scores = calculateScores(tasks, members, await getGardenMembers(supabase, gardenId, true));
-  const now = new Date();
-  const rows = templates
-    .filter((template) => template.recurrence_type !== "none" && template.recurrence_type !== "on_demand")
-    .map((template) => ({ template, dueDate: toIsoDate(addDays(now, getCadenceRule(template).intervalDays)) }))
-    .filter(({ template, dueDate }) => isTemplateDateInSeason(dueDate, template))
-    .filter(({ template, dueDate }) =>
-      !hasTemplateTaskWithinInterval(tasks, template.id, dueDate, getCadenceRule(template).intervalDays),
-    )
-    .map(({ template, dueDate }) => {
-      const assignee = suggestAssignee(scores, dueDate, availability);
-      const score = assignee ? scores.find((row) => row.userId === assignee.userId) : null;
-      if (score) {
-        score.points += template.default_points;
-      }
+    const [templates, tasks, members, availability] = await Promise.all([
+      getTaskTemplates(supabase, gardenId),
+      getTasks(supabase, gardenId),
+      getGardenMembers(supabase, gardenId),
+      getAvailability(supabase, gardenId),
+    ]);
+    const scores = calculateScores(tasks, members, await getGardenMembers(supabase, gardenId, true));
+    const now = new Date();
+    const rows = templates
+      .filter((template) => template.recurrence_type !== "none" && template.recurrence_type !== "on_demand")
+      .map((template) => ({ template, dueDate: toIsoDate(addDays(now, getCadenceRule(template).intervalDays)) }))
+      .filter(({ template, dueDate }) => isTemplateDateInSeason(dueDate, template))
+      .filter(({ template, dueDate }) =>
+        !hasTemplateTaskWithinInterval(tasks, template.id, dueDate, getCadenceRule(template).intervalDays),
+      )
+      .map(({ template, dueDate }) => {
+        const assignee = suggestAssignee(scores, dueDate, availability);
+        const score = assignee ? scores.find((row) => row.userId === assignee.userId) : null;
+        if (score) {
+          score.points += template.default_points;
+        }
 
-      return {
-        garden_id: gardenId,
-        template_id: template.id,
-        title: template.title,
-        description: `Automatisch aus Vorlage erzeugt (${template.recurrence_type}).`,
-        points: template.default_points,
-        due_date: dueDate,
-        assigned_to: assignee?.userId ?? null,
-        original_assignee: assignee?.userId ?? null,
-        status: assignee ? "assigned" as const : "open" as const,
-        created_by: user.id,
-      };
-    });
+        return {
+          garden_id: gardenId,
+          template_id: template.id,
+          title: template.title,
+          description: `Automatisch aus Vorlage erzeugt (${template.recurrence_type}).`,
+          points: template.default_points,
+          due_date: dueDate,
+          assigned_to: assignee?.userId ?? null,
+          original_assignee: assignee?.userId ?? null,
+          status: assignee ? "assigned" as const : "open" as const,
+          created_by: user.id,
+        };
+      });
 
-  if (rows.length === 0) {
+    if (rows.length === 0) {
+      revalidatePath("/templates");
+      return;
+    }
+
+    const { data, error } = await supabase.from("tasks").insert(rows).select("id,garden_id,title,assigned_to");
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    await supabase.from("task_events").insert(
+      (data ?? []).map((task) => ({
+        task_id: task.id,
+        garden_id: task.garden_id,
+        actor_id: user.id,
+        event_type: "created" as const,
+        to_user_id: task.assigned_to,
+        note: "Aus Vorlage erzeugt",
+      })),
+    );
+
+    const notificationRows = (data ?? [])
+      .filter((task) => task.assigned_to)
+      .map((task) => ({
+        user_id: task.assigned_to as string,
+        garden_id: task.garden_id,
+        type: "task_assigned",
+        title: "Neue Aufgabe aus Vorlage",
+        message: task.title,
+        related_task_id: task.id,
+      }));
+
+    if (notificationRows.length > 0) {
+      await supabase.from("notifications").insert(notificationRows);
+    }
+
     revalidatePath("/templates");
-    return;
-  }
-
-  const { data, error } = await supabase.from("tasks").insert(rows).select("id,garden_id,title,assigned_to");
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  await supabase.from("task_events").insert(
-    (data ?? []).map((task) => ({
-      task_id: task.id,
-      garden_id: task.garden_id,
-      actor_id: user.id,
-      event_type: "created" as const,
-      to_user_id: task.assigned_to,
-      note: "Aus Vorlage erzeugt",
-    })),
-  );
-
-  const notificationRows = (data ?? [])
-    .filter((task) => task.assigned_to)
-    .map((task) => ({
-      user_id: task.assigned_to as string,
-      garden_id: task.garden_id,
-      type: "task_assigned",
-      title: "Neue Aufgabe aus Vorlage",
-      message: task.title,
-      related_task_id: task.id,
-    }));
-
-  if (notificationRows.length > 0) {
-    await supabase.from("notifications").insert(notificationRows);
-  }
-
-  revalidatePath("/templates");
-  revalidatePath("/tasks");
-  revalidatePath("/dashboard");
+    revalidatePath("/tasks");
+    revalidatePath("/dashboard");
+  });
 }
 
 export async function createTaskTemplateAction(formData: FormData) {
-  const user = await requireUser();
-  const supabase = await createClient();
+  return runAction(async () => {
+    const user = await requireUser();
+    const supabase = await createClient();
 
-  if (!supabase) {
-    throw new Error("Supabase ist nicht konfiguriert.");
-  }
+    if (!supabase) {
+      throw new Error("Supabase ist nicht konfiguriert.");
+    }
 
-  const gardenId = readString(formData, "garden_id");
-  const title = readString(formData, "title");
-  const defaultPoints = readNumber(formData, "default_points");
-  const estimatedMinutes = readNumber(formData, "estimated_minutes");
-  const customIntervalDays = readNumber(formData, "custom_interval_days");
-  const seasonStartMonth = readNumber(formData, "season_start_month");
-  const seasonStartDay = readNumber(formData, "season_start_day");
-  const seasonEndMonth = readNumber(formData, "season_end_month");
-  const seasonEndDay = readNumber(formData, "season_end_day");
-  const isWeatherDependent = formData.get("is_weather_dependent") === "on";
+    const gardenId = readString(formData, "garden_id");
+    const title = readString(formData, "title");
+    const defaultPoints = readNumber(formData, "default_points");
+    const estimatedMinutes = readNumber(formData, "estimated_minutes");
+    const customIntervalDays = readNumber(formData, "custom_interval_days");
+    const seasonStartMonth = readNumber(formData, "season_start_month");
+    const seasonStartDay = readNumber(formData, "season_start_day");
+    const seasonEndMonth = readNumber(formData, "season_end_month");
+    const seasonEndDay = readNumber(formData, "season_end_day");
+    const isWeatherDependent = formData.get("is_weather_dependent") === "on";
 
-  if (
-    !gardenId ||
-    !title ||
-    !defaultPoints ||
-    !estimatedMinutes ||
-    !customIntervalDays ||
-    !seasonStartMonth ||
-    !seasonStartDay ||
-    !seasonEndMonth ||
-    !seasonEndDay
-  ) {
-    throw new Error("Vorlage ist unvollstaendig.");
-  }
+    if (
+      !gardenId ||
+      !title ||
+      !defaultPoints ||
+      !estimatedMinutes ||
+      !customIntervalDays ||
+      !seasonStartMonth ||
+      !seasonStartDay ||
+      !seasonEndMonth ||
+      !seasonEndDay
+    ) {
+      throw new Error("Vorlage ist unvollstaendig.");
+    }
 
-  await assertCanManage(gardenId, user.id);
+    await assertCanManage(gardenId, user.id);
 
-  const { error } = await supabase.from("task_templates").insert({
-    garden_id: gardenId,
-    title,
-    default_points: defaultPoints,
-    estimated_minutes: estimatedMinutes,
-    season_start_month: seasonStartMonth,
-    season_start_day: seasonStartDay,
-    season_end_month: seasonEndMonth,
-    season_end_day: seasonEndDay,
-    recurrence_type: "seasonal",
-    recurrence_interval: 1,
-    custom_interval_days: customIntervalDays,
-    is_weather_dependent: isWeatherDependent,
-    is_active: true,
-  });
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  revalidatePath("/templates");
-  revalidatePath("/forecast");
-  revalidatePath("/calendar");
-}
-
-export async function updateTaskTemplateScheduleAction(formData: FormData) {
-  const user = await requireUser();
-  const supabase = await createClient();
-
-  if (!supabase) {
-    throw new Error("Supabase ist nicht konfiguriert.");
-  }
-
-  const gardenId = readString(formData, "garden_id");
-  const templateId = readString(formData, "template_id");
-  const title = readString(formData, "title");
-  const defaultPoints = readNumber(formData, "default_points");
-  const estimatedMinutes = readNumber(formData, "estimated_minutes");
-  const customIntervalDays = readNumber(formData, "custom_interval_days");
-  const seasonStartMonth = readNumber(formData, "season_start_month");
-  const seasonStartDay = readNumber(formData, "season_start_day");
-  const seasonEndMonth = readNumber(formData, "season_end_month");
-  const seasonEndDay = readNumber(formData, "season_end_day");
-  const isWeatherDependent = formData.get("is_weather_dependent") === "on";
-  const isActive = formData.get("is_active") === "on";
-
-  if (
-    !gardenId ||
-    !templateId ||
-    !title ||
-    !defaultPoints ||
-    !estimatedMinutes ||
-    !customIntervalDays ||
-    !seasonStartMonth ||
-    !seasonStartDay ||
-    !seasonEndMonth ||
-    !seasonEndDay
-  ) {
-    throw new Error("Vorlagen-Zeitplan ist unvollstaendig.");
-  }
-
-  await assertCanManage(gardenId, user.id);
-
-  const { data: template, error: readError } = await supabase
-    .from("task_templates")
-    .select("id,garden_id,title,recurrence_type,recurrence_interval")
-    .eq("id", templateId)
-    .maybeSingle();
-
-  if (readError || !template) {
-    throw new Error(readError?.message ?? "Vorlage wurde nicht gefunden.");
-  }
-
-  if (!template.garden_id) {
     const { error } = await supabase.from("task_templates").insert({
       garden_id: gardenId,
       title,
@@ -250,11 +180,11 @@ export async function updateTaskTemplateScheduleAction(formData: FormData) {
       season_start_day: seasonStartDay,
       season_end_month: seasonEndMonth,
       season_end_day: seasonEndDay,
-      recurrence_type: template.recurrence_type,
-      recurrence_interval: template.recurrence_interval,
+      recurrence_type: "seasonal",
+      recurrence_interval: 1,
       custom_interval_days: customIntervalDays,
       is_weather_dependent: isWeatherDependent,
-      is_active: isActive,
+      is_active: true,
     });
 
     if (error) {
@@ -264,31 +194,108 @@ export async function updateTaskTemplateScheduleAction(formData: FormData) {
     revalidatePath("/templates");
     revalidatePath("/forecast");
     revalidatePath("/calendar");
-    return;
-  }
+  });
+}
 
-  const { error } = await supabase
-    .from("task_templates")
-    .update({
-      title,
-      default_points: defaultPoints,
-      estimated_minutes: estimatedMinutes,
-      custom_interval_days: customIntervalDays,
-      season_start_month: seasonStartMonth,
-      season_start_day: seasonStartDay,
-      season_end_month: seasonEndMonth,
-      season_end_day: seasonEndDay,
-      is_weather_dependent: isWeatherDependent,
-      is_active: isActive,
-    })
-    .eq("id", templateId)
-    .eq("garden_id", gardenId);
+export async function updateTaskTemplateScheduleAction(formData: FormData) {
+  return runAction(async () => {
+    const user = await requireUser();
+    const supabase = await createClient();
 
-  if (error) {
-    throw new Error(error.message);
-  }
+    if (!supabase) {
+      throw new Error("Supabase ist nicht konfiguriert.");
+    }
 
-  revalidatePath("/templates");
-  revalidatePath("/forecast");
-  revalidatePath("/calendar");
+    const gardenId = readString(formData, "garden_id");
+    const templateId = readString(formData, "template_id");
+    const title = readString(formData, "title");
+    const defaultPoints = readNumber(formData, "default_points");
+    const estimatedMinutes = readNumber(formData, "estimated_minutes");
+    const customIntervalDays = readNumber(formData, "custom_interval_days");
+    const seasonStartMonth = readNumber(formData, "season_start_month");
+    const seasonStartDay = readNumber(formData, "season_start_day");
+    const seasonEndMonth = readNumber(formData, "season_end_month");
+    const seasonEndDay = readNumber(formData, "season_end_day");
+    const isWeatherDependent = formData.get("is_weather_dependent") === "on";
+    const isActive = formData.get("is_active") === "on";
+
+    if (
+      !gardenId ||
+      !templateId ||
+      !title ||
+      !defaultPoints ||
+      !estimatedMinutes ||
+      !customIntervalDays ||
+      !seasonStartMonth ||
+      !seasonStartDay ||
+      !seasonEndMonth ||
+      !seasonEndDay
+    ) {
+      throw new Error("Vorlagen-Zeitplan ist unvollstaendig.");
+    }
+
+    await assertCanManage(gardenId, user.id);
+
+    const { data: template, error: readError } = await supabase
+      .from("task_templates")
+      .select("id,garden_id,title,recurrence_type,recurrence_interval")
+      .eq("id", templateId)
+      .maybeSingle();
+
+    if (readError || !template) {
+      throw new Error(readError?.message ?? "Vorlage wurde nicht gefunden.");
+    }
+
+    if (!template.garden_id) {
+      const { error } = await supabase.from("task_templates").insert({
+        garden_id: gardenId,
+        title,
+        default_points: defaultPoints,
+        estimated_minutes: estimatedMinutes,
+        season_start_month: seasonStartMonth,
+        season_start_day: seasonStartDay,
+        season_end_month: seasonEndMonth,
+        season_end_day: seasonEndDay,
+        recurrence_type: template.recurrence_type,
+        recurrence_interval: template.recurrence_interval,
+        custom_interval_days: customIntervalDays,
+        is_weather_dependent: isWeatherDependent,
+        is_active: isActive,
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      revalidatePath("/templates");
+      revalidatePath("/forecast");
+      revalidatePath("/calendar");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("task_templates")
+      .update({
+        title,
+        default_points: defaultPoints,
+        estimated_minutes: estimatedMinutes,
+        custom_interval_days: customIntervalDays,
+        season_start_month: seasonStartMonth,
+        season_start_day: seasonStartDay,
+        season_end_month: seasonEndMonth,
+        season_end_day: seasonEndDay,
+        is_weather_dependent: isWeatherDependent,
+        is_active: isActive,
+      })
+      .eq("id", templateId)
+      .eq("garden_id", gardenId);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    revalidatePath("/templates");
+    revalidatePath("/forecast");
+    revalidatePath("/calendar");
+  });
 }

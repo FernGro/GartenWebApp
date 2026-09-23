@@ -7,14 +7,12 @@ import { getAvailability } from "@/lib/availability/queries";
 import { createNotification } from "@/lib/notifications/send";
 import { hasCronMessageForTask, hasTakeoverCallForTask, insertSystemChatMessage } from "@/lib/chat/queries";
 import { formatWeatherRecommendation, getWetterOnlineForecast, type WeatherForecast } from "@/lib/weather/wetteronline";
-import { todayIsoDate } from "@/lib/format/date";
+import { addDaysIso, todayIsoDate } from "@/lib/format/date";
 import type { Database } from "@/types/database";
 import type { AvailabilityWindow, GardenMember, ScoreRow, TaskWithPeople } from "@/types/domain";
 
 function addDays(date: Date, days: number) {
-  const next = new Date(date);
-  next.setDate(next.getDate() + days);
-  return next.toISOString().slice(0, 10);
+  return addDaysIso(todayIsoDate(date), days);
 }
 
 function daysDiff(fromIso: string, toIso: string): number {

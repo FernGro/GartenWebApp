@@ -1,9 +1,10 @@
 import { createInviteAction } from "@/lib/gardens/invite-actions";
-import { setMemberActiveAction, updateMemberRoleAction } from "@/lib/gardens/member-actions";
+import { setMemberActiveAction, updateMemberDatesAction, updateMemberRoleAction } from "@/lib/gardens/member-actions";
 import { createPreparedMemberAction } from "@/lib/gardens/prepared-member-actions";
 import { formatDate, todayIsoDate } from "@/lib/format/date";
 import type { GardenInvite, GardenMember, GardenRole } from "@/types/domain";
 import { Button } from "@/components/ui/button";
+import { ActionForm } from "@/components/ui/action-form";
 
 const inputClass = "mt-1 w-full rounded-xl border border-[#cbd8c1] bg-white px-3 py-3";
 const labelClass = "block text-sm font-semibold text-[#405039]";
@@ -82,7 +83,7 @@ export function InvitePanel({
                     <details className="mt-3 border-t border-[#e5ecdc] pt-3">
                       <summary className="cursor-pointer text-sm font-semibold text-[#2f6b3f]">Bearbeiten</summary>
                       <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                        <form action={updateMemberRoleAction} className="space-y-2">
+                        <ActionForm action={updateMemberRoleAction} className="space-y-2">
                           <input name="member_id" type="hidden" value={member.id} />
                           <input name="garden_id" type="hidden" value={gardenId} />
                           <label className={labelClass}>
@@ -94,8 +95,8 @@ export function InvitePanel({
                             </select>
                           </label>
                           <Button type="submit" variant="secondary">Rolle speichern</Button>
-                        </form>
-                        <form action={setMemberActiveAction} className="space-y-2">
+                        </ActionForm>
+                        <ActionForm action={setMemberActiveAction} className="space-y-2">
                           <input name="member_id" type="hidden" value={member.id} />
                           <input name="garden_id" type="hidden" value={gardenId} />
                           <input name="active" type="hidden" value="false" />
@@ -104,7 +105,17 @@ export function InvitePanel({
                             <input className={inputClass} defaultValue={todayIsoDate()} max={todayIsoDate()} name="left_on" type="date" />
                           </label>
                           <Button type="submit" variant="secondary">Als ausgezogen markieren</Button>
-                        </form>
+                        </ActionForm>
+                        <ActionForm action={updateMemberDatesAction} className="space-y-2 sm:col-span-2">
+                          <input name="member_id" type="hidden" value={member.id} />
+                          <input name="garden_id" type="hidden" value={gardenId} />
+                          <label className={labelClass}>
+                            Eingezogen am
+                            <input className={inputClass} defaultValue={member.joined_on} max={todayIsoDate()} name="joined_on" required type="date" />
+                          </label>
+                          <p className="text-xs text-[#6d7669]">Zaehlt fuer die Abrechnung: Vor diesem Tag hat die Person keinen Anteil.</p>
+                          <Button type="submit" variant="secondary">Einzugsdatum speichern</Button>
+                        </ActionForm>
                       </div>
                     </details>
                   ) : null}
@@ -131,12 +142,30 @@ export function InvitePanel({
                       </div>
                     </div>
                     {canManage ? (
-                      <form action={setMemberActiveAction}>
+                      <details className="text-sm">
+                        <summary className="cursor-pointer font-semibold text-[#2f6b3f]">Daten korrigieren</summary>
+                        <ActionForm action={updateMemberDatesAction} className="mt-2 grid gap-2 sm:grid-cols-2">
+                          <input name="member_id" type="hidden" value={member.id} />
+                          <input name="garden_id" type="hidden" value={gardenId} />
+                          <label className={labelClass}>
+                            Eingezogen am
+                            <input className={inputClass} defaultValue={member.joined_on} max={todayIsoDate()} name="joined_on" required type="date" />
+                          </label>
+                          <label className={labelClass}>
+                            Ausgezogen am
+                            <input className={inputClass} defaultValue={member.left_on ?? todayIsoDate()} max={todayIsoDate()} name="left_on" required type="date" />
+                          </label>
+                          <Button className="sm:col-span-2" type="submit" variant="secondary">Speichern</Button>
+                        </ActionForm>
+                      </details>
+                    ) : null}
+                    {canManage ? (
+                      <ActionForm action={setMemberActiveAction}>
                         <input name="member_id" type="hidden" value={member.id} />
                         <input name="garden_id" type="hidden" value={gardenId} />
                         <input name="active" type="hidden" value="true" />
                         <Button type="submit" variant="ghost">Wieder aktivieren</Button>
-                      </form>
+                      </ActionForm>
                     ) : null}
                   </li>
                 );
@@ -153,7 +182,7 @@ export function InvitePanel({
             <details className={`${panelClass} p-4`} open>
               <summary className="cursor-pointer text-lg font-bold">Per Einladungslink</summary>
               <p className="mt-2 text-sm text-[#5a6655]">Die Person oeffnet den Link, meldet sich an und ist dabei. Nicht fuer dein eigenes Konto verwenden.</p>
-              <form action={createInviteAction} className="mt-4 space-y-3">
+              <ActionForm action={createInviteAction} className="mt-4 space-y-3">
                 <input name="garden_id" type="hidden" value={gardenId} />
                 <label className={labelClass}>
                   Ersetzt
@@ -175,7 +204,7 @@ export function InvitePanel({
                   </label>
                 </div>
                 <Button className="w-full" type="submit">Link erstellen</Button>
-              </form>
+              </ActionForm>
             </details>
 
             <details className={`${panelClass} p-4`}>
@@ -183,7 +212,7 @@ export function InvitePanel({
               <p className="mt-2 text-sm text-[#5a6655]">
                 Fuer jemanden, der noch nicht beigetreten ist. Die Person bekommt sofort Dienste und uebernimmt ihr Profil, sobald sie sich mit dieser E-Mail anmeldet.
               </p>
-              <form action={createPreparedMemberAction} className="mt-4 space-y-3">
+              <ActionForm action={createPreparedMemberAction} className="mt-4 space-y-3">
                 <input name="garden_id" type="hidden" value={gardenId} />
                 <label className={labelClass}>
                   Name
@@ -209,7 +238,7 @@ export function InvitePanel({
                   </label>
                 </div>
                 <Button className="w-full" type="submit">Person anlegen</Button>
-              </form>
+              </ActionForm>
             </details>
 
             <section className={`${panelClass} p-4`}>

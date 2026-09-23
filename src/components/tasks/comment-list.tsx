@@ -2,6 +2,7 @@ import { addTaskCommentAction } from "@/lib/tasks/comment-actions";
 import { formatDateTime } from "@/lib/format/date";
 import type { TaskComment, TaskEvent } from "@/types/domain";
 import { Button } from "@/components/ui/button";
+import { ActionForm } from "@/components/ui/action-form";
 
 const eventLabels: Record<string, string> = {
   created: "erstellt",
@@ -42,7 +43,7 @@ export function TaskDiscussion({
           ))}
           {comments.length === 0 ? <p className="text-sm text-[#6d7669]">Noch keine Kommentare.</p> : null}
         </div>
-        <form action={addTaskCommentAction} className="mt-4 space-y-3">
+        <ActionForm action={addTaskCommentAction} className="mt-4 space-y-3">
           <input name="task_id" type="hidden" value={taskId} />
           <input name="garden_id" type="hidden" value={gardenId} />
           <textarea
@@ -52,7 +53,7 @@ export function TaskDiscussion({
             required
           />
           <Button type="submit">Kommentar speichern</Button>
-        </form>
+        </ActionForm>
       </div>
       <aside className="rounded-2xl border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-[0_2px_0_#d7dfcf]">
         <h2 className="text-lg font-bold">Verlauf</h2>

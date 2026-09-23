@@ -9,6 +9,7 @@ import { canManageGarden, getUserGardenRole } from "@/lib/gardens/roles";
 import { createClient } from "@/lib/supabase/server";
 import { reassignOpenTasksAction } from "@/lib/tasks/reassign-actions";
 import { getTasks } from "@/lib/tasks/queries";
+import { ActionForm } from "@/components/ui/action-form";
 
 export const dynamic = "force-dynamic";
 
@@ -29,10 +30,10 @@ export default async function TasksPage() {
         </div>
         <div className="flex gap-2">
           {garden && canManage ? (
-            <form action={reassignOpenTasksAction}>
+            <ActionForm action={reassignOpenTasksAction}>
               <input name="garden_id" type="hidden" value={garden.id} />
               <Button variant="secondary" type="submit">Fair neu zuweisen</Button>
-            </form>
+            </ActionForm>
           ) : null}
           <Link className={buttonClass("primary")} href="/tasks/new">
             Neue Aufgabe

@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   title: "Garten Dienstplan",
   description: "Dienstplan und Aufgabenverwaltung fuer Gartenhaushalte",
   manifest: "/manifest.webmanifest",
+  icons: { icon: "/icon.svg", apple: "/icon.svg" },
 };
 
 export const viewport: Viewport = {

@@ -2,6 +2,7 @@ import { createTaskAction } from "@/lib/tasks/actions";
 import type { AvailabilityWindow, GardenMember, ScoreRow, TaskTemplate } from "@/types/domain";
 import { suggestAssignee } from "@/lib/planning/fairness";
 import { Button } from "@/components/ui/button";
+import { ActionForm } from "@/components/ui/action-form";
 
 export function TaskForm({
   gardenId,
@@ -19,7 +20,7 @@ export function TaskForm({
   const suggested = suggestAssignee(scores, null, availability);
 
   return (
-    <form action={createTaskAction} className="space-y-4 rounded-2xl border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-[0_2px_0_#d7dfcf]">
+    <ActionForm action={createTaskAction} className="space-y-4 rounded-2xl border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-[0_2px_0_#d7dfcf]">
       <input name="garden_id" type="hidden" value={gardenId} />
       <div>
         <label className="text-sm font-semibold" htmlFor="template_hint">
@@ -92,6 +93,6 @@ export function TaskForm({
       <Button className="w-full sm:w-auto" type="submit">
         Aufgabe erstellen
       </Button>
-    </form>
+    </ActionForm>
   );
 }

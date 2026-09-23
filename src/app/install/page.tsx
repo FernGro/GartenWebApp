@@ -44,10 +44,10 @@ export default function InstallPage() {
       </div>
 
       <section className="mt-6 rounded-2xl border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-[0_2px_0_#d7dfcf]">
-        <h2 className="text-lg font-bold">Serdar zum bestehenden Garten einladen</h2>
+        <h2 className="text-lg font-bold">Mitbewohner zum Garten einladen</h2>
         <p className="mt-2 text-sm leading-6 text-[#42513d]">
-          Oeffne als Owner die Seite Mitglieder, erstelle einen Invite-Link und schicke genau diesen Link an Serdar.
-          Serdar muss den Link oeffnen, sich anmelden und Einladung annehmen klicken. Danach erscheint dein Garten bei ihm.
+          Oeffne als Owner oder Admin unter Mehr die Seite Mitglieder, erstelle einen Invite-Link und schicke genau diesen Link an die Person.
+          Die Person oeffnet den Link, meldet sich an und klickt Einladung annehmen. Danach sieht sie euren Garten.
         </p>
       </section>
     </AppShell>

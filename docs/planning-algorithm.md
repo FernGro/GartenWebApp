@@ -55,7 +55,7 @@ Die Seite `/forecast` zeigt eine unverbindliche Vorschau fuer die naechsten drei
 
 Forecast-Eintraege sind noch keine verbindlichen Aufgaben. Verbindlich werden sie erst, wenn Aufgaben erzeugt oder uebernommen werden.
 
-Aufgaben mit Status `pending_review` zaehlen noch nicht als erledigt. Sie beeinflussen Punktestand, Abrechnung und Fairness erst nach Owner/Admin-Bestaetigung als `done`.
+Erledigungen zaehlen sofort (keine Bestaetigung mehr seit Migration 017). Der Status `pending_review` wird nicht mehr verwendet.
 
 Forecast-Eintraege koennen jetzt eingeloggt werden. Dadurch entsteht eine echte Aufgabe mit `assignment_locked = true`. Fixierte Aufgaben werden bei `Fair neu zuweisen` nicht ueberschrieben.
 

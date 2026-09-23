@@ -3,6 +3,7 @@ import { formatDate } from "@/lib/format/date";
 import type { AvailabilityWindow } from "@/types/domain";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { ActionForm } from "@/components/ui/action-form";
 
 function monthDays(year: number, month: number) {
   const days = new Date(Date.UTC(year, month, 0)).getUTCDate();
@@ -50,7 +51,7 @@ export function AvailabilityCalendar({
             </Link>
           </div>
         </div>
-        <form action={createAvailabilityAction} className="mt-4 grid gap-3 sm:grid-cols-2">
+        <ActionForm action={createAvailabilityAction} className="mt-4 grid gap-3 sm:grid-cols-2">
           <input name="garden_id" type="hidden" value={gardenId} />
           <label className="text-sm font-semibold">
             Von
@@ -65,7 +66,7 @@ export function AvailabilityCalendar({
             <input className="mt-1 w-full rounded-xl border border-[#cbd8c1] px-3 py-3" name="reason" placeholder="Urlaub, keine Zeit, beschaeftigt" />
           </label>
           <Button className="sm:col-span-2" type="submit">Speichern</Button>
-        </form>
+        </ActionForm>
         <div className="mt-5 grid grid-cols-7 gap-1">
           {days.map((day) => (
             <div
@@ -90,10 +91,10 @@ export function AvailabilityCalendar({
                 {formatDate(entry.from_date)} bis {formatDate(entry.to_date)}
               </div>
               {entry.reason ? <div className="mt-1 text-sm text-[#42513d]">{entry.reason}</div> : null}
-              <form action={deleteAvailabilityAction} className="mt-2">
+              <ActionForm action={deleteAvailabilityAction} className="mt-2">
                 <input name="id" type="hidden" value={entry.id} />
                 <Button variant="ghost" type="submit">Loeschen</Button>
-              </form>
+              </ActionForm>
             </div>
           ))}
           {entries.length === 0 ? <p className="text-sm text-[#6d7669]">Noch keine Abwesenheiten.</p> : null}

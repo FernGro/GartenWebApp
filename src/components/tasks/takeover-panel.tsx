@@ -2,6 +2,7 @@ import { decideTakeoverAction } from "@/lib/tasks/actions";
 import { formatDateTime } from "@/lib/format/date";
 import type { TaskTakeoverRequest } from "@/types/domain";
 import { Button } from "@/components/ui/button";
+import { ActionForm } from "@/components/ui/action-form";
 
 export function TakeoverPanel({
   requests,
@@ -35,7 +36,7 @@ export function TakeoverPanel({
                 </div>
                 {mayDecide ? (
                   <div className="flex gap-2">
-                    <form action={decideTakeoverAction}>
+                    <ActionForm action={decideTakeoverAction}>
                       <input name="request_id" type="hidden" value={request.id} />
                       <input name="task_id" type="hidden" value={request.task_id} />
                       <input name="garden_id" type="hidden" value={request.garden_id} />
@@ -43,8 +44,8 @@ export function TakeoverPanel({
                       <input name="current_assignee" type="hidden" value={request.current_assignee ?? ""} />
                       <input name="decision" type="hidden" value="approved" />
                       <Button type="submit">Bestaetigen</Button>
-                    </form>
-                    <form action={decideTakeoverAction}>
+                    </ActionForm>
+                    <ActionForm action={decideTakeoverAction}>
                       <input name="request_id" type="hidden" value={request.id} />
                       <input name="task_id" type="hidden" value={request.task_id} />
                       <input name="garden_id" type="hidden" value={request.garden_id} />
@@ -52,7 +53,7 @@ export function TakeoverPanel({
                       <input name="current_assignee" type="hidden" value={request.current_assignee ?? ""} />
                       <input name="decision" type="hidden" value="rejected" />
                       <Button variant="secondary" type="submit">Ablehnen</Button>
-                    </form>
+                    </ActionForm>
                   </div>
                 ) : null}
               </div>

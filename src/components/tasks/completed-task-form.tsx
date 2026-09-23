@@ -1,6 +1,7 @@
 import { createCompletedTaskAction } from "@/lib/tasks/actions";
 import type { GardenMember } from "@/types/domain";
 import { Button } from "@/components/ui/button";
+import { ActionForm } from "@/components/ui/action-form";
 
 export function CompletedTaskForm({
   gardenId,
@@ -16,7 +17,7 @@ export function CompletedTaskForm({
   }
 
   return (
-    <form action={createCompletedTaskAction} className="mt-6 space-y-4 rounded-2xl border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-[0_2px_0_#d7dfcf]">
+    <ActionForm action={createCompletedTaskAction} className="mt-6 space-y-4 rounded-2xl border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-[0_2px_0_#d7dfcf]">
       <input name="garden_id" type="hidden" value={gardenId} />
       <div>
         <h2 className="text-lg font-bold">Erledigte Aufgabe nachtragen</h2>
@@ -53,6 +54,6 @@ export function CompletedTaskForm({
         <textarea className="mt-1 min-h-20 w-full rounded-xl border border-[#cbd8c1] px-3 py-3" name="description" />
       </label>
       <Button type="submit">Erledigung nachtragen</Button>
-    </form>
+    </ActionForm>
   );
 }

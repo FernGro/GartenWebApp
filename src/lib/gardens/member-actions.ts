@@ -1,5 +1,6 @@
 "use server";
 
+import { runAction } from "@/lib/actions/run-action";
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth/session";
 import { todayIsoDate } from "@/lib/format/date";
@@ -57,96 +58,160 @@ async function assertMayChangeMember(
 }
 
 export async function updateMemberRoleAction(formData: FormData) {
-  const user = await requireUser();
-  const supabase = await createClient();
+  return runAction(async () => {
+    const user = await requireUser();
+    const supabase = await createClient();
 
-  if (!supabase) {
-    throw new Error("Supabase ist nicht konfiguriert.");
-  }
+    if (!supabase) {
+      throw new Error("Supabase ist nicht konfiguriert.");
+    }
 
-  const memberId = readString(formData, "member_id");
-  const gardenId = readString(formData, "garden_id");
-  const role = readString(formData, "role") as GardenRole;
+    const memberId = readString(formData, "member_id");
+    const gardenId = readString(formData, "garden_id");
+    const role = readString(formData, "role") as GardenRole;
 
-  if (!memberId || !gardenId || !["owner", "admin", "member"].includes(role)) {
-    throw new Error("Mitgliedsdaten sind ungueltig.");
-  }
+    if (!memberId || !gardenId || !["owner", "admin", "member"].includes(role)) {
+      throw new Error("Mitgliedsdaten sind ungueltig.");
+    }
 
-  const currentRole = await assertMayChangeMember(supabase, gardenId, memberId, user.id, role);
+    const currentRole = await assertMayChangeMember(supabase, gardenId, memberId, user.id, role);
 
-  if (currentRole === "owner" && role !== "owner" && (await activeOwnerCount(gardenId)) <= 1) {
-    throw new Error("Der letzte Owner kann nicht heruntergestuft werden.");
-  }
+    if (currentRole === "owner" && role !== "owner" && (await activeOwnerCount(gardenId)) <= 1) {
+      throw new Error("Der letzte Owner kann nicht heruntergestuft werden.");
+    }
 
-  const { error } = await supabase.from("garden_members").update({ role }).eq("id", memberId).eq("garden_id", gardenId);
+    const { error } = await supabase.from("garden_members").update({ role }).eq("id", memberId).eq("garden_id", gardenId);
 
-  if (error) {
-    throw new Error(error.message);
-  }
+    if (error) {
+      throw new Error(error.message);
+    }
 
-  revalidatePath("/settings/members");
+    revalidatePath("/settings/members");
+  });
 }
 
 export async function setMemberActiveAction(formData: FormData) {
-  const user = await requireUser();
-  const supabase = await createClient();
+  return runAction(async () => {
+    const user = await requireUser();
+    const supabase = await createClient();
 
-  if (!supabase) {
-    throw new Error("Supabase ist nicht konfiguriert.");
-  }
+    if (!supabase) {
+      throw new Error("Supabase ist nicht konfiguriert.");
+    }
 
-  const memberId = readString(formData, "member_id");
-  const gardenId = readString(formData, "garden_id");
-  const active = readString(formData, "active") === "true";
-  const leftOn = readString(formData, "left_on") || todayIsoDate();
+    const memberId = readString(formData, "member_id");
+    const gardenId = readString(formData, "garden_id");
+    const active = readString(formData, "active") === "true";
+    const leftOn = readString(formData, "left_on") || todayIsoDate();
 
-  if (!memberId || !gardenId) {
-    throw new Error("Mitglied fehlt.");
-  }
+    if (!memberId || !gardenId) {
+      throw new Error("Mitglied fehlt.");
+    }
 
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(leftOn) || leftOn > todayIsoDate()) {
-    throw new Error("Auszugsdatum ist ungueltig oder liegt in der Zukunft.");
-  }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(leftOn) || leftOn > todayIsoDate()) {
+      throw new Error("Auszugsdatum ist ungueltig oder liegt in der Zukunft.");
+    }
 
-  const currentRole = await assertMayChangeMember(supabase, gardenId, memberId, user.id);
+    const currentRole = await assertMayChangeMember(supabase, gardenId, memberId, user.id);
 
-  if (!active && currentRole === "owner" && (await activeOwnerCount(gardenId)) <= 1) {
-    throw new Error("Der letzte Owner kann nicht deaktiviert werden.");
-  }
+    if (!active && currentRole === "owner" && (await activeOwnerCount(gardenId)) <= 1) {
+      throw new Error("Der letzte Owner kann nicht deaktiviert werden.");
+    }
 
-  const { error } = await supabase.from("garden_members").update(active ? { is_active: true, left_on: null, joined_on: todayIsoDate() } : { is_active: false, left_on: leftOn })
-    .eq("id", memberId).eq("garden_id", gardenId);
+    const { error } = await supabase.from("garden_members").update(active ? { is_active: true, left_on: null, joined_on: todayIsoDate() } : { is_active: false, left_on: leftOn })
+      .eq("id", memberId).eq("garden_id", gardenId);
 
-  if (error) {
-    throw new Error(error.message);
-  }
+    if (error) {
+      throw new Error(error.message);
+    }
 
-  revalidatePath("/settings/members");
-  revalidatePath("/dashboard");
+    if (!active) {
+      const { data: member } = await supabase.from("garden_members").select("user_id").eq("id", memberId).maybeSingle();
+
+      if (member) {
+        const { error: taskError } = await supabase
+          .from("tasks")
+          .update({ assigned_to: null, status: "open" })
+          .eq("garden_id", gardenId)
+          .eq("assigned_to", member.user_id)
+          .in("status", ["assigned", "overdue", "postponed"]);
+
+        if (taskError) {
+          throw new Error(taskError.message);
+        }
+      }
+    }
+
+    revalidatePath("/settings/members");
+    revalidatePath("/dashboard");
+    revalidatePath("/tasks");
+  });
 }
 
 export async function restoreOwnerAction(formData: FormData) {
-  await requireUser();
-  const supabase = await createClient();
+  return runAction(async () => {
+    await requireUser();
+    const supabase = await createClient();
 
-  if (!supabase) {
-    throw new Error("Supabase ist nicht konfiguriert.");
-  }
+    if (!supabase) {
+      throw new Error("Supabase ist nicht konfiguriert.");
+    }
 
-  const gardenId = readString(formData, "garden_id");
+    const gardenId = readString(formData, "garden_id");
 
-  if (!gardenId) {
-    throw new Error("Garten fehlt.");
-  }
+    if (!gardenId) {
+      throw new Error("Garten fehlt.");
+    }
 
-  const { error } = await supabase.rpc("restore_garden_creator_owner", {
-    target_garden_id: gardenId,
+    const { error } = await supabase.rpc("restore_garden_creator_owner", {
+      target_garden_id: gardenId,
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    revalidatePath("/dashboard");
+    revalidatePath("/settings/members");
   });
+}
 
-  if (error) {
-    throw new Error(error.message);
-  }
+export async function updateMemberDatesAction(formData: FormData) {
+  return runAction(async () => {
+    const user = await requireUser();
+    const supabase = await createClient();
 
-  revalidatePath("/dashboard");
-  revalidatePath("/settings/members");
+    if (!supabase) {
+      throw new Error("Supabase ist nicht konfiguriert.");
+    }
+
+    const memberId = readString(formData, "member_id");
+    const gardenId = readString(formData, "garden_id");
+    const joinedOn = readString(formData, "joined_on");
+    const leftOn = readString(formData, "left_on") || null;
+    const isoDate = /^\d{4}-\d{2}-\d{2}$/;
+
+    if (!memberId || !gardenId || !isoDate.test(joinedOn) || (leftOn && !isoDate.test(leftOn))) {
+      throw new Error("Bitte gueltige Daten angeben.");
+    }
+
+    if (joinedOn > todayIsoDate() || (leftOn && (leftOn < joinedOn || leftOn > todayIsoDate()))) {
+      throw new Error("Einzug darf nicht in der Zukunft und Auszug nicht vor dem Einzug liegen.");
+    }
+
+    await assertMayChangeMember(supabase, gardenId, memberId, user.id);
+
+    const { error } = await supabase
+      .from("garden_members")
+      .update(leftOn ? { joined_on: joinedOn, left_on: leftOn } : { joined_on: joinedOn })
+      .eq("id", memberId)
+      .eq("garden_id", gardenId);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    revalidatePath("/settings/members");
+    revalidatePath("/billing");
+  });
 }

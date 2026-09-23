@@ -89,7 +89,11 @@ export function ChatInput({
         fd.set("garden_id", gardenId);
         fd.set("content", trimmed);
         fd.set("mentioned_user_ids", JSON.stringify(userIds));
-        await sendChatMessageAction(fd);
+        const result = await sendChatMessageAction(fd);
+        if (result && "error" in result) {
+          setError(result.error);
+          setContent(trimmed);
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Fehler beim Senden.");
         setContent(trimmed);

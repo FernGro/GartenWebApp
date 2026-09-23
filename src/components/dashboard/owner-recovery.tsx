@@ -1,6 +1,7 @@
 import { restoreOwnerAction } from "@/lib/gardens/member-actions";
 import type { GardenMember } from "@/types/domain";
 import { Button } from "@/components/ui/button";
+import { ActionForm } from "@/components/ui/action-form";
 
 export function OwnerRecovery({
   gardenId,
@@ -26,10 +27,10 @@ export function OwnerRecovery({
       <p className="mt-2 text-sm leading-6">
         In diesem Garten gibt es aktuell keinen aktiven Owner. Da du den Garten erstellt hast, kannst du dich wieder als Owner eintragen.
       </p>
-      <form action={restoreOwnerAction} className="mt-3">
+      <ActionForm action={restoreOwnerAction} className="mt-3">
         <input name="garden_id" type="hidden" value={gardenId} />
         <Button type="submit">Mich wieder zum Owner machen</Button>
-      </form>
+      </ActionForm>
     </section>
   );
 }

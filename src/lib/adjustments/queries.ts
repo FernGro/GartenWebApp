@@ -8,7 +8,7 @@ export async function getMemberAdjustments(
 ): Promise<MemberAdjustment[]> {
   const { data, error } = await supabase
     .from("member_adjustments")
-    .select("id,garden_id,user_id,points_delta,amount_cents_delta,reason,created_by,created_at,profiles(id,display_name)")
+    .select("id,garden_id,user_id,points_delta,amount_cents_delta,reason,created_by,created_at,profiles!member_adjustments_user_id_fkey(id,display_name)")
     .eq("garden_id", gardenId)
     .order("created_at", { ascending: false });
 

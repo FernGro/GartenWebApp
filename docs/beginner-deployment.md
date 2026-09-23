@@ -63,9 +63,10 @@ Im Supabase Dashboard:
 20. Datei `supabase/migrations/018_harden_member_and_task_permissions.sql` komplett kopieren und ausfuehren.
 21. Datei `supabase/migrations/019_member_slots_and_billing_periods.sql` komplett kopieren und ausfuehren.
 22. Datei `supabase/migrations/020_fix_ambiguous_member_profile_embed.sql` komplett kopieren und ausfuehren.
-23. Optional `supabase/seed.sql` kopieren und ausfuehren, damit Standard-Aufgabenvorlagen vorhanden sind.
+23. Datei `supabase/migrations/021_keep_history_and_safe_notifications.sql` komplett kopieren und ausfuehren.
+24. Optional `supabase/seed.sql` kopieren und ausfuehren, damit Standard-Aufgabenvorlagen vorhanden sind.
 
-Wenn ein `Application error` erscheint, pruefe zuerst, ob wirklich alle Migrationen (001 bis 020) in Supabase ausgefuehrt wurden. Die genaue Fehlermeldung findest du im Vercel Dashboard unter Projekt → Logs → Functions.
+Wenn ein `Application error` erscheint, pruefe zuerst, ob wirklich alle Migrationen (001 bis 021) in Supabase ausgefuehrt wurden. Die genaue Fehlermeldung findest du im Vercel Dashboard unter Projekt → Logs → Functions.
 
 ## 4. Supabase API Keys finden
 

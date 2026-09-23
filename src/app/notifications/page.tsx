@@ -9,6 +9,7 @@ import { markNotificationReadAction } from "@/lib/notifications/actions";
 import { createDueNotificationsAction } from "@/lib/notifications/reminder-actions";
 import { getNotifications } from "@/lib/notifications/queries";
 import { createClient } from "@/lib/supabase/server";
+import { ActionForm } from "@/components/ui/action-form";
 
 export const dynamic = "force-dynamic";
 
@@ -25,10 +26,10 @@ export default async function NotificationsPage() {
           <p className="mt-1 text-sm text-[#5a6655]">Zuweisungen, Erinnerungen und ueberfaellige Aufgaben.</p>
         </div>
         {garden ? (
-          <form action={createDueNotificationsAction}>
+          <ActionForm action={createDueNotificationsAction}>
             <input name="garden_id" type="hidden" value={garden.id} />
             <Button type="submit">Erinnerungen pruefen</Button>
-          </form>
+          </ActionForm>
         ) : null}
       </div>
       <div className="grid gap-3">
@@ -52,10 +53,10 @@ export default async function NotificationsPage() {
                   </Link>
                 ) : null}
                 {!notification.read_at ? (
-                  <form action={markNotificationReadAction}>
+                  <ActionForm action={markNotificationReadAction}>
                     <input name="id" type="hidden" value={notification.id} />
                     <Button variant="ghost" type="submit">Gelesen</Button>
-                  </form>
+                  </ActionForm>
                 ) : null}
               </div>
             </div>

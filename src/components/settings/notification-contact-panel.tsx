@@ -2,6 +2,7 @@ import { sendTelegramTestAction, updateNotificationContactAction } from "@/lib/n
 import type { NotificationContact } from "@/types/domain";
 import { Button } from "@/components/ui/button";
 import { WebPushPanel } from "@/components/settings/web-push-panel";
+import { ActionForm } from "@/components/ui/action-form";
 
 export function NotificationContactPanel({
   gardenId,
@@ -16,7 +17,7 @@ export function NotificationContactPanel({
       <p className="mt-2 text-sm leading-6 text-[#5a6655]">
         WhatsApp ist nur als Kontaktinfo vorbereitet. Fuer kostenlose automatische Nachrichten ist Telegram besser geeignet.
       </p>
-      <form action={updateNotificationContactAction} className="mt-4 grid gap-3 sm:grid-cols-2">
+      <ActionForm action={updateNotificationContactAction} className="mt-4 grid gap-3 sm:grid-cols-2">
         <input name="garden_id" type="hidden" value={gardenId} />
         <label className="text-sm font-semibold">
           WhatsApp Nummer optional
@@ -35,12 +36,12 @@ export function NotificationContactPanel({
           Telegram aktivieren
         </label>
         <Button className="sm:col-span-2" type="submit">Kontakte speichern</Button>
-      </form>
+      </ActionForm>
       {contact?.telegram_chat_id ? (
-        <form action={sendTelegramTestAction} className="mt-3">
+        <ActionForm action={sendTelegramTestAction} className="mt-3">
           <input name="telegram_chat_id" type="hidden" value={contact.telegram_chat_id} />
           <Button variant="secondary" type="submit">Telegram Test senden</Button>
-        </form>
+        </ActionForm>
       ) : null}
       <WebPushPanel gardenId={gardenId} publicKey={process.env.NEXT_PUBLIC_WEB_PUSH_VAPID_PUBLIC_KEY ?? ""} />
     </section>

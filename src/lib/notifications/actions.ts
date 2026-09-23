@@ -1,5 +1,6 @@
 "use server";
 
+import { runAction } from "@/lib/actions/run-action";
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
@@ -10,27 +11,29 @@ function readString(formData: FormData, key: string) {
 }
 
 export async function markNotificationReadAction(formData: FormData) {
-  await requireUser();
-  const supabase = await createClient();
+  return runAction(async () => {
+    await requireUser();
+    const supabase = await createClient();
 
-  if (!supabase) {
-    throw new Error("Supabase ist nicht konfiguriert.");
-  }
+    if (!supabase) {
+      throw new Error("Supabase ist nicht konfiguriert.");
+    }
 
-  const id = readString(formData, "id");
+    const id = readString(formData, "id");
 
-  if (!id) {
-    throw new Error("Notification fehlt.");
-  }
+    if (!id) {
+      throw new Error("Notification fehlt.");
+    }
 
-  const { error } = await supabase
-    .from("notifications")
-    .update({ read_at: new Date().toISOString() })
-    .eq("id", id);
+    const { error } = await supabase
+      .from("notifications")
+      .update({ read_at: new Date().toISOString() })
+      .eq("id", id);
 
-  if (error) {
-    throw new Error(error.message);
-  }
+    if (error) {
+      throw new Error(error.message);
+    }
 
-  revalidatePath("/notifications");
+    revalidatePath("/notifications");
+  });
 }

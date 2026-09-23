@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { AppShell } from "@/components/layout/app-shell";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getMemberAdjustments } from "@/lib/adjustments/queries";
@@ -10,6 +11,7 @@ import { lockForecastTaskAction } from "@/lib/planning/actions";
 import { buildThreeMonthForecast } from "@/lib/planning/forecast";
 import { createClient } from "@/lib/supabase/server";
 import { calculateScores, getTaskTemplates, getTasks } from "@/lib/tasks/queries";
+import { ActionForm } from "@/components/ui/action-form";
 
 export const dynamic = "force-dynamic";
 
@@ -62,21 +64,17 @@ export default async function ForecastPage() {
                 Aufgabe
               </a>
             ) : row.suggestedUserId ? (
-              <form action={lockForecastTaskAction}>
+              <ActionForm action={lockForecastTaskAction}>
                 <input name="garden_id" type="hidden" value={garden.id} />
                 <input name="template_id" type="hidden" value={row.sourceTemplateId ?? ""} />
                 <input name="title" type="hidden" value={row.title} />
                 <input name="due_date" type="hidden" value={row.dueDate} />
                 <input name="assigned_to" type="hidden" value={row.suggestedUserId} />
                 <input name="points" type="hidden" value={row.points} />
-                <button
-                  className="min-h-10 rounded-lg bg-[#2f6b3f] px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
-                  disabled={row.suggestedUserId !== user?.id && !canManage}
-                  type="submit"
-                >
+                <Button disabled={row.suggestedUserId !== user?.id && !canManage} type="submit">
                   Einloggen
-                </button>
-              </form>
+                </Button>
+              </ActionForm>
             ) : null}
           </div>
         ))}

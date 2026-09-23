@@ -17,7 +17,9 @@ export async function createNotification(
   supabase: SupabaseClient<Database>,
   input: NotificationInput,
 ) {
-  const { data: contact } = await supabase
+  // Notifications for other people need the service role (RLS only allows inserting own rows).
+  const serverClient = createAdminClient() ?? supabase;
+  const { data: contact } = await serverClient
     .from("notification_contacts")
     .select("telegram_chat_id,telegram_enabled,in_app_enabled")
     .eq("garden_id", input.gardenId)
@@ -25,7 +27,7 @@ export async function createNotification(
     .maybeSingle();
 
   if (contact?.in_app_enabled ?? true) {
-    await supabase.from("notifications").insert({
+    const { error } = await serverClient.from("notifications").insert({
       user_id: input.userId,
       garden_id: input.gardenId,
       type: input.type,
@@ -33,6 +35,10 @@ export async function createNotification(
       message: input.message,
       related_task_id: input.relatedTaskId ?? null,
     });
+
+    if (error) {
+      console.error("createNotification", error.message);
+    }
   }
 
   if (contact?.telegram_enabled && contact.telegram_chat_id) {
@@ -43,12 +49,7 @@ export async function createNotification(
     }
   }
 
-  // The RLS policy on web_push_subscriptions only allows reading own rows.
-  // Admin client is required to read subscriptions of OTHER users (e.g. when
-  // notifying the assignee of a task). Falls back to the caller's client when
-  // admin is not configured (only works for self-notifications in that case).
-  const pushClient = createAdminClient() ?? supabase;
-  await sendWebPushToUser(pushClient, input.userId, input.gardenId, {
+  await sendWebPushToUser(serverClient, input.userId, input.gardenId, {
     title: input.title,
     message: input.message,
     url: input.relatedTaskId ? `/tasks/${input.relatedTaskId}` : "/notifications",

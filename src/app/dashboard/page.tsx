@@ -15,6 +15,7 @@ import { suggestAssignee } from "@/lib/planning/fairness";
 import { createClient } from "@/lib/supabase/server";
 import { calculateScores, getTasks } from "@/lib/tasks/queries";
 import { triggerTaskChatAutomationAction } from "@/lib/tasks/reminder-actions";
+import { ActionForm } from "@/components/ui/action-form";
 
 export const dynamic = "force-dynamic";
 
@@ -74,10 +75,10 @@ export default async function DashboardPage({
             Wenn du eingeladen wurdest, oeffne den Einladungslink, den der Owner unter Mitglieder erstellt hat.
             Nur wenn du einen eigenen neuen Haushalt starten willst, lege hier einen neuen Garten an.
           </p>
-          <form action={createGardenAction} className="mt-5 space-y-4">
+          <ActionForm action={createGardenAction} className="mt-5 space-y-4">
             <input className="w-full rounded-xl border border-[#cbd8c1] px-3 py-3" name="name" placeholder="z. B. Garten Haus 12" required />
             <Button type="submit">Garten erstellen</Button>
-          </form>
+          </ActionForm>
           <Link className="mt-4 inline-block text-sm font-semibold text-[#2f6b3f] underline" href="/install">
             App auf dem Handy speichern
           </Link>
@@ -155,7 +156,7 @@ export default async function DashboardPage({
       </section>
 
       <section className="mt-8 grid gap-8 lg:grid-cols-[1fr_380px]">
-        <div>
+        <div className="min-w-0">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-2xl font-bold">{filterLabels[activeFilter]}</h2>
             <Link className="text-sm font-semibold text-[#2f6b3f] hover:underline" href="/tasks">
@@ -199,7 +200,7 @@ export default async function DashboardPage({
             ) : null}
           </div>
         </div>
-        <aside className="space-y-4">
+        <aside className="min-w-0 space-y-4">
           <ScoreRace currentUserId={user.id} fairnessName={suggestion?.displayName ?? null} scores={scores} />
           {canManage && nextTriggerTasks.length > 0 ? (
             <details className="rounded-2xl border border-[#d7dfcf] bg-[#fffef9] p-4">
@@ -209,7 +210,7 @@ export default async function DashboardPage({
               </p>
               <div className="mt-3 space-y-2">
                 {nextTriggerTasks.map((task) => (
-                  <form action={triggerTaskChatAutomationAction} className="flex items-center justify-between gap-3 rounded-xl bg-[#f8faf3] p-3" key={task.id}>
+                  <ActionForm action={triggerTaskChatAutomationAction} className="flex items-center justify-between gap-3 rounded-xl bg-[#f8faf3] p-3" key={task.id}>
                     <input name="task_id" type="hidden" value={task.id} />
                     <input name="garden_id" type="hidden" value={task.garden_id} />
                     <div className="min-w-0">
@@ -217,7 +218,7 @@ export default async function DashboardPage({
                       <div className="text-xs text-[#6d7669]">{task.due_date ? `Faellig ${formatDate(task.due_date)}` : "Ohne Faelligkeit"}</div>
                     </div>
                     <Button variant="secondary" type="submit">Testen</Button>
-                  </form>
+                  </ActionForm>
                 ))}
               </div>
             </details>

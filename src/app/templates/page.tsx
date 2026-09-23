@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createTaskTemplateAction, generateSeasonalTasksAction, updateTaskTemplateScheduleAction } from "@/lib/templates/actions";
 import { getTaskTemplates } from "@/lib/tasks/queries";
 import { TaskIcon } from "@/components/tasks/task-icon";
+import { ActionForm } from "@/components/ui/action-form";
 
 export const dynamic = "force-dynamic";
 
@@ -29,14 +30,14 @@ export default async function TemplatesPage() {
           <p className="mt-1 text-sm text-[#5a6655]">Saisonale Aufgaben ohne Hardcoding im UI.</p>
         </div>
         {garden ? (
-          <form action={generateSeasonalTasksAction}>
+          <ActionForm action={generateSeasonalTasksAction}>
             <input name="garden_id" type="hidden" value={garden.id} />
             <Button type="submit">Saisonaufgaben erzeugen</Button>
-          </form>
+          </ActionForm>
         ) : null}
       </div>
       {garden && canManage ? (
-        <form action={createTaskTemplateAction} className="mb-5 rounded-2xl border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-[0_2px_0_#d7dfcf]">
+        <ActionForm action={createTaskTemplateAction} className="mb-5 rounded-2xl border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-[0_2px_0_#d7dfcf]">
           <input name="garden_id" type="hidden" value={garden.id} />
           <h2 className="text-lg font-bold">Eigene Vorlage anlegen</h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -80,7 +81,7 @@ export default async function TemplatesPage() {
             wetterabhaengig
           </label>
           <Button className="mt-4" type="submit">Vorlage speichern</Button>
-        </form>
+        </ActionForm>
       ) : null}
 
       <div className="grid gap-3 sm:grid-cols-2">
@@ -106,7 +107,7 @@ export default async function TemplatesPage() {
               </div>
             </div>
             {garden && canManage ? (
-              <form action={updateTaskTemplateScheduleAction} className="mt-4 grid gap-3 border-t border-[#e5ecdc] pt-4 sm:grid-cols-3">
+              <ActionForm action={updateTaskTemplateScheduleAction} className="mt-4 grid gap-3 border-t border-[#e5ecdc] pt-4 sm:grid-cols-3">
                 <input name="garden_id" type="hidden" value={garden.id} />
                 <input name="template_id" type="hidden" value={template.id} />
                 <label className="text-sm font-semibold">
@@ -152,7 +153,7 @@ export default async function TemplatesPage() {
                 <Button className="sm:col-span-2" variant="secondary" type="submit">
                   {template.garden_id === garden.id ? "Vorlage speichern" : "Als Garten-Anpassung speichern"}
                 </Button>
-              </form>
+              </ActionForm>
             ) : null}
           </article>
         ))}

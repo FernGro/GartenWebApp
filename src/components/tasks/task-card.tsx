@@ -14,6 +14,7 @@ import type { TaskWithPeople } from "@/types/domain";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { TaskIcon } from "@/components/tasks/task-icon";
+import { ActionForm } from "@/components/ui/action-form";
 
 export function TaskCard({
   task,
@@ -31,7 +32,7 @@ export function TaskCard({
   const completionWindow = task.due_date ? getCompletionWindow(task.due_date) : null;
   const daysUntilWindow = task.due_date ? daysUntilCompletionWindow(task.due_date) : 0;
   const canRequestTakeover = currentUserId && task.assigned_to !== currentUserId && ["open", "assigned", "overdue", "postponed"].includes(task.status);
-  const canAcceptTakeoverDirectly = task.status === "overdue" || task.status === "postponed";
+  const canAcceptTakeoverDirectly = !task.assigned_to || task.status === "overdue" || task.status === "postponed";
 
   return (
     <article
@@ -58,7 +59,7 @@ export function TaskCard({
       </div>
       {!compact && task.description ? <p className="mt-3 text-sm text-[#42513d]">{task.description}</p> : null}
       {canComplete && isCompletionWindowOpen ? (
-        <form action={completeTaskAction} className="mt-4">
+        <ActionForm action={completeTaskAction} className="mt-4">
           <input name="task_id" type="hidden" value={task.id} />
           <input name="garden_id" type="hidden" value={task.garden_id} />
           <input name="points" type="hidden" value={task.points} />
@@ -68,7 +69,7 @@ export function TaskCard({
             </svg>
             Dienst erledigt
           </Button>
-        </form>
+        </ActionForm>
       ) : null}
       {canComplete && !isCompletionWindowOpen && completionWindow ? (
         <div className="mt-4 rounded-lg bg-[#fff7e8] px-4 py-3 text-sm text-[#915b10]">
@@ -77,36 +78,39 @@ export function TaskCard({
         </div>
       ) : null}
       {canRequestTakeover ? (
-        <form action={requestTakeoverAction} className="mt-4 flex flex-col gap-2 sm:flex-row">
+        <ActionForm action={requestTakeoverAction} className="mt-4 flex flex-col gap-2 sm:flex-row">
           <input name="task_id" type="hidden" value={task.id} />
           <input name="garden_id" type="hidden" value={task.garden_id} />
           <input name="current_assignee" type="hidden" value={task.assigned_to ?? ""} />
-          <input
-            className="min-h-11 flex-1 rounded-xl border border-[#cbd8c1] px-3 py-2 text-sm"
-            name="note"
-            placeholder="Warum willst du uebernehmen?"
-          />
+          {canAcceptTakeoverDirectly ? null : (
+            <input
+              aria-label="Grund fuer die Uebernahme"
+              className="min-h-11 flex-1 rounded-xl border border-[#cbd8c1] px-3 py-2 text-sm"
+              name="note"
+              placeholder="Warum willst du uebernehmen? (optional)"
+            />
+          )}
           <Button variant="secondary" type="submit">
             {canAcceptTakeoverDirectly ? "Dienst uebernehmen" : "Uebernahme anfragen"}
           </Button>
-        </form>
+        </ActionForm>
       ) : null}
       {currentUserId === task.assigned_to && !task.assignment_locked && ["open", "assigned", "overdue", "postponed"].includes(task.status) ? (
-        <form action={lockTaskAssignmentAction} className="mt-3">
+        <ActionForm action={lockTaskAssignmentAction} className="mt-3">
           <input name="task_id" type="hidden" value={task.id} />
           <input name="garden_id" type="hidden" value={task.garden_id} />
           <Button variant="secondary" type="submit">Diesen Dienst fest einloggen</Button>
-        </form>
+        </ActionForm>
       ) : null}
       {canManage && task.assignment_locked ? (
-        <form action={unlockTaskAssignmentAction} className="mt-3">
+        <ActionForm action={unlockTaskAssignmentAction} className="mt-3">
           <input name="task_id" type="hidden" value={task.id} />
           <input name="garden_id" type="hidden" value={task.garden_id} />
           <Button variant="ghost" type="submit">Fixierung loesen</Button>
-        </form>
+        </ActionForm>
       ) : null}
       {!compact && task.status === "done" && canManage ? (
-        <form action={reopenTaskAction} className="mt-4 flex flex-col gap-2 sm:flex-row">
+        <ActionForm action={reopenTaskAction} className="mt-4 flex flex-col gap-2 sm:flex-row">
           <input name="task_id" type="hidden" value={task.id} />
           <input name="garden_id" type="hidden" value={task.garden_id} />
           <input
@@ -117,26 +121,26 @@ export function TaskCard({
           <Button variant="secondary" type="submit">
             Erledigung rueckgaengig
           </Button>
-        </form>
+        </ActionForm>
       ) : null}
       {!compact && task.status === "cancelled" && canManage ? (
-        <form action={restoreTaskAction} className="mt-3">
+        <ActionForm action={restoreTaskAction} className="mt-3">
           <input name="task_id" type="hidden" value={task.id} />
           <input name="garden_id" type="hidden" value={task.garden_id} />
           <input name="assigned_to" type="hidden" value={task.assigned_to ?? ""} />
           <Button variant="secondary" type="submit">
             Wiederherstellen
           </Button>
-        </form>
+        </ActionForm>
       ) : null}
       {!compact && canManage && task.status !== "cancelled" ? (
-        <form action={deleteTaskAction} className="mt-3">
+        <ActionForm action={deleteTaskAction} className="mt-3">
           <input name="task_id" type="hidden" value={task.id} />
           <input name="garden_id" type="hidden" value={task.garden_id} />
           <Button variant="ghost" type="submit">
             In Papierkorb
           </Button>
-        </form>
+        </ActionForm>
       ) : null}
     </article>
   );

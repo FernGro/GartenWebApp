@@ -11,6 +11,7 @@ import { getCurrentGarden } from "@/lib/gardens/queries";
 import { canManageGarden, getUserGardenRole } from "@/lib/gardens/roles";
 import { createClient } from "@/lib/supabase/server";
 import type { GardenMember } from "@/types/domain";
+import { ActionForm } from "@/components/ui/action-form";
 
 export const dynamic = "force-dynamic";
 
@@ -189,7 +190,7 @@ export default async function BillingPage() {
         <aside className="space-y-4">
           <details className={`${panelClass} p-4`} open>
             <summary className="cursor-pointer text-lg font-bold">Ausgabe oder Zahlung eintragen</summary>
-            <form action={createTransactionAction} className="mt-4 space-y-3">
+            <ActionForm action={createTransactionAction} className="mt-4 space-y-3">
               <input name="garden_id" type="hidden" value={garden.id} />
               <fieldset>
                 <legend className={labelClass}>Was ist passiert?</legend>
@@ -240,7 +241,7 @@ export default async function BillingPage() {
                 <input className={inputClass} name="note" />
               </label>
               <Button className="w-full" type="submit">Eintragen</Button>
-            </form>
+            </ActionForm>
           </details>
 
           <details className={`${panelClass} p-4`}>
@@ -300,7 +301,7 @@ export default async function BillingPage() {
             <details className={`${panelClass} p-4`}>
               <summary className="cursor-pointer text-lg font-bold">Verwaltung</summary>
               <div className="mt-4 space-y-6">
-                <form action={updateBillingSettingsAction} className="space-y-3">
+                <ActionForm action={updateBillingSettingsAction} className="space-y-3">
                   <h3 className="font-bold">Wert eines Punktes</h3>
                   <input name="garden_id" type="hidden" value={garden.id} />
                   <div className="grid grid-cols-2 gap-3">
@@ -314,9 +315,9 @@ export default async function BillingPage() {
                     </label>
                   </div>
                   <Button type="submit" variant="secondary">Speichern</Button>
-                </form>
+                </ActionForm>
 
-                <form action={createMemberAdjustmentAction} className="space-y-3 border-t border-[#e5ecdc] pt-5">
+                <ActionForm action={createMemberAdjustmentAction} className="space-y-3 border-t border-[#e5ecdc] pt-5">
                   <h3 className="font-bold">Korrektur eintragen</h3>
                   <input name="garden_id" type="hidden" value={garden.id} />
                   <label className={labelClass}>
@@ -342,9 +343,9 @@ export default async function BillingPage() {
                     <input className={inputClass} name="reason" placeholder="z. B. Startwert beim Einzug" required />
                   </label>
                   <Button type="submit" variant="secondary">Korrektur eintragen</Button>
-                </form>
+                </ActionForm>
 
-                <form action={closeBillingPeriodAction} className="space-y-3 rounded-xl border border-[#efc071] bg-[#fff7e8] p-4 text-[#6f4d16]">
+                <ActionForm action={closeBillingPeriodAction} className="space-y-3 rounded-xl border border-[#efc071] bg-[#fff7e8] p-4 text-[#6f4d16]">
                   <h3 className="font-bold">Abrechnung abschliessen</h3>
                   <p className="text-sm">Speichert das Ergebnis bis gestern im Archiv. Ab heute laeuft ein neuer Zeitraum. Das laesst sich nicht rueckgaengig machen.</p>
                   <input name="garden_id" type="hidden" value={garden.id} />
@@ -353,7 +354,7 @@ export default async function BillingPage() {
                     <input autoComplete="off" className="mt-1 w-full rounded-xl border border-[#efc071] bg-white px-3 py-3" name="confirm" required />
                   </label>
                   <Button type="submit">Abrechnung abschliessen</Button>
-                </form>
+                </ActionForm>
               </div>
             </details>
           ) : null}
