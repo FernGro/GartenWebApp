@@ -27,7 +27,7 @@ export async function getGardenMembers(
 ): Promise<GardenMember[]> {
   let query = supabase
     .from("garden_members")
-    .select("id,garden_id,user_id,role,is_active,profiles(id,display_name)")
+    .select("id,garden_id,user_id,role,is_active,slot_id,joined_on,left_on,replaces_user_id,profiles!garden_members_user_id_fkey(id,display_name)")
     .eq("garden_id", gardenId)
     .order("joined_at", { ascending: true });
 

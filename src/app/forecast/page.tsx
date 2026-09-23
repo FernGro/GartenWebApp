@@ -35,7 +35,7 @@ export default async function ForecastPage() {
   const user = (await supabase.auth.getUser()).data.user;
   const role = user ? await getUserGardenRole(supabase, garden.id, user.id) : null;
   const canManage = canManageGarden(role);
-  const scores = applyPointAdjustments(calculateScores(tasks, members), adjustments);
+  const scores = applyPointAdjustments(calculateScores(tasks, members, await getGardenMembers(supabase, garden.id, true)), adjustments);
   const forecast = buildThreeMonthForecast(templates, scores, availability, tasks);
 
   return (

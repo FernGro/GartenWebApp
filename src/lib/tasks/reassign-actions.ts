@@ -43,7 +43,7 @@ export async function reassignOpenTasksAction(formData: FormData) {
     getAvailability(supabase, gardenId),
     getMemberAdjustments(supabase, gardenId),
   ]);
-  const mutableScores = applyPointAdjustments(calculateScores(tasks, members), adjustments);
+  const mutableScores = applyPointAdjustments(calculateScores(tasks, members, await getGardenMembers(supabase, gardenId, true)), adjustments);
   const plannedCounts = new Map<string, number>();
   let previousAssignee: string | null = null;
   const fixedUpcoming = tasks

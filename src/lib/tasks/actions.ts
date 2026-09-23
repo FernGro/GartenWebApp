@@ -47,7 +47,7 @@ export async function createTaskAction(formData: FormData) {
       getTasks(supabase, gardenId),
       getAvailability(supabase, gardenId),
     ]);
-    const suggestion = suggestAssignee(calculateScores(tasks, members), dueDate, availability);
+    const suggestion = suggestAssignee(calculateScores(tasks, members, await getGardenMembers(supabase, gardenId, true)), dueDate, availability);
     assignedTo = suggestion?.userId ?? null;
   }
 

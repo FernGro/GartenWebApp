@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth/session";
+import { todayIsoDate } from "@/lib/format/date";
 import { getUserGardenRole } from "@/lib/gardens/roles";
 import { createClient } from "@/lib/supabase/server";
 import type { GardenRole } from "@/types/domain";
@@ -97,9 +98,14 @@ export async function setMemberActiveAction(formData: FormData) {
   const memberId = readString(formData, "member_id");
   const gardenId = readString(formData, "garden_id");
   const active = readString(formData, "active") === "true";
+  const leftOn = readString(formData, "left_on") || todayIsoDate();
 
   if (!memberId || !gardenId) {
     throw new Error("Mitglied fehlt.");
+  }
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(leftOn) || leftOn > todayIsoDate()) {
+    throw new Error("Auszugsdatum ist ungueltig oder liegt in der Zukunft.");
   }
 
   const currentRole = await assertMayChangeMember(supabase, gardenId, memberId, user.id);
@@ -108,7 +114,8 @@ export async function setMemberActiveAction(formData: FormData) {
     throw new Error("Der letzte Owner kann nicht deaktiviert werden.");
   }
 
-  const { error } = await supabase.from("garden_members").update({ is_active: active }).eq("id", memberId).eq("garden_id", gardenId);
+  const { error } = await supabase.from("garden_members").update(active ? { is_active: true, left_on: null, joined_on: todayIsoDate() } : { is_active: false, left_on: leftOn })
+    .eq("id", memberId).eq("garden_id", gardenId);
 
   if (error) {
     throw new Error(error.message);

@@ -77,3 +77,12 @@ Das erste Garten-Onboarding erfolgt ueber `public.create_garden_with_owner(name)
 
 - `task_templates.custom_interval_days`: frei waehlbare Intervalle wie alle 3, 14 oder 60 Tage.
 - `task_templates.season_start_day` und `task_templates.season_end_day`: genaue Saisonfenster mit Tag und Monat.
+
+## Mitbewohner-Wechsel und Abrechnungszeitraeume (Migration 019)
+
+- `garden_members.slot_id` — Platz im Haushalt. Wer jemanden ersetzt, erbt dessen `slot_id`; alle Mitgliedschaften eines Platzes bilden ein Team.
+- `garden_members.joined_on` / `left_on` — Ein- und Auszugsdatum. Ausgezogene bleiben mit `is_active = false` erhalten (Abrechnung).
+- `garden_members.replaces_user_id`, `garden_invites.replaces_user_id` — wer ersetzt wird.
+- `billing_periods` — Abrechnungszeitraeume; genau einer pro Garten ist offen (`ends_on is null`). Abgeschlossene enthalten `snapshot` (Ergebnis zum Abschluss).
+- RPCs: `add_prepared_garden_member` (vorab angelegte Person aufnehmen), `close_billing_period` (Zeitraum abschliessen). Intern: `replace_garden_member` (nicht fuer Clients freigegeben).
+- Rechenweg: `src/lib/billing/teams.ts`, Spec: `docs/superpowers/specs/2026-09-23-mitbewohner-wechsel-design.md`.

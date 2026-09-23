@@ -45,7 +45,7 @@ export default async function CalendarPage({
     getGardenMembers(supabase, garden.id),
     getMemberAdjustments(supabase, garden.id),
   ]);
-  const scores = applyPointAdjustments(calculateScores(tasks, members), adjustments);
+  const scores = applyPointAdjustments(calculateScores(tasks, members, await getGardenMembers(supabase, garden.id, true)), adjustments);
   const monthStart = new Date(Date.UTC(year, month - 1, 1));
   const forecast = buildThreeMonthForecast(templates, scores, availability, tasks, monthStart);
   const weather = await getWetterOnlineForecast(garden.weather_location ?? garden.name);

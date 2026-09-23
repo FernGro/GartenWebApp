@@ -30,7 +30,7 @@ export default async function NewTaskPage() {
   ]);
   const user = (await supabase.auth.getUser()).data.user;
   const role = user ? await getUserGardenRole(supabase, garden.id, user.id) : null;
-  const scores = calculateScores(tasks, members);
+  const scores = calculateScores(tasks, members, await getGardenMembers(supabase, garden.id, true));
 
   return (
     <AppShell>

@@ -23,9 +23,21 @@ export type Database = {
         Update: { id?: string; name?: string; created_by?: string | null; chat_retention_days?: number; weather_location?: string | null; created_at?: string; updated_at?: string };
       };
       garden_members: {
-        Row: { id: string; garden_id: string; user_id: string; role: GardenRole; is_active: boolean; joined_at: string; last_chat_read_at: string | null };
-        Insert: { id?: string; garden_id: string; user_id: string; role?: GardenRole; is_active?: boolean; joined_at?: string; last_chat_read_at?: string | null };
-        Update: { id?: string; garden_id?: string; user_id?: string; role?: GardenRole; is_active?: boolean; joined_at?: string; last_chat_read_at?: string | null };
+        Row: {
+          id: string;
+          garden_id: string;
+          user_id: string;
+          role: GardenRole;
+          is_active: boolean;
+          joined_at: string;
+          last_chat_read_at: string | null;
+          slot_id: string;
+          joined_on: string;
+          left_on: string | null;
+          replaces_user_id: string | null;
+        };
+        Insert: Partial<Database["public"]["Tables"]["garden_members"]["Row"]> & { garden_id: string; user_id: string };
+        Update: Partial<Database["public"]["Tables"]["garden_members"]["Row"]>;
       };
       garden_invites: {
         Row: {
@@ -39,11 +51,26 @@ export type Database = {
           accepted_at: string | null;
           expires_at: string;
           created_at: string;
+          replaces_user_id: string | null;
         };
         Insert: Partial<Database["public"]["Tables"]["garden_invites"]["Row"]> & {
           garden_id: string;
         };
         Update: Partial<Database["public"]["Tables"]["garden_invites"]["Row"]>;
+      };
+      billing_periods: {
+        Row: {
+          id: string;
+          garden_id: string;
+          starts_on: string;
+          ends_on: string | null;
+          closed_at: string | null;
+          closed_by: string | null;
+          snapshot: Json | null;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["billing_periods"]["Row"]> & { garden_id: string; starts_on: string };
+        Update: Partial<Database["public"]["Tables"]["billing_periods"]["Row"]>;
       };
       task_templates: {
         Row: {
@@ -328,6 +355,14 @@ export type Database = {
       delete_garden: {
         Args: { target_garden_id: string };
         Returns: void;
+      };
+      add_prepared_garden_member: {
+        Args: { target_garden_id: string; target_user_id: string; target_role: GardenRole; replaces_user: string | null };
+        Returns: void;
+      };
+      close_billing_period: {
+        Args: { target_garden_id: string; period_snapshot: Json };
+        Returns: string;
       };
     };
     Enums: {

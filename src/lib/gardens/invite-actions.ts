@@ -22,6 +22,7 @@ export async function createInviteAction(formData: FormData) {
   const gardenId = readString(formData, "garden_id");
   const email = readString(formData, "email") || null;
   const role = readString(formData, "role") as GardenRole;
+  const replacesUserId = readString(formData, "replaces_user_id") || null;
 
   if (!gardenId || !["admin", "member"].includes(role)) {
     throw new Error("Invite ist ungueltig.");
@@ -31,6 +32,7 @@ export async function createInviteAction(formData: FormData) {
     garden_id: gardenId,
     email,
     role,
+    replaces_user_id: replacesUserId,
     created_by: user.id,
   });
 

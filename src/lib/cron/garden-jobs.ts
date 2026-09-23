@@ -140,7 +140,7 @@ export async function runGardenAutomation(supabase: SupabaseClient<Database>) {
         getGardenMembers(supabase, garden.id),
         getAvailability(supabase, garden.id),
       ]);
-      const scores = calculateScores(tasks, members);
+      const scores = calculateScores(tasks, members, await getGardenMembers(supabase, garden.id, true));
       const weatherForecast = await getWetterOnlineForecast(garden.weather_location ?? garden.name, today);
       const templateRows = templates
         .filter((template) => template.recurrence_type !== "none" && template.recurrence_type !== "on_demand")

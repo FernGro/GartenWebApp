@@ -75,7 +75,7 @@ export async function createAvailabilityAction(formData: FormData) {
       getAvailability(admin, gardenId),
       admin.from("gardens").select("name,weather_location").eq("id", gardenId).maybeSingle(),
     ]);
-    const scores = calculateScores(tasks, members);
+    const scores = calculateScores(tasks, members, await getGardenMembers(admin, gardenId, true));
     const userName = members.find((member) => member.user_id === user.id)?.profiles?.display_name ?? "Jemand";
     const weatherForecast = await getWetterOnlineForecast(gardenResult.data?.weather_location ?? gardenResult.data?.name);
     const affectedTasks = tasks.filter(

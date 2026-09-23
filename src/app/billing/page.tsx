@@ -2,17 +2,31 @@ import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { createMemberAdjustmentAction } from "@/lib/adjustments/actions";
-import { getMemberAdjustments } from "@/lib/adjustments/queries";
-import { createTransactionAction, updateBillingSettingsAction } from "@/lib/billing/actions";
-import { calculateBilling, calculateSettlementSuggestions, getBillingSettings, getGardenTransactions } from "@/lib/billing/queries";
-import { formatDate } from "@/lib/format/date";
+import { closeBillingPeriodAction, createTransactionAction, updateBillingSettingsAction } from "@/lib/billing/actions";
+import { calculateSettlementSuggestions, type SettlementSuggestion } from "@/lib/billing/queries";
+import { getCurrentTeamBilling } from "@/lib/billing/team-queries";
+import { formatDate, todayIsoDate } from "@/lib/format/date";
 import { formatMoney } from "@/lib/format/money";
-import { getCurrentGarden, getGardenMembers } from "@/lib/gardens/queries";
+import { getCurrentGarden } from "@/lib/gardens/queries";
 import { canManageGarden, getUserGardenRole } from "@/lib/gardens/roles";
 import { createClient } from "@/lib/supabase/server";
-import { getTasks } from "@/lib/tasks/queries";
+import type { GardenMember } from "@/types/domain";
 
 export const dynamic = "force-dynamic";
+
+function memberLabel(member: GardenMember) {
+  const name = member.profiles?.display_name ?? "Mitglied";
+  return member.is_active ? name : `${name} (ausgezogen)`;
+}
+
+function snapshotSettlements(snapshot: unknown): SettlementSuggestion[] {
+  if (!snapshot || typeof snapshot !== "object" || !("settlements" in snapshot)) {
+    return [];
+  }
+
+  const settlements = (snapshot as { settlements: unknown }).settlements;
+  return Array.isArray(settlements) ? (settlements as SettlementSuggestion[]) : [];
+}
 
 export default async function BillingPage() {
   const supabase = await createClient();
@@ -27,24 +41,23 @@ export default async function BillingPage() {
   }
 
   const user = (await supabase.auth.getUser()).data.user;
-  const [members, tasks, transactions, settings, adjustments, role] = await Promise.all([
-    getGardenMembers(supabase, garden.id),
-    getTasks(supabase, garden.id),
-    getGardenTransactions(supabase, garden.id),
-    getBillingSettings(supabase, garden.id),
-    getMemberAdjustments(supabase, garden.id),
+  const [{ billing, range, members, transactions, adjustments, settings, closedPeriods }, role] = await Promise.all([
+    getCurrentTeamBilling(supabase, garden.id),
     user ? getUserGardenRole(supabase, garden.id, user.id) : Promise.resolve(null),
   ]);
   const canManage = canManageGarden(role);
-  const billing = calculateBilling(members, tasks, transactions, settings, adjustments);
-  const settlements = calculateSettlementSuggestions(billing);
+  const settlements = calculateSettlementSuggestions(billing.rows);
+  const periodAdjustments = adjustments.filter((adjustment) => todayIsoDate(new Date(adjustment.created_at)) >= range.startsOn);
 
   return (
     <AppShell>
       <div className="mb-6">
         <p className="text-sm font-semibold text-[#2f6b3f]">{garden.name}</p>
         <h1 className="text-3xl font-bold">Abrechnung</h1>
-        <p className="mt-2 text-sm text-[#5a6655]">Punkte werden als Arbeitszeit bewertet, Ausgaben und Zahlungen werden verrechnet.</p>
+        <p className="mt-2 text-sm text-[#5a6655]">
+          Zeitraum seit {formatDate(range.startsOn)}. Punkte werden als Arbeitszeit bewertet. Wer jemanden ersetzt, bildet mit ihm ein Team:
+          Ein Minus wird nach Anwesenheit geteilt, ein Plus nach eigenem Beitrag.
+        </p>
       </div>
 
       <section className="grid gap-4 lg:grid-cols-[360px_1fr]">
@@ -87,16 +100,16 @@ export default async function BillingPage() {
               Bezahlt von
               <select className="mt-1 w-full rounded-lg border border-[#cbd8c1] bg-white px-3 py-3" name="paid_by">
                 {members.map((member) => (
-                  <option key={member.user_id} value={member.user_id}>{member.profiles?.display_name ?? "Mitglied"}</option>
+                  <option key={member.user_id} value={member.user_id}>{memberLabel(member)}</option>
                 ))}
               </select>
             </label>
             <label className="mt-3 block text-sm font-semibold">
-              Zahlung an optional
+              Zahlung an (nur bei Zahlung)
               <select className="mt-1 w-full rounded-lg border border-[#cbd8c1] bg-white px-3 py-3" name="paid_to">
                 <option value="">Niemand</option>
                 {members.map((member) => (
-                  <option key={member.user_id} value={member.user_id}>{member.profiles?.display_name ?? "Mitglied"}</option>
+                  <option key={member.user_id} value={member.user_id}>{memberLabel(member)}</option>
                 ))}
               </select>
             </label>
@@ -119,7 +132,7 @@ export default async function BillingPage() {
               Mitglied
               <select className="mt-1 w-full rounded-lg border border-[#cbd8c1] bg-white px-3 py-3" name="user_id">
                 {members.map((member) => (
-                  <option key={member.user_id} value={member.user_id}>{member.profiles?.display_name ?? "Mitglied"}</option>
+                  <option key={member.user_id} value={member.user_id}>{memberLabel(member)}</option>
                 ))}
               </select>
             </label>
@@ -143,31 +156,53 @@ export default async function BillingPage() {
         <div className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
-              <div className="text-sm text-[#5a6655]">Arbeitswert</div>
-              <div className="mt-2 text-2xl font-bold text-[#2f6b3f]">{formatMoney(billing.reduce((sum, row) => sum + row.workCents, 0))}</div>
+              <div className="text-sm text-[#5a6655]">Gesamtbeitrag</div>
+              <div className="mt-2 text-2xl font-bold text-[#2f6b3f]">{formatMoney(billing.potCents)}</div>
             </div>
             <div className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
-              <div className="text-sm text-[#5a6655]">Auslagen</div>
-              <div className="mt-2 text-2xl font-bold text-[#2f6b3f]">{formatMoney(billing.reduce((sum, row) => sum + row.expenseCents, 0))}</div>
+              <div className="text-sm text-[#5a6655]">Plaetze</div>
+              <div className="mt-2 text-2xl font-bold text-[#2f6b3f]">{billing.slots.length}</div>
             </div>
             <div className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
-              <div className="text-sm text-[#5a6655]">Pro Person</div>
-              <div className="mt-2 text-2xl font-bold text-[#2f6b3f]">{formatMoney(billing[0]?.fairShareCents ?? 0)}</div>
+              <div className="text-sm text-[#5a6655]">Seit</div>
+              <div className="mt-2 text-2xl font-bold text-[#2f6b3f]">{formatDate(range.startsOn)}</div>
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-lg border border-[#d7dfcf] bg-[#fffef9] shadow-sm shadow-[#4a5d3f]/5">
-            {billing.map((row) => (
-              <div className="grid gap-2 border-b border-[#e5ecdc] p-4 text-sm sm:grid-cols-[1fr_repeat(4,120px)]" key={row.userId}>
-                <div className="font-bold">{row.displayName}</div>
-                <div>Arbeit {formatMoney(row.workCents)}</div>
-                <div>Auslagen {formatMoney(row.expenseCents)}</div>
-                <div>Soll {formatMoney(row.fairShareCents)}</div>
-                <div className={row.balanceCents >= 0 ? "font-bold text-[#2f6b3f]" : "font-bold text-[#915b10]"}>
-                  {formatMoney(row.balanceCents)}
+          <div className="space-y-3">
+            {billing.slots.map((slot) => (
+              <div className="overflow-hidden rounded-lg border border-[#d7dfcf] bg-[#fffef9] shadow-sm shadow-[#4a5d3f]/5" key={slot.slotId}>
+                <div className="flex flex-col gap-1 bg-[#f8faf3] p-4 text-sm sm:flex-row sm:items-center sm:justify-between">
+                  <div className="font-bold">
+                    {slot.members.length > 1 ? "Team: " : ""}
+                    {slot.members.map((row) => row.displayName).join(" + ")}
+                  </div>
+                  <div className="text-[#5a6655]">
+                    Beitrag {formatMoney(slot.contributionCents)} · Soll {formatMoney(slot.fairShareCents)} ·{" "}
+                    <span className={slot.teamBalanceCents >= 0 ? "font-bold text-[#2f6b3f]" : "font-bold text-[#915b10]"}>
+                      {formatMoney(slot.teamBalanceCents)}
+                    </span>
+                  </div>
                 </div>
+                {slot.members.map((row) => (
+                  <div className="grid gap-1 border-t border-[#e5ecdc] p-4 text-sm sm:grid-cols-[1fr_repeat(4,110px)]" key={row.userId}>
+                    <div>
+                      <div className="font-bold">{row.displayName}</div>
+                      <div className="text-xs text-[#6d7669]">
+                        {row.isActive ? "wohnt hier" : `ausgezogen ${formatDate(row.leftOn)}`} · {row.presenceDays} Tage
+                      </div>
+                    </div>
+                    <div>Beitrag {formatMoney(row.contributionCents)}</div>
+                    <div>Anteil {formatMoney(row.teamShareCents)}</div>
+                    <div>Zahlungen {formatMoney(row.transferCents)}</div>
+                    <div className={row.balanceCents >= 0 ? "font-bold text-[#2f6b3f]" : "font-bold text-[#915b10]"}>
+                      {formatMoney(row.balanceCents)}
+                    </div>
+                  </div>
+                ))}
               </div>
             ))}
+            {billing.slots.length === 0 ? <p className="text-sm text-[#6d7669]">Im aktuellen Zeitraum gibt es noch keine Mitglieder.</p> : null}
           </div>
 
           <div className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
@@ -184,6 +219,47 @@ export default async function BillingPage() {
               {settlements.length === 0 ? <p className="text-sm text-[#6d7669]">Aktuell ist rechnerisch nichts auszugleichen.</p> : null}
             </div>
           </div>
+
+          {canManage ? (
+            <form action={closeBillingPeriodAction} className="rounded-lg border border-[#efc071] bg-[#fff7e8] p-4 text-[#6f4d16]">
+              <h2 className="text-lg font-bold">Abrechnung abschliessen</h2>
+              <p className="mt-1 text-sm">
+                Speichert das Ergebnis bis gestern im Archiv. Ab heute laeuft ein neuer Zeitraum. Das kann nicht rueckgaengig gemacht werden.
+              </p>
+              <input name="garden_id" type="hidden" value={garden.id} />
+              <label className="mt-3 block text-sm font-semibold">
+                Zur Bestaetigung ABSCHLIESSEN eintippen
+                <input className="mt-1 w-full rounded-lg border border-[#efc071] bg-white px-3 py-3" name="confirm" autoComplete="off" required />
+              </label>
+              <Button className="mt-3" type="submit">Abrechnung abschliessen</Button>
+            </form>
+          ) : null}
+
+          {closedPeriods.length > 0 ? (
+            <div className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
+              <h2 className="text-lg font-bold">Archiv</h2>
+              <div className="mt-3 space-y-3">
+                {closedPeriods.map((period) => {
+                  const archived = snapshotSettlements(period.snapshot);
+                  return (
+                    <details className="rounded-lg bg-[#f2f7ec] p-3 text-sm" key={period.id}>
+                      <summary className="cursor-pointer font-semibold">
+                        {formatDate(period.starts_on)} bis {formatDate(period.ends_on)}
+                      </summary>
+                      <div className="mt-2 space-y-1">
+                        {archived.map((settlement) => (
+                          <div key={`${period.id}-${settlement.fromUserId}-${settlement.toUserId}`}>
+                            {settlement.fromName} zahlt an {settlement.toName}: <span className="font-bold">{formatMoney(settlement.amountCents)}</span>
+                          </div>
+                        ))}
+                        {archived.length === 0 ? <div className="text-[#6d7669]">Nichts auszugleichen.</div> : null}
+                      </div>
+                    </details>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
 
           <div className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
             <h2 className="text-lg font-bold">Transaktionen</h2>
@@ -204,7 +280,7 @@ export default async function BillingPage() {
           <div className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
             <h2 className="text-lg font-bold">Ausgleiche</h2>
             <div className="mt-3 space-y-3">
-              {adjustments.map((adjustment) => (
+              {periodAdjustments.map((adjustment) => (
                 <div className="rounded-lg bg-[#f2f7ec] p-3 text-sm" key={adjustment.id}>
                   <div className="font-semibold">{adjustment.profiles?.display_name ?? "Mitglied"} · {adjustment.reason}</div>
                   <div className="text-xs text-[#6d7669]">
@@ -212,7 +288,7 @@ export default async function BillingPage() {
                   </div>
                 </div>
               ))}
-              {adjustments.length === 0 ? <p className="text-sm text-[#6d7669]">Noch keine Startwerte oder Uebernahmen.</p> : null}
+              {periodAdjustments.length === 0 ? <p className="text-sm text-[#6d7669]">Noch keine Startwerte oder Uebernahmen.</p> : null}
             </div>
           </div>
         </div>

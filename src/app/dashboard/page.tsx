@@ -95,7 +95,7 @@ export default async function DashboardPage({
   ]);
   const canManage = canManageGarden(role);
   const scores = calculateScores(tasks, members);
-  const suggestion = suggestAssignee(scores, null);
+  const suggestion = suggestAssignee(calculateScores(tasks, members, allMembers), null);
   const openTasks = tasks.filter((task) => task.status === "open" || task.status === "assigned" || task.status === "overdue" || task.status === "postponed");
   const myTasks = openTasks.filter((task) => task.assigned_to === user.id);
   const today = todayIsoDate();

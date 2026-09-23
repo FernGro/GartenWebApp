@@ -60,7 +60,7 @@ export async function generateSeasonalTasksAction(formData: FormData) {
     getGardenMembers(supabase, gardenId),
     getAvailability(supabase, gardenId),
   ]);
-  const scores = calculateScores(tasks, members);
+  const scores = calculateScores(tasks, members, await getGardenMembers(supabase, gardenId, true));
   const now = new Date();
   const rows = templates
     .filter((template) => template.recurrence_type !== "none" && template.recurrence_type !== "on_demand")

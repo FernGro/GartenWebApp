@@ -2,8 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth/session";
-import { todayIsoDate } from "@/lib/format/date";
+import { addDaysIso, todayIsoDate } from "@/lib/format/date";
 import { formatMoney } from "@/lib/format/money";
+import { getCurrentTeamBilling } from "@/lib/billing/team-queries";
+import { calculateSettlementSuggestions } from "@/lib/billing/queries";
 import { createNotification } from "@/lib/notifications/send";
 import { canManageGarden, getUserGardenRole } from "@/lib/gardens/roles";
 import { createClient } from "@/lib/supabase/server";
@@ -72,6 +74,21 @@ export async function createTransactionAction(formData: FormData) {
     throw new Error("Transaktion ist ungueltig.");
   }
 
+  if (type === "payment" && (!paidTo || paidTo === paidBy)) {
+    throw new Error("Eine Zahlung braucht einen Empfaenger, der nicht der Zahlende ist.");
+  }
+
+  const { data: openPeriod } = await supabase
+    .from("billing_periods")
+    .select("starts_on")
+    .eq("garden_id", gardenId)
+    .is("ends_on", null)
+    .maybeSingle();
+
+  if (openPeriod && occurredOn < openPeriod.starts_on) {
+    throw new Error(`Die Abrechnung bis ${openPeriod.starts_on} ist schon abgeschlossen. Bitte ein spaeteres Datum waehlen.`);
+  }
+
   const { error } = await supabase.from("garden_transactions").insert({
     garden_id: gardenId,
     type,
@@ -106,6 +123,49 @@ export async function createTransactionAction(formData: FormData) {
       title: "Ausgabe eingetragen",
       message: `${title}: ${formatMoney(amountCents)}`,
     });
+  }
+
+  revalidatePath("/billing");
+}
+
+export async function closeBillingPeriodAction(formData: FormData) {
+  const user = await requireUser();
+  const supabase = await createClient();
+
+  if (!supabase) {
+    throw new Error("Supabase ist nicht konfiguriert.");
+  }
+
+  const gardenId = readString(formData, "garden_id");
+
+  if (!gardenId) {
+    throw new Error("Garten fehlt.");
+  }
+
+  if (readString(formData, "confirm") !== "ABSCHLIESSEN") {
+    throw new Error("Bitte zur Bestaetigung ABSCHLIESSEN eintippen.");
+  }
+
+  if (!canManageGarden(await getUserGardenRole(supabase, gardenId, user.id))) {
+    throw new Error("Nur Owner/Admin duerfen die Abrechnung abschliessen.");
+  }
+
+  const { billing, range, settings } = await getCurrentTeamBilling(supabase, gardenId, addDaysIso(todayIsoDate(), -1));
+  const snapshot = {
+    range,
+    settings: { hourly_rate_cents: settings.hourly_rate_cents, point_hours: settings.point_hours },
+    potCents: billing.potCents,
+    slots: billing.slots,
+    settlements: calculateSettlementSuggestions(billing.rows),
+  };
+
+  const { error } = await supabase.rpc("close_billing_period", {
+    target_garden_id: gardenId,
+    period_snapshot: JSON.parse(JSON.stringify(snapshot)),
+  });
+
+  if (error) {
+    throw new Error(error.message);
   }
 
   revalidatePath("/billing");

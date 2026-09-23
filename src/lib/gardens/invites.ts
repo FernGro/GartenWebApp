@@ -8,7 +8,7 @@ export async function getGardenInvites(
 ): Promise<GardenInvite[]> {
   const { data, error } = await supabase
     .from("garden_invites")
-    .select("id,garden_id,email,role,token,created_by,accepted_by,accepted_at,expires_at,created_at")
+    .select("id,garden_id,email,role,token,created_by,accepted_by,accepted_at,expires_at,created_at,replaces_user_id")
     .eq("garden_id", gardenId)
     .order("created_at", { ascending: false });
 
@@ -26,7 +26,7 @@ export async function getInviteByToken(
 ): Promise<GardenInvite | null> {
   const { data, error } = await supabase
     .from("garden_invites")
-    .select("id,garden_id,email,role,token,created_by,accepted_by,accepted_at,expires_at,created_at")
+    .select("id,garden_id,email,role,token,created_by,accepted_by,accepted_at,expires_at,created_at,replaces_user_id")
     .eq("token", token)
     .maybeSingle();
 

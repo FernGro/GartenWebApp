@@ -60,6 +60,10 @@ export type GardenMember = {
   user_id: string;
   role: GardenRole;
   is_active: boolean;
+  slot_id: string;
+  joined_on: string;
+  left_on: string | null;
+  replaces_user_id: string | null;
   profiles?: Profile | null;
 };
 
@@ -170,6 +174,7 @@ export type GardenInvite = {
   accepted_at: string | null;
   expires_at: string;
   created_at: string;
+  replaces_user_id: string | null;
 };
 
 export type TaskTakeoverRequest = {
@@ -207,6 +212,15 @@ export type GardenBillingSettings = {
   garden_id: string;
   hourly_rate_cents: number;
   point_hours: number;
+};
+
+export type BillingPeriod = {
+  id: string;
+  garden_id: string;
+  starts_on: string;
+  ends_on: string | null;
+  closed_at: string | null;
+  snapshot: unknown;
 };
 
 export type MemberAdjustment = {

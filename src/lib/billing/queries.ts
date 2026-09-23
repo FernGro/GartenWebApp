@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
-import type { GardenBillingSettings, GardenMember, GardenTransaction, MemberAdjustment, Task } from "@/types/domain";
+import type { BillingPeriod, GardenBillingSettings, GardenTransaction } from "@/types/domain";
 
 export async function getBillingSettings(
   supabase: SupabaseClient<Database>,
@@ -45,15 +45,27 @@ export async function getGardenTransactions(
   })) as GardenTransaction[];
 }
 
-export type BillingRow = {
+export async function getBillingPeriods(
+  supabase: SupabaseClient<Database>,
+  gardenId: string,
+): Promise<BillingPeriod[]> {
+  const { data, error } = await supabase
+    .from("billing_periods")
+    .select("id,garden_id,starts_on,ends_on,closed_at,snapshot")
+    .eq("garden_id", gardenId)
+    .order("starts_on", { ascending: false });
+
+  if (error) {
+    console.error("getBillingPeriods", error.message);
+    return [];
+  }
+
+  return data ?? [];
+}
+
+type BalanceRow = {
   userId: string;
   displayName: string;
-  workCents: number;
-  expenseCents: number;
-  paidOutCents: number;
-  receivedCents: number;
-  contributionCents: number;
-  fairShareCents: number;
   balanceCents: number;
 };
 
@@ -65,63 +77,7 @@ export type SettlementSuggestion = {
   amountCents: number;
 };
 
-export function calculateBilling(
-  members: GardenMember[],
-  tasks: Task[],
-  transactions: GardenTransaction[],
-  settings: GardenBillingSettings,
-  adjustments: MemberAdjustment[] = [],
-) {
-  const activeMembers = members.filter((member) => member.is_active);
-  const memberCount = Math.max(activeMembers.length, 1);
-  const rows = activeMembers.map((member) => {
-    const points = tasks
-      .filter((task) => task.status === "done" && task.completed_by === member.user_id)
-      .reduce((sum, task) => sum + task.points, 0);
-    const workCents = Math.round(points * settings.point_hours * settings.hourly_rate_cents);
-    const adjustmentWorkCents = Math.round(
-      adjustments
-        .filter((adjustment) => adjustment.user_id === member.user_id)
-        .reduce((sum, adjustment) => sum + adjustment.points_delta, 0)
-        * settings.point_hours
-        * settings.hourly_rate_cents,
-    );
-    const adjustmentAmountCents = adjustments
-      .filter((adjustment) => adjustment.user_id === member.user_id)
-      .reduce((sum, adjustment) => sum + adjustment.amount_cents_delta, 0);
-    const expenseCents = transactions
-      .filter((transaction) => transaction.type === "expense" && transaction.paid_by === member.user_id)
-      .reduce((sum, transaction) => sum + transaction.amount_cents, 0);
-    const paidOutCents = transactions
-      .filter((transaction) => transaction.type === "payment" && transaction.paid_by === member.user_id)
-      .reduce((sum, transaction) => sum + transaction.amount_cents, 0);
-    const receivedCents = transactions
-      .filter((transaction) => transaction.type === "payment" && transaction.paid_to === member.user_id)
-      .reduce((sum, transaction) => sum + transaction.amount_cents, 0);
-
-    return {
-      userId: member.user_id,
-      displayName: member.profiles?.display_name ?? "Mitglied",
-      workCents: workCents + adjustmentWorkCents,
-      expenseCents,
-      paidOutCents,
-      receivedCents,
-      contributionCents: workCents + adjustmentWorkCents + adjustmentAmountCents + expenseCents + paidOutCents - receivedCents,
-      fairShareCents: 0,
-      balanceCents: 0,
-    };
-  });
-  const totalContributions = rows.reduce((sum, row) => sum + row.workCents + row.expenseCents, 0);
-  const fairShareCents = Math.round(totalContributions / memberCount);
-
-  return rows.map((row) => ({
-    ...row,
-    fairShareCents,
-    balanceCents: row.contributionCents - fairShareCents,
-  }));
-}
-
-export function calculateSettlementSuggestions(rows: BillingRow[]): SettlementSuggestion[] {
+export function calculateSettlementSuggestions(rows: BalanceRow[]): SettlementSuggestion[] {
   const debtors = rows
     .filter((row) => row.balanceCents < 0)
     .map((row) => ({ ...row, remaining: Math.abs(row.balanceCents) }))

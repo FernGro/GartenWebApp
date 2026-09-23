@@ -1,6 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
-import type { ScoreRow, Task, TaskTemplate, TaskWithPeople } from "@/types/domain";
+import { todayIsoDate } from "@/lib/format/date";
+import { applyMembershipHistory } from "@/lib/planning/membership-scores";
+import type { GardenMember, ScoreRow, Task, TaskTemplate, TaskWithPeople } from "@/types/domain";
 
 export async function getTasks(
   supabase: SupabaseClient<Database>,
@@ -95,8 +97,12 @@ export async function getTaskTemplates(
   return [...byTitle.values()].sort((a, b) => a.title.localeCompare(b.title));
 }
 
-export function calculateScores(tasks: Task[], members: { user_id: string; profiles?: { display_name: string } | null }[]): ScoreRow[] {
-  return members
+export function calculateScores(
+  tasks: Task[],
+  members: { user_id: string; profiles?: { display_name: string } | null }[],
+  history: GardenMember[] = [],
+): ScoreRow[] {
+  const scores = members
     .map((member) => {
       const completedTasks = tasks.filter((task) => task.completed_by === member.user_id && task.status === "done");
       const points = completedTasks.reduce((sum, task) => sum + task.points, 0);
@@ -112,6 +118,8 @@ export function calculateScores(tasks: Task[], members: { user_id: string; profi
         points,
         lastCompletedAt,
       };
-    })
+    });
+
+  return applyMembershipHistory(scores, tasks, history, todayIsoDate())
     .sort((a, b) => a.points - b.points || (a.lastCompletedAt ?? "").localeCompare(b.lastCompletedAt ?? ""));
 }

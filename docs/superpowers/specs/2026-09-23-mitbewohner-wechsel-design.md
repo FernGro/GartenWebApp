@@ -1,6 +1,6 @@
 # Mitbewohner-Wechsel, Team-Abrechnung und vorab angelegte Personen
 
-Stand: 2026-09-23 · Status: Entwurf zur Freigabe
+Stand: 2026-09-23 · Status: freigegeben (Annahmen 1 + 2 bestätigt)
 
 ## Ziel
 
@@ -51,7 +51,7 @@ Ausgezogene Mitglieder bleiben als `is_active = false` in `garden_members`. Sie 
 ### 1. Einladung mit "ersetzt"
 Einladungsformular bekommt das Feld "Ersetzt: — niemand — / Person X". `accept_garden_invite` (security definer):
 1. Neue Mitgliedschaft mit `slot_id` = Platz von X, `replaces_user_id` = X, `joined_on` = heute.
-2. X wird deaktiviert (`is_active = false`, `left_on` = gestern), außer X ist letzter Owner (Trigger schützt weiter).
+2. X wird deaktiviert (`is_active = false`, `left_on` = gestern). Ist X der letzte Owner, übernimmt die neue Person die Owner-Rolle. Owner können nur über Einladungen von Owners ersetzt werden.
 3. Offene, nicht erledigte Aufgaben von X gehen an die neue Person.
 
 ### 2. Auszug ohne Nachfolger
@@ -68,8 +68,8 @@ E-Mail an, ist es dasselbe Konto.
 - Einzige Stelle im User-Flow mit Admin-Client. Begründung: Supabase erlaubt das Anlegen fremder Konten nur mit service_role.
 
 ### 4. Abrechnung abschließen (März)
-Owner/Admin klickt "Abrechnung abschließen" → Ergebnis wird als `snapshot` gespeichert, `ends_on` = heute,
-neuer Zeitraum ab morgen. Abgeschlossene Zeiträume bleiben als Archiv lesbar.
+Owner/Admin klickt "Abrechnung abschließen" → Ergebnis wird als `snapshot` gespeichert, `ends_on` = gestern,
+neuer Zeitraum ab heute. Buchungen vor dem Beginn des offenen Zeitraums werden abgelehnt. Abgeschlossene Zeiträume bleiben als Archiv lesbar.
 
 ## Rechenweg (reine Funktion `lib/billing/teams.ts`, Unit-getestet)
 
@@ -92,14 +92,15 @@ Alt 10 Monate 20 P., Neu 2 Monate 15 P. → Team 35 − 60 = −25 → Neu −4,
 
 ## Aufgabenverteilung (Fairness)
 
-`calculateScores` rechnet einer aktiven Person zusätzlich die Punkte der Vorgänger auf ihrem Platz an
-(nur im aktuellen Zeitraum). So startet der Neue nicht bei 0 und bekommt nicht alle Aufgaben.
-Zusätzlich dazugekommene Personen (eigener Platz) starten mit dem Durchschnitt der Punkte pro Anwesenheitstag × eigene Tage.
+`calculateScores` rechnet einer aktiven Person zusätzlich die Punkte der Vorgänger auf ihrem Platz an.
+So startet der Neue nicht bei 0 und bekommt nicht alle Aufgaben.
+Zusätzlich dazugekommene Personen (eigener Platz, kein Vorgänger) bekommen einen Startwert, als wären sie seit dem
+ersten Beitritt im Garten mit Durchschnittstempo dabei gewesen: `Ø Punkte pro Tag der anderen × Tage vor dem eigenen Beitritt`.
 
 ## UI
 
 - **Mitglieder:** Einladung mit "Ersetzt"-Auswahl · Formular "Person vorab anlegen" · Deaktivieren mit Auszugsdatum ·
-  Liste "Ausgezogen" mit Platz-Zuordnung · Badge "noch nicht angemeldet" für vorab angelegte Personen.
+  Liste "Ausgezogen" mit Platz-Zuordnung.
 - **Abrechnung:** Zeitraum-Kopf (seit …) · Tabelle gruppiert nach Platz/Team mit Anwesenheit, Ist, Soll, Anteil ·
   Button "Abrechnung abschließen" (Owner/Admin, mit Bestätigung) · Archiv der abgeschlossenen Zeiträume.
 - **Hilfe:** Einträge für Ersetzen, Vorab anlegen, Auszug und Abschluss (`src/lib/help/content.ts`).

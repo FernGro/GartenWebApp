@@ -95,7 +95,7 @@ export async function triggerTaskChatAutomationAction(formData: FormData) {
     getAvailability(admin, gardenId),
     getWetterOnlineForecast(garden?.weather_location ?? garden?.name, today),
   ]);
-  const scores = calculateScores(tasks, members);
+  const scores = calculateScores(tasks, members, await getGardenMembers(admin, gardenId, true));
   const assigneeName = members.find((member) => member.user_id === task.assigned_to)?.profiles?.display_name ?? "Unbekannt";
   const weatherBlock = formatWeatherRecommendation({
     forecast: weatherForecast,
