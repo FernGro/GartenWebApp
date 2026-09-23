@@ -20,6 +20,7 @@ const allNavItems: NavItem[] = [
   { href: "/forecast", label: "Vorschau", icon: "forecast" },
   { href: "/log", label: "Verlauf", icon: "log" },
   { href: "/settings/garden", label: "Einstellungen", icon: "settings" },
+  { href: "/konto", label: "Mein Konto", icon: "user" },
   { href: "/help", label: "Hilfe", icon: "help" },
   { href: "/install", label: "App installieren", icon: "install" },
 ];

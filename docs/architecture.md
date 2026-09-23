@@ -292,6 +292,12 @@ Benachrichtigung → `revalidatePath()` → optional `redirect()`.
 > („Email not confirmed“, „Invalid login credentials“, Rate-Limit, „already registered“) ins Deutsche und bietet
 > „Bestätigungs-Mail erneut senden“ (`auth.resend`). Liefert `signUp` direkt eine Session (Bestätigung deaktiviert),
 > wird sofort weitergeleitet.
+>
+> **Passwort vergessen:** Login-Formular Modus „reset“ → `auth.resetPasswordForEmail` mit Redirect
+> `/auth/callback?next=/konto?reset=1`. **Mein Konto** (`src/app/konto/page.tsx`, Client-Komponente
+> `src/components/account/account-panel.tsx`) ändert Passwort (`auth.updateUser({ password })`) und E-Mail
+> (`auth.updateUser({ email })`, Bestätigung per Mail). `/auth/callback` leitet bei ungültigem oder abgelaufenem Code
+> nach `/login?link=invalid` um, statt stillschweigend ohne Sitzung weiterzuleiten.
 
 `src/components/auth/login-form.tsx` bietet drei Wege:
 1. **Magic Link:** `signInWithOtp` mit `emailRedirectTo = <Site-URL>/auth/callback?next=…`.

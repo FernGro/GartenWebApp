@@ -63,6 +63,10 @@ flowchart LR
 3. **Mit Passwort:** Zuerst **Registrieren**, dann den Link in der **Bestätigungs-Mail** klicken. Erst danach klappt „Login“ mit Passwort. Vorher meldet die App „E-Mail noch nicht bestätigt“.
 4. Du landest auf der **Übersicht** bzw. wieder auf der Einladung.
 
+**Passwort vergessen?** Unter **Login** auf *Passwort vergessen?* → E-Mail eingeben → Link aus der Mail öffnen → neues Passwort festlegen.
+
+**Passwort oder E-Mail ändern:** **Mehr → Mein Konto**. Eine neue E-Mail gilt erst, wenn du den Link in der Bestätigungs-Mail geklickt hast.
+
 Die Mails kommen von `noreply@mail.app.supabase.io`. Bei GMX, Web.de und Outlook landen sie oft im **Spam-Ordner**. Über „Bestätigungs-Mail erneut senden“ kommt eine neue, frühestens nach 60 Sekunden.
 
 ### Einladung annehmen
@@ -88,7 +92,7 @@ flowchart TB
   subgraph Handy["Handy: Leiste unten"]
     U["Übersicht"] --- A["Aufgaben"] --- N(("+ Neue Aufgabe")) --- C["Chat"] --- M["Mehr"]
   end
-  M --> K["Kalender"] & AB["Abrechnung"] & ME["Meldungen"] & MI["Mitglieder"] & VO["Vorlagen"] & VS["Vorschau"] & VE["Verlauf"] & EI["Einstellungen"] & H["Hilfe"] & I["App installieren"]
+  M --> K["Kalender"] & AB["Abrechnung"] & ME["Meldungen"] & MI["Mitglieder"] & VO["Vorlagen"] & VS["Vorschau"] & VE["Verlauf"] & EI["Einstellungen"] & KO["Mein Konto"] & H["Hilfe"] & I["App installieren"]
 ```
 
 - **Desktop:** oben Übersicht, Aufgaben, Chat, Kalender, Abrechnung und **Mehr**. Rechts der Knopf **+ Aufgabe**.
@@ -254,6 +258,7 @@ flowchart TD
 
 | Einstellung | Wer | Wo |
 |---|---|---|
+| Passwort, E-Mail | alle | Mehr → Mein Konto |
 | Anzeigename | alle | Mein Anzeigename |
 | Abwesenheit | alle | Abwesenheit eintragen |
 | Push / Telegram | alle | Web Push, Benachrichtigungen |

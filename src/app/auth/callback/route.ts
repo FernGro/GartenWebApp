@@ -11,7 +11,16 @@ export async function GET(request: NextRequest) {
 
   if (code) {
     const supabase = await createClient();
-    await supabase?.auth.exchangeCodeForSession(code);
+    const result = await supabase?.auth.exchangeCodeForSession(code);
+
+    // Links opened on another device or twice have no usable code; send people back to login with a hint.
+    if (result?.error) {
+      return NextResponse.redirect(new URL(`/login?link=invalid&next=${encodeURIComponent(next)}`, requestUrl.origin));
+    }
+  }
+
+  if (requestUrl.searchParams.get("error_description")) {
+    return NextResponse.redirect(new URL(`/login?link=invalid&next=${encodeURIComponent(next)}`, requestUrl.origin));
   }
 
   return NextResponse.redirect(new URL(next, requestUrl.origin));

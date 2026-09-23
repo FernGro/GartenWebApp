@@ -305,6 +305,48 @@ let token;
   });
   await context.close();
 }
+{
+  const { context, page } = await login(browser, "newbie");
+  await step("member changes password and logs in with it", async () => {
+    await go(page, `/konto`);
+    await page.fill("input[name=password]", "NeuesPasswort26!");
+    await page.fill("input[name=password_repeat]", "NeuesPasswort26!");
+    await page.getByRole("button", { name: "Passwort speichern" }).click();
+    await page.getByText("Neues Passwort gespeichert").waitFor({ timeout: 10000 });
+    const c2 = await browser.newContext();
+    const p2 = await c2.newPage();
+    await p2.goto(`${BASE}/login`);
+    await p2.getByRole("button", { name: "Login", exact: true }).click();
+    await p2.fill("#email", users.newbie.email);
+    await p2.fill("#password", "NeuesPasswort26!");
+    await Promise.all([p2.waitForURL(/dashboard/, { timeout: 15000 }), p2.locator("form button[type=submit]").click()]);
+    await c2.close();
+  });
+  await step("member requests email change", async () => {
+    await go(page, `/konto`);
+    await page.fill("input[name=email]", "nico.neu@test.local");
+    await page.getByRole("button", { name: "E-Mail aendern" }).click();
+    const box = page.locator("form [role=status], form [role=alert]").last();
+    await box.waitFor({ timeout: 10000 });
+    const text = await box.innerText();
+    if (!/Fast geschafft/.test(text)) throw new Error(text.slice(0, 120));
+  });
+  await context.close();
+}
+await step("password reset link can be requested", async () => {
+  const c = await browser.newContext();
+  const p = await c.newPage();
+  await p.goto(`${BASE}/login`);
+  await p.getByRole("button", { name: "Login", exact: true }).click();
+  await p.getByRole("button", { name: "Passwort vergessen?" }).click();
+  await p.fill("#email", users.member.email);
+  await p.getByRole("button", { name: "Link zum Zuruecksetzen senden" }).click();
+  const box = p.locator("form [role=status], form [role=alert]").first();
+  await box.waitFor({ timeout: 10000 });
+  const text = await box.innerText();
+  await c.close();
+  if (!/Link zum Zuruecksetzen geschickt/.test(text)) throw new Error(text.slice(0, 140));
+});
 await step("cron route runs", async () => {
   const r = await fetch(`${BASE}/api/cron/garden-jobs`, { headers: { authorization: "Bearer localcron" } });
   const body = await r.text(); if (!r.ok) throw new Error(`${r.status} ${body.slice(0, 200)}`);

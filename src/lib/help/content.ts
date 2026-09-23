@@ -494,6 +494,32 @@ export const helpItems: HelpItem[] = [
   {
     role: "Alle",
     topic: "Einstellungen",
+    title: "Passwort oder E-Mail aendern",
+    location: "Mehr > Mein Konto",
+    keywords: ["passwort", "e-mail", "email", "aendern", "konto", "login"],
+    steps: [
+      "Mein Konto oeffnen.",
+      "Neues Passwort zweimal eingeben und Passwort speichern.",
+      "Fuer eine neue E-Mail die Adresse eintragen und E-Mail aendern. Danach den Link in der Bestaetigungs-Mail klicken.",
+    ],
+    note: "Bis zur Bestaetigung gilt die alte E-Mail-Adresse.",
+  },
+  {
+    role: "Alle",
+    topic: "Erste Schritte",
+    title: "Passwort vergessen",
+    location: "Login",
+    keywords: ["passwort vergessen", "zuruecksetzen", "reset", "login geht nicht"],
+    steps: [
+      "Auf der Anmeldeseite Login waehlen und Passwort vergessen? klicken.",
+      "E-Mail eingeben und Link zum Zuruecksetzen senden.",
+      "Den Link aus der Mail auf demselben Geraet oeffnen und ein neues Passwort festlegen.",
+    ],
+    note: "Alternativ jederzeit per Magic-Link anmelden, dafuer braucht es kein Passwort.",
+  },
+  {
+    role: "Alle",
+    topic: "Einstellungen",
     title: "Verlauf ansehen",
     location: "Mehr > Verlauf",
     keywords: ["verlauf", "log", "historie", "wer hat"],
