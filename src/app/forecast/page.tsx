@@ -1,8 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { AppShell } from "@/components/layout/app-shell";
 import { EmptyState } from "@/components/ui/empty-state";
-import { getMemberAdjustments } from "@/lib/adjustments/queries";
-import { applyPointAdjustments } from "@/lib/adjustments/scores";
 import { getAvailability } from "@/lib/availability/queries";
 import { formatDate } from "@/lib/format/date";
 import { getCurrentGarden, getGardenMembers } from "@/lib/gardens/queries";
@@ -10,8 +8,9 @@ import { canManageGarden, getUserGardenRole } from "@/lib/gardens/roles";
 import { lockForecastTaskAction } from "@/lib/planning/actions";
 import { buildThreeMonthForecast } from "@/lib/planning/forecast";
 import { createClient } from "@/lib/supabase/server";
-import { calculateScores, getTaskTemplates, getTasks } from "@/lib/tasks/queries";
+import { getTaskTemplates, getTasks } from "@/lib/tasks/queries";
 import { ActionForm } from "@/components/ui/action-form";
+import { getRankingScores } from "@/lib/planning/ranking";
 
 export const dynamic = "force-dynamic";
 
@@ -27,17 +26,16 @@ export default async function ForecastPage() {
     );
   }
 
-  const [templates, tasks, members, availability, adjustments] = await Promise.all([
+  const [templates, tasks, members, availability] = await Promise.all([
     getTaskTemplates(supabase, garden.id),
     getTasks(supabase, garden.id),
     getGardenMembers(supabase, garden.id),
     getAvailability(supabase, garden.id),
-    getMemberAdjustments(supabase, garden.id),
   ]);
   const user = (await supabase.auth.getUser()).data.user;
   const role = user ? await getUserGardenRole(supabase, garden.id, user.id) : null;
   const canManage = canManageGarden(role);
-  const scores = applyPointAdjustments(calculateScores(tasks, members, await getGardenMembers(supabase, garden.id, true)), adjustments);
+  const scores = await getRankingScores(supabase, garden.id, tasks, members);
   const forecast = buildThreeMonthForecast(templates, scores, availability, tasks);
 
   return (

@@ -13,7 +13,8 @@ import { assertCleanOptionalText, assertCleanText } from "@/lib/moderation/conte
 import { todayIsoDate } from "@/lib/format/date";
 import { createClient } from "@/lib/supabase/server";
 import { getCompletionWindow, isWithinCompletionWindow } from "@/lib/tasks/completion-window";
-import { calculateScores, getTasks } from "@/lib/tasks/queries";
+import { getTasks } from "@/lib/tasks/queries";
+import { getRankingScores } from "@/lib/planning/ranking";
 
 function readString(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -49,7 +50,7 @@ export async function createTaskAction(formData: FormData) {
         getTasks(supabase, gardenId),
         getAvailability(supabase, gardenId),
       ]);
-      const suggestion = suggestAssignee(calculateScores(tasks, members, await getGardenMembers(supabase, gardenId, true)), dueDate, availability);
+      const suggestion = suggestAssignee(await getRankingScores(supabase, gardenId, tasks, members), dueDate, availability);
       assignedTo = suggestion?.userId ?? null;
     }
 

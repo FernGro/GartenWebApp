@@ -3,15 +3,14 @@
 import { runAction } from "@/lib/actions/run-action";
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth/session";
-import { getMemberAdjustments } from "@/lib/adjustments/queries";
-import { applyPointAdjustments } from "@/lib/adjustments/scores";
 import { getAvailability } from "@/lib/availability/queries";
 import { getGardenMembers } from "@/lib/gardens/queries";
 import { canManageGarden, getUserGardenRole } from "@/lib/gardens/roles";
 import { createNotification } from "@/lib/notifications/send";
 import { suggestAssignee } from "@/lib/planning/fairness";
 import { createClient } from "@/lib/supabase/server";
-import { calculateScores, getTasks } from "@/lib/tasks/queries";
+import { getTasks } from "@/lib/tasks/queries";
+import { getRankingScores } from "@/lib/planning/ranking";
 
 function readString(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -39,13 +38,12 @@ export async function reassignOpenTasksAction(formData: FormData) {
       throw new Error("Nur Owner/Admin duerfen Aufgaben neu zuweisen.");
     }
 
-    const [members, tasks, availability, adjustments] = await Promise.all([
+    const [members, tasks, availability] = await Promise.all([
       getGardenMembers(supabase, gardenId),
       getTasks(supabase, gardenId),
       getAvailability(supabase, gardenId),
-      getMemberAdjustments(supabase, gardenId),
     ]);
-    const mutableScores = applyPointAdjustments(calculateScores(tasks, members, await getGardenMembers(supabase, gardenId, true)), adjustments);
+    const mutableScores = await getRankingScores(supabase, gardenId, tasks, members);
     const plannedCounts = new Map<string, number>();
     let previousAssignee: string | null = null;
     const fixedUpcoming = tasks

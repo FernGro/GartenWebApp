@@ -1,7 +1,7 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { createMemberAdjustmentAction } from "@/lib/adjustments/actions";
+import { createMemberAdjustmentAction, deleteMemberAdjustmentAction } from "@/lib/adjustments/actions";
 import { closeBillingPeriodAction, createTransactionAction, updateBillingSettingsAction } from "@/lib/billing/actions";
 import { calculateSettlementSuggestions, type SettlementSuggestion } from "@/lib/billing/queries";
 import { getCurrentTeamBilling } from "@/lib/billing/team-queries";
@@ -150,15 +150,22 @@ export default async function BillingPage() {
                         <span>Soll {formatMoney(slot.fairShareCents)}</span>
                       </div>
                     </div>
-                    {slot.members.length > 1 || slot.members.some((row) => row.transferCents !== 0) ? (
+                    {slot.members.length > 0 ? (
                       <div className="divide-y divide-[#e5ecdc] border-t border-[#e5ecdc] bg-[#f8faf3]">
                         {slot.members.map((row) => (
                           <div className="flex items-center justify-between gap-3 px-4 py-3 text-sm" key={row.userId}>
                             <div className="min-w-0">
                               <div className="font-semibold">{row.displayName}</div>
                               <div className="text-xs text-[#6d7669]">
-                                {row.isActive ? "wohnt hier" : `ausgezogen am ${formatDate(row.leftOn)}`}, {row.presenceDays} Tage im Zeitraum
+                                {row.points + row.adjustmentPoints} Punkte
+                                {row.adjustmentPoints !== 0 ? ` (${row.points} erledigt, Korrektur ${row.adjustmentPoints > 0 ? "+" : ""}${row.adjustmentPoints})` : ""}
+                                {" = "}{formatMoney(row.workCents)}
+                                {row.expenseCents !== 0 ? `, Ausgaben ${formatMoney(row.expenseCents)}` : ""}
+                                {row.adjustmentCents !== 0 ? `, Betrags-Korrektur ${formatMoney(row.adjustmentCents)}` : ""}
                                 {row.transferCents !== 0 ? `, Zahlungen ${formatMoney(row.transferCents)}` : ""}
+                              </div>
+                              <div className="text-xs text-[#6d7669]">
+                                {row.isActive ? "wohnt hier" : `ausgezogen am ${formatDate(row.leftOn)}`}, {row.presenceDays} Tage im Zeitraum
                               </div>
                             </div>
                             <span className={`shrink-0 font-bold tabular-nums ${row.balanceCents >= 0 ? "text-[#2f6b3f]" : "text-[#915b10]"}`}>
@@ -260,11 +267,21 @@ export default async function BillingPage() {
                 </div>
               ))}
               {periodAdjustments.map((adjustment) => (
-                <div className="rounded-xl bg-[#f4efe1] px-3 py-2.5 text-sm" key={adjustment.id}>
-                  <div className="font-semibold">Korrektur fuer {adjustment.profiles?.display_name ?? "Mitglied"}</div>
-                  <div className="text-xs text-[#6d7669]">
-                    {adjustment.reason}: {adjustment.points_delta} Punkte, {formatMoney(adjustment.amount_cents_delta)}
+                <div className="flex items-start justify-between gap-3 rounded-xl bg-[#f4efe1] px-3 py-2.5 text-sm" key={adjustment.id}>
+                  <div className="min-w-0">
+                    <div className="font-semibold">Korrektur fuer {adjustment.profiles?.display_name ?? "Mitglied"}</div>
+                    <div className="text-xs text-[#6d7669]">
+                      {adjustment.reason}: {adjustment.points_delta > 0 ? "+" : ""}{adjustment.points_delta} Punkte
+                      {adjustment.amount_cents_delta !== 0 ? `, ${formatMoney(adjustment.amount_cents_delta)}` : ""} am {formatDate(adjustment.created_at)}
+                    </div>
                   </div>
+                  {canManage ? (
+                    <ActionForm action={deleteMemberAdjustmentAction} successMessage="">
+                      <input name="id" type="hidden" value={adjustment.id} />
+                      <input name="garden_id" type="hidden" value={garden.id} />
+                      <Button className="min-h-9 px-3 text-xs" type="submit" variant="ghost">Loeschen</Button>
+                    </ActionForm>
+                  ) : null}
                 </div>
               ))}
               {transactions.length === 0 && periodAdjustments.length === 0 ? (

@@ -6,7 +6,8 @@ import { getAvailability } from "@/lib/availability/queries";
 import { getCurrentGarden, getGardenMembers } from "@/lib/gardens/queries";
 import { canManageGarden, getUserGardenRole } from "@/lib/gardens/roles";
 import { createClient } from "@/lib/supabase/server";
-import { calculateScores, getTaskTemplates, getTasks } from "@/lib/tasks/queries";
+import { getTaskTemplates, getTasks } from "@/lib/tasks/queries";
+import { getRankingScores } from "@/lib/planning/ranking";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +31,7 @@ export default async function NewTaskPage() {
   ]);
   const user = (await supabase.auth.getUser()).data.user;
   const role = user ? await getUserGardenRole(supabase, garden.id, user.id) : null;
-  const scores = calculateScores(tasks, members, await getGardenMembers(supabase, garden.id, true));
+  const scores = await getRankingScores(supabase, garden.id, tasks, members);
 
   return (
     <AppShell>

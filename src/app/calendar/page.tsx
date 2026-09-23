@@ -1,14 +1,13 @@
 import { GardenCalendar } from "@/components/calendar/garden-calendar";
 import { AppShell } from "@/components/layout/app-shell";
 import { EmptyState } from "@/components/ui/empty-state";
-import { getMemberAdjustments } from "@/lib/adjustments/queries";
-import { applyPointAdjustments } from "@/lib/adjustments/scores";
 import { getAvailability } from "@/lib/availability/queries";
 import { getCurrentGarden, getGardenMembers } from "@/lib/gardens/queries";
 import { buildThreeMonthForecast } from "@/lib/planning/forecast";
 import { createClient } from "@/lib/supabase/server";
-import { calculateScores, getTaskTemplates, getTasks } from "@/lib/tasks/queries";
+import { getTaskTemplates, getTasks } from "@/lib/tasks/queries";
 import { getWetterOnlineForecast } from "@/lib/weather/wetteronline";
+import { getRankingScores } from "@/lib/planning/ranking";
 
 export const dynamic = "force-dynamic";
 
@@ -38,14 +37,13 @@ export default async function CalendarPage({
     );
   }
 
-  const [tasks, availability, templates, members, adjustments] = await Promise.all([
+  const [tasks, availability, templates, members] = await Promise.all([
     getTasks(supabase, garden.id),
     getAvailability(supabase, garden.id),
     getTaskTemplates(supabase, garden.id),
     getGardenMembers(supabase, garden.id),
-    getMemberAdjustments(supabase, garden.id),
   ]);
-  const scores = applyPointAdjustments(calculateScores(tasks, members, await getGardenMembers(supabase, garden.id, true)), adjustments);
+  const scores = await getRankingScores(supabase, garden.id, tasks, members);
   const monthStart = new Date(Date.UTC(year, month - 1, 1));
   const forecast = buildThreeMonthForecast(templates, scores, availability, tasks, monthStart);
   const weather = await getWetterOnlineForecast(garden.weather_location ?? garden.name);

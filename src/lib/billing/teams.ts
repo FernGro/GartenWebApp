@@ -10,6 +10,8 @@ export type TeamMemberRow = {
   joinedOn: string;
   leftOn: string | null;
   presenceDays: number;
+  points: number;
+  adjustmentPoints: number;
   workCents: number;
   expenseCents: number;
   adjustmentCents: number;
@@ -125,6 +127,8 @@ export function calculateTeamBilling({ members, tasks, transactions, adjustments
         joinedOn: member.joined_on,
         leftOn: member.left_on,
         presenceDays: days,
+        points,
+        adjustmentPoints,
         workCents,
         expenseCents,
         adjustmentCents,

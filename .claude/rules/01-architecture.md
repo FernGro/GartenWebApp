@@ -52,8 +52,10 @@ export async function someAction(formData: FormData) {
 ```
 
 **Regeln:**
-- `requireUser()` IMMER als erste Zeile
-- Fehler werden geworfen (nicht returned) — Next.js zeigt Application-Error-Seite
+- Body immer in `return runAction(async () => { ... })` einpacken (`src/lib/actions/run-action.ts`)
+- `requireUser()` IMMER als erste Zeile im Body
+- Fehler innerhalb werfen; `runAction` gibt sie als `{ error }` zurück, übersetzt bekannte DB-Meldungen und reicht `redirect()` als `{ redirectTo }` weiter
+- Formulare mit Server Actions immer über `<ActionForm action={...}>` (`src/components/ui/action-form.tsx`), nie `<form action={...}>`
 - `redirect()` nur am Ende nach erfolgreicher Operation
 - Helper `readString(formData, key)` für FormData-Zugriff
 

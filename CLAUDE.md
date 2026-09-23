@@ -89,16 +89,18 @@ src/
     domain.ts                # App-Domänentypen: Garden, GardenMember, Task, …
 
 supabase/
-  migrations/                # 001–006 SQL (additive, idempotent via CREATE OR REPLACE)
+  migrations/                # 001–022 SQL (additiv, idempotent, manuell im SQL Editor ausführen)
   seed.sql                   # Standard-Aufgabenvorlagen
 
 tests/
   unit/                      # Node Test Runner: reine Logik
   integration/               # Node Test Runner: integrierte/externe Pfade
+  e2e/                       # Browser-Tests gegen lokale Supabase (npm run test:e2e)
 
 docs/                        # Menschenlesbare Dokumentation
-  beginner-deployment.md     # Schritt-für-Schritt Deployment
-  architecture.md            # Architektur-Entscheidungen
+  beginner-deployment.md     # Schritt-für-Schritt Deployment + Migrationsliste
+  architecture.md            # Architektur-Bericht mit Mermaid-Diagrammen
+  benutzerhandbuch.md        # Anleitung für Mitglied, Admin, Owner
   database-schema.md         # DB-Schema-Dokumentation
 
 .claude/                     # KI-Framework (dieses Verzeichnis)
@@ -147,10 +149,15 @@ notifications     — In-App-Benachrichtigungen
 4. **Migrationen additiv.** Kein `DROP TABLE`, kein `ALTER COLUMN` ohne Rückwärtskompatibilität. Immer `CREATE OR REPLACE`.
 5. **TypeScript strict.** Kein `any`. Kein `!` ohne Kommentar warum nicht null.
 6. **Keine Kommentare außer bei nicht-offensichtlichem WHY.** Code ist selbstdokumentierend.
-7. **Fehler werden geworfen, nicht verschluckt.** Queries loggen per `console.error` und geben `[]`/`null` zurück; Actions werfen für Next.js-Error-Handling.
+7. **Fehler werden nicht verschluckt.** Queries loggen per `console.error` und geben `[]`/`null` zurück. Actions werfen intern, laufen aber in `runAction()` (`src/lib/actions/run-action.ts`) und geben `{ error }` zurück; Formulare nutzen `ActionForm`, das den Fehler am Formular zeigt.
 8. **Kein over-engineering.** Keine Abstraktionen für hypothetische Anforderungen.
 9. **Tests vor Release.** Vor jedem Commit laufen `npm run test:unit`, `npm run test:integration`, `npm run typecheck`, `npm run build`.
-10. **Hilfe aktuell halten.** Jede sichtbare neue oder geänderte Funktion wird in `src/lib/help/content.ts` dokumentiert.
+10. **Doku bei jeder Änderung mitziehen (Pflicht).** Jede neue oder geänderte Funktion, Migration oder Logik wird im selben Commit dokumentiert in:
+    - `docs/architecture.md` (Architektur, Diagramme, Migrations-Chronik, bekannte Grenzen)
+    - `docs/benutzerhandbuch.md` (Anleitung für Mitglied, Admin, Owner inkl. FAQ)
+    - `src/lib/help/content.ts` (In-App-Hilfe mit Suche)
+    - bei Migrationen zusätzlich `docs/beginner-deployment.md` (Liste der auszuführenden SQL-Dateien)
+11. **E2E-Tests vor Release.** Bei Änderungen an Abläufen `npm run test:e2e` gegen eine lokale Supabase laufen lassen (siehe `tests/e2e/README.md`) und neue Abläufe dort ergänzen.
 
 ---
 

@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getCadenceRule, hasTemplateTaskWithinInterval, isTemplateDateInSeason } from "@/lib/planning/cadence";
 import { suggestAssignee } from "@/lib/planning/fairness";
-import { calculateScores, getTaskTemplates, getTasks } from "@/lib/tasks/queries";
+import { getTaskTemplates, getTasks } from "@/lib/tasks/queries";
 import { getGardenMembers } from "@/lib/gardens/queries";
 import { getAvailability } from "@/lib/availability/queries";
 import { createNotification } from "@/lib/notifications/send";
@@ -10,6 +10,7 @@ import { formatWeatherRecommendation, getWetterOnlineForecast, type WeatherForec
 import { addDaysIso, todayIsoDate } from "@/lib/format/date";
 import type { Database } from "@/types/database";
 import type { AvailabilityWindow, GardenMember, ScoreRow, TaskWithPeople } from "@/types/domain";
+import { getRankingScores } from "@/lib/planning/ranking";
 
 function addDays(date: Date, days: number) {
   return addDaysIso(todayIsoDate(date), days);
@@ -138,7 +139,7 @@ export async function runGardenAutomation(supabase: SupabaseClient<Database>) {
         getGardenMembers(supabase, garden.id),
         getAvailability(supabase, garden.id),
       ]);
-      const scores = calculateScores(tasks, members, await getGardenMembers(supabase, garden.id, true));
+      const scores = await getRankingScores(supabase, garden.id, tasks, members);
       const weatherForecast = await getWetterOnlineForecast(garden.weather_location ?? garden.name, today);
       const templateRows = templates
         .filter((template) => template.recurrence_type !== "none" && template.recurrence_type !== "on_demand")
@@ -240,7 +241,16 @@ export async function runGardenAutomation(supabase: SupabaseClient<Database>) {
         })),
       ];
 
-      for (const notification of reminderRows) {
+      // Each reminder type is sent once per task and person, not every morning again.
+      const { data: sentReminders } = await supabase
+        .from("notifications")
+        .select("user_id,type,related_task_id")
+        .eq("garden_id", garden.id)
+        .in("type", ["task_overdue", "task_due_soon"])
+        .in("related_task_id", reminderRows.length ? reminderRows.map((row) => row.related_task_id) : ["00000000-0000-0000-0000-000000000000"]);
+      const alreadySent = new Set((sentReminders ?? []).map((row) => `${row.user_id}:${row.type}:${row.related_task_id}`));
+
+      for (const notification of reminderRows.filter((row) => !alreadySent.has(`${row.user_id}:${row.type}:${row.related_task_id}`))) {
         await createNotification(supabase, {
           userId: notification.user_id,
           gardenId: notification.garden_id,

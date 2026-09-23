@@ -9,7 +9,8 @@ import { canManageGarden, getUserGardenRole } from "@/lib/gardens/roles";
 import { addDays, getCadenceRule, hasTemplateTaskWithinInterval, isTemplateDateInSeason } from "@/lib/planning/cadence";
 import { suggestAssignee } from "@/lib/planning/fairness";
 import { createClient } from "@/lib/supabase/server";
-import { calculateScores, getTaskTemplates, getTasks } from "@/lib/tasks/queries";
+import { getTaskTemplates, getTasks } from "@/lib/tasks/queries";
+import { getRankingScores } from "@/lib/planning/ranking";
 
 function readString(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -62,7 +63,7 @@ export async function generateSeasonalTasksAction(formData: FormData) {
       getGardenMembers(supabase, gardenId),
       getAvailability(supabase, gardenId),
     ]);
-    const scores = calculateScores(tasks, members, await getGardenMembers(supabase, gardenId, true));
+    const scores = await getRankingScores(supabase, gardenId, tasks, members);
     const now = new Date();
     const rows = templates
       .filter((template) => template.recurrence_type !== "none" && template.recurrence_type !== "on_demand")

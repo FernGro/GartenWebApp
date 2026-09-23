@@ -15,6 +15,7 @@ const friendlyMessages: [RegExp, string][] = [
   [/Only the assignee can lock this task/i, "Nur die zugewiesene Person kann den Dienst fixieren."],
   [/Only the assigned member can complete this task/i, "Nur die zugewiesene Person kann diesen Dienst erledigen."],
   [/Task can only be completed within 7 days/i, "Dieser Dienst kann nur 7 Tage vor bis 7 Tage nach dem Faelligkeitsdatum erledigt werden."],
+  [/Invite is for another email address/i, "Diese Einladung gilt fuer eine andere E-Mail-Adresse. Melde dich mit der eingeladenen E-Mail an."],
   [/Invite not found or expired/i, "Die Einladung ist abgelaufen oder wurde schon benutzt."],
   [/Insufficient permissions|row-level security|permission denied/i, "Dafuer fehlen dir die Rechte."],
   [/Person is already member of a garden/i, "Diese Person ist schon Mitglied in einem Garten."],

@@ -1,6 +1,6 @@
 # Architektur-Bericht – Garten Dienstplan
 
-Stand: 2026-09-23 · Grundlage: Code-Stand nach Commit `31e23ac` und Migrationen `001`–`021`.
+Stand: 2026-09-23 · Grundlage: Code-Stand nach Commit `31e23ac` und Migrationen `001`–`022`.
 
 Dieses Dokument beschreibt, wie die App aufgebaut ist, wie Daten fließen und warum Dinge so gelöst sind.
 Es richtet sich an Betreiber ohne tiefe Entwicklerkenntnisse, bleibt aber technisch präzise. Jede Aussage
@@ -626,6 +626,7 @@ erDiagram
 | 018 | Guard-Trigger und verschärfte Policies |
 | 019 | Plätze/Teams, Ein-/Auszug, `billing_periods`, Ersetzen, vorab angelegte Personen |
 | 020 | Fixes zu 019: FK entfernt, Owner-Übergabe beim Ersetzen, Abschluss endet gestern, deutsche Zeit |
+| 022 | Admins dürfen Korrekturen löschen; Einladungen mit E-Mail gelten nur für genau diese E-Mail |
 | 021 | Namen Ausgezogener bleiben sichtbar, „Garten verlassen“ markiert als ausgezogen statt zu löschen, Meldungen nur noch serverseitig für andere, erster Zeitraum beginnt beim frühesten Dienst |
 
 ---
@@ -814,6 +815,11 @@ Spezifikation: `docs/superpowers/specs/2026-09-23-mitbewohner-wechsel-design.md`
 
 Ausgezogene Personen bleiben als `is_active = false` mit `left_on` in `garden_members`, damit sie in der Abrechnung bleiben.
 
+### Einladungen mit E-Mail
+
+Ist bei einer Einladung eine E-Mail eingetragen, prüft `accept_garden_invite` (Migration 022), dass die annehmende
+Person genau mit dieser E-Mail angemeldet ist. Links ohne E-Mail kann jede angemeldete Person annehmen.
+
 ### Ersetzen: zwei Wege
 
 ```mermaid
@@ -942,6 +948,10 @@ sequenceDiagram
 
 ## 11. Benachrichtigungen
 
+> Stand 2026-09-23: Der Cron schickt „überfällig“ und „bald fällig“ nur **einmal pro Dienst und Person** (Abgleich mit
+> vorhandenen `notifications` in `src/lib/cron/garden-jobs.ts`). Chat-Erinnerungen 7/3/0 Tage vor Fälligkeit bleiben.
+
+
 ```mermaid
 flowchart LR
   Ev["Ereignis: Zuweisung, Übernahme, Erinnerung, Buchung, Mention"] --> CN["createNotification<br/>src/lib/notifications/send.ts"]
@@ -1042,13 +1052,15 @@ importiert TypeScript-Quellen direkt).
 Zusätzlich wurden am 2026-09-23 alle Seiten (3 Rollen × Handy/Desktop, inkl. Prüfung auf seitliches Scrollen) und
 28 Abläufe (Erledigen, Übernehmen, Kommentieren, Abwesenheit, Abrechnung, Einladung mit Ersetzen, Vorab-Anlegen,
 Auszug, Abschluss, Cron) per Browser-Automation gegen eine lokale Supabase-Instanz mit allen Migrationen getestet.
-Diese Skripte liegen nicht im Repository. Ohne sie nicht automatisiert: Server Actions, RLS-Policies, RPCs und Trigger. Diese werden nach der Checkliste in
+Diese Skripte liegen unter `tests/e2e/` (`npm run test:e2e`, Anleitung in `tests/e2e/README.md`) und laufen nur gegen
+eine lokale Supabase (Schutz in `tests/e2e/env.mjs`). Sie decken Server Actions, RLS, RPCs und Trigger über die echte
+Oberfläche ab. Diese werden nach der Checkliste in
 `.claude/rules/06-testing.md` manuell gegen Supabase getestet. Vor jedem Commit laufen zusätzlich
 `npm run typecheck` und `npm run build`.
 
 ### Migrations-Workflow
 
-1. Neue Datei `supabase/migrations/NNN_thema.sql`, fortlaufend nummeriert (nächste: `022_…`).
+1. Neue Datei `supabase/migrations/NNN_thema.sql`, fortlaufend nummeriert (nächste: `023_…`).
 2. Additiv und idempotent: `create … if not exists`, `create or replace function`, `drop trigger if exists` vor `create trigger`,
    `grant`/`revoke execute` nach jeder Funktion.
 3. `src/types/database.ts` (Tabellen und `Functions`) anpassen.
@@ -1062,8 +1074,8 @@ Diese Skripte liegen nicht im Repository. Ohne sie nicht automatisiert: Server A
   die Vorlagen-Erzeugung zweimal (Cron und `generateSeasonalTasksAction`).
 - **Nicht-atomare Mehrschritt-Actions:** z. B. Übernahme-Anfrage wird als `approved` gespeichert, bevor das Task-Update
   (evtl. am Guard-Trigger) scheitert; Event- und Benachrichtigungs-Inserts sind nicht transaktional.
-- **Uneinheitliche Punktbasis:** Ausgleiche (`member_adjustments.points_delta`) wirken nur bei „Fair neu zuweisen“,
-  nicht bei `createTaskAction`, Cron oder Forecast; das Dashboard-Rennen zeigt Punkte ohne Historie.
+- **Punktbasis:** Für die Verteilung gilt überall `getRankingScores()` (`src/lib/planning/ranking.ts`): eigene Punkte +
+  Vorgänger-Historie + Korrekturen. Das Rennen auf der Übersicht zeigt bewusst nur selbst erledigte Punkte.
 - **Leistung:** Seiten laden alle Aufgaben eines Gartens ohne Paging; der Cron sendet Benachrichtigungen einzeln (N+1)
   und ruft das Wetter für jeden Garten ab. Für einen Haushalt unkritisch.
 - **Einfacher Wortfilter** statt echter Moderation; **WhatsApp** nur als Kontaktfeld.

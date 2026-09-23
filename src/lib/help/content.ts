@@ -306,7 +306,7 @@ export const helpItems: HelpItem[] = [
     steps: [
       "Abrechnung oeffnen. Oben steht Dein Stand: Plus heisst, du bekommst Geld, Minus heisst, du zahlst.",
       "Darunter stehen deine Ausgleichszahlungen: wer an wen wie viel zahlt.",
-      "Bei Plaetze im Haushalt siehst du pro Platz Beitrag und Soll.",
+      "Bei Plaetze im Haushalt siehst du pro Platz Beitrag und Soll, darunter pro Person die Rechnung (Punkte, Korrekturen, Ausgaben).",
     ],
     note: "Punkte zaehlen als Arbeitszeit (Punkte mal Stunden pro Punkt mal Stundenlohn). Ausgaben zaehlen als Beitrag. Zahlungen untereinander gleichen nur aus.",
   },
@@ -346,7 +346,9 @@ export const helpItems: HelpItem[] = [
       "Verwaltung aufklappen.",
       "Bei Wert eines Punktes Stundenlohn und Stunden pro Punkt setzen.",
       "Bei Korrektur eintragen Punkte oder Betrag fuer eine Person ergaenzen, z. B. als Startwert.",
+      "Doppelte oder falsche Korrekturen unter Verlauf in diesem Zeitraum mit Loeschen entfernen.",
     ],
+    note: "Korrekturen zaehlen in der Abrechnung und bei der fairen Verteilung neuer Dienste.",
   },
   {
     role: "Owner/Admin",
@@ -372,6 +374,7 @@ export const helpItems: HelpItem[] = [
       "Bei Ersetzt festlegen, ob die Person jemanden ersetzt oder zusaetzlich dazukommt.",
       "Link erstellen, dann den Link aus Offene Einladungen kopieren und verschicken.",
     ],
+    note: "Mit eingetragener E-Mail funktioniert der Link nur fuer genau diese E-Mail. Ohne E-Mail kann ihn jede Person nutzen.",
   },
   {
     role: "Owner/Admin",

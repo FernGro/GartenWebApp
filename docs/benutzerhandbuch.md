@@ -158,6 +158,7 @@ Monatsübersicht mit Diensten, Abwesenheiten und **Wetter**. Das Wetter kommt vo
 
 - **Chat:** Nachricht schreiben, Enter sendet. Mit **@Name** erwähnst du jemanden, die Person bekommt eine Meldung.
 - Die App schreibt selbst in den Chat: Erinnerungen **7, 3 und 0 Tage** vor Fälligkeit und Übernahme-Aufrufe, wenn ein Dienst **5 Tage überfällig** oder verschoben ist.
+- Die Meldungen „bald fällig“ und „überfällig“ bekommst du pro Dienst nur **einmal**, nicht jeden Tag neu.
 - **Meldungen** (Glocke): Zuweisungen, Erinnerungen, Übernahme-Anfragen, Zahlungen. **Gelesen** markiert sie.
 - **Push/Telegram:** unter Einstellungen aktivieren.
 
@@ -193,6 +194,7 @@ Buchungen vor dem Beginn des laufenden Zeitraums gehen nicht, weil dieser Zeitra
 
 ### 9.4 Plätze im Haushalt
 Jede Person hat einen **Platz**. Pro Platz siehst du einen Balken: Beitrag im Vergleich zum Soll (schwarzer Strich). Grün heißt über dem Soll, gelb darunter.
+Darunter steht pro Person die Rechnung, z. B. „12 Punkte = 120,00 €“ oder „5 Punkte (9 erledigt, Korrektur −4) = 50,00 €“, dazu Ausgaben und Zahlungen.
 
 ### 9.5 Team-Abrechnung beim Mitbewohner-Wechsel
 Wer jemanden **ersetzt**, teilt sich mit ihm den Platz und bildet ein **Team**:
@@ -206,7 +208,8 @@ Wer ohne Nachfolger auszieht, bleibt mit seinen Anwesenheitstagen bis zum Abschl
 ### 9.6 Für Admins und Owner: Verwaltung
 Unter **Verwaltung** (aufklappen):
 - **Wert eines Punktes:** Stundenlohn und Stunden pro Punkt.
-- **Korrektur eintragen:** Punkte oder Betrag für eine Person, z. B. Startwert beim Einzug.
+- **Korrektur eintragen:** Punkte oder Betrag für eine Person, z. B. Startwert beim Einzug. Korrekturen zählen auch für die faire Verteilung neuer Dienste.
+- **Korrektur löschen:** unter *Verlauf in diesem Zeitraum* bei der Korrektur auf **Löschen**, z. B. bei doppelten Einträgen.
 - **Abrechnung abschließen:** `ABSCHLIESSEN` eintippen und bestätigen. Das Ergebnis **bis gestern** wird im Archiv gespeichert (**Frühere Abrechnungen**), ab heute läuft ein neuer Zeitraum. Das lässt sich nicht rückgängig machen.
 
 ## 10. Mitglieder verwalten
@@ -226,7 +229,7 @@ flowchart TD
 
 | Aufgabe | So geht's |
 |---|---|
-| Einladen | *Per Einladungslink* → Ersetzt wählen → **Link erstellen** → Link aus *Offene Einladungen* kopieren |
+| Einladen | *Per Einladungslink* → Ersetzt wählen → **Link erstellen** → Link aus *Offene Einladungen* kopieren. Mit eingetragener E-Mail funktioniert der Link **nur für diese E-Mail**. |
 | Vorab anlegen | *Vorab anlegen* → Name, E-Mail, optional Ersetzt → **Person anlegen** |
 | Auszug | Person → *Bearbeiten* → Auszugsdatum → **Als ausgezogen markieren**. Ihre offenen Dienste werden frei. |
 | Einzugsdatum korrigieren | Person → *Bearbeiten* → **Eingezogen am** → speichern (bei Ausgezogenen: *Daten korrigieren*) |
@@ -276,8 +279,11 @@ Admin: Einladung mit „Ersetzt: alte Person“ erstellen (oder vorab anlegen). 
 **Jemand war von Anfang an da, steht aber mit späterem Einzug drin.**
 Admin: Mitglieder → Bearbeiten → **Eingezogen am** korrigieren.
 
-**Warum steht bei der Abrechnung jemand mit 0?**
-Zählen nur Dienste und Buchungen im laufenden Zeitraum? Stimmt das Einzugsdatum? Korrekturen stehen unter „Verlauf in diesem Zeitraum“.
+**Warum hat jemand in der Abrechnung so viel mehr oder weniger?**
+Die Zeile unter dem Namen zeigt die Rechnung: Punkte, Korrekturen, Ausgaben. Häufige Ursache sind doppelte Korrekturen, z. B. durch einen Doppelklick. Ein Admin löscht sie unter „Verlauf in diesem Zeitraum“. Außerdem prüfen: Zählen die Dienste im laufenden Zeitraum? Stimmt das Einzugsdatum?
+
+**Die Einladung sagt „gilt für eine andere E-Mail-Adresse“.**
+Der Link wurde für eine bestimmte E-Mail erstellt. Melde dich mit genau dieser E-Mail an oder lass dir einen Link ohne E-Mail schicken.
 
 **Ich sehe keinen Garten mehr.**
 Du bist vermutlich als ausgezogen markiert. Ein Admin kann dich unter Mitglieder wieder aktivieren, oder du nimmst eine neue Einladung an.

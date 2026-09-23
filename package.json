@@ -10,7 +10,8 @@
     "test:unit": "node --test --experimental-strip-types tests/unit/*.test.mjs",
     "test:integration": "node --test --experimental-strip-types tests/integration/*.test.mjs",
     "test": "npm run test:unit && npm run test:integration",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:e2e": "node tests/e2e/seed.mjs && node tests/e2e/smoke.mjs && node tests/e2e/flows.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.6.1",
@@ -26,6 +27,7 @@
     "@types/react": "^19.0.12",
     "@types/react-dom": "^19.0.4",
     "@types/web-push": "^3.6.4",
+    "playwright-core": "^1.63.0",
     "tailwindcss": "^4.1.4",
     "typescript": "^5.8.3"
   }

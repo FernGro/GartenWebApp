@@ -11,9 +11,10 @@ import { canManageGarden, getUserGardenRole } from "@/lib/gardens/roles";
 import { createNotification } from "@/lib/notifications/send";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { calculateScores, getTasks } from "@/lib/tasks/queries";
+import { getTasks } from "@/lib/tasks/queries";
 import { formatWeatherRecommendation, getWetterOnlineForecast } from "@/lib/weather/wetteronline";
 import type { AvailabilityWindow, ScoreRow } from "@/types/domain";
+import { getRankingScores } from "@/lib/planning/ranking";
 
 function readString(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -98,7 +99,7 @@ export async function triggerTaskChatAutomationAction(formData: FormData) {
       getAvailability(admin, gardenId),
       getWetterOnlineForecast(garden?.weather_location ?? garden?.name, today),
     ]);
-    const scores = calculateScores(tasks, members, await getGardenMembers(admin, gardenId, true));
+    const scores = await getRankingScores(admin, gardenId, tasks, members);
     const assigneeName = members.find((member) => member.user_id === task.assigned_to)?.profiles?.display_name ?? "Unbekannt";
     const weatherBlock = formatWeatherRecommendation({
       forecast: weatherForecast,

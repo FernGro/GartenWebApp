@@ -9,9 +9,10 @@ import { getAvailability } from "@/lib/availability/queries";
 import { hasTakeoverCallForTask, insertSystemChatMessage } from "@/lib/chat/queries";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { calculateScores, getTasks } from "@/lib/tasks/queries";
+import { getTasks } from "@/lib/tasks/queries";
 import { formatWeatherRecommendation, getWetterOnlineForecast } from "@/lib/weather/wetteronline";
 import type { AvailabilityWindow, ScoreRow } from "@/types/domain";
+import { getRankingScores } from "@/lib/planning/ranking";
 
 function readString(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -77,7 +78,7 @@ export async function createAvailabilityAction(formData: FormData) {
         getAvailability(admin, gardenId),
         admin.from("gardens").select("name,weather_location").eq("id", gardenId).maybeSingle(),
       ]);
-      const scores = calculateScores(tasks, members, await getGardenMembers(admin, gardenId, true));
+      const scores = await getRankingScores(admin, gardenId, tasks, members);
       const userName = members.find((member) => member.user_id === user.id)?.profiles?.display_name ?? "Jemand";
       const weatherForecast = await getWetterOnlineForecast(gardenResult.data?.weather_location ?? gardenResult.data?.name);
       const affectedTasks = tasks.filter(
