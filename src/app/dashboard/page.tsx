@@ -19,12 +19,11 @@ import { triggerTaskChatAutomationAction } from "@/lib/tasks/reminder-actions";
 
 export const dynamic = "force-dynamic";
 
-type DashboardFilter = "open" | "mine" | "review" | "overdue" | "done";
+type DashboardFilter = "open" | "mine" | "overdue" | "done";
 
 const filterLabels: Record<DashboardFilter, string> = {
   open: "Offene Aufgaben",
   mine: "Meine Aufgaben",
-  review: "Erledigungen in Pruefung",
   overdue: "Ueberfaellige Aufgaben",
   done: "Erledigte Aufgaben",
 };
@@ -35,7 +34,7 @@ export default async function DashboardPage({
   searchParams: Promise<{ view?: string }>;
 }) {
   const params = await searchParams;
-  const activeFilter: DashboardFilter = ["open", "mine", "review", "overdue", "done"].includes(params.view ?? "")
+  const activeFilter: DashboardFilter = ["open", "mine", "overdue", "done"].includes(params.view ?? "")
     ? params.view as DashboardFilter
     : "open";
   const supabase = await createClient();
@@ -98,7 +97,6 @@ export default async function DashboardPage({
   const scores = calculateScores(tasks, members);
   const suggestion = suggestAssignee(scores, null);
   const openTasks = tasks.filter((task) => task.status === "open" || task.status === "assigned" || task.status === "overdue" || task.status === "postponed");
-  const pendingReviewTasks = tasks.filter((task) => task.status === "pending_review");
   const myTasks = openTasks.filter((task) => task.assigned_to === user.id);
   const today = todayIsoDate();
   const overdueTasks = openTasks.filter((task) => task.status === "overdue" || (task.due_date && task.due_date < today));
@@ -106,7 +104,6 @@ export default async function DashboardPage({
   const taskBuckets: Record<DashboardFilter, typeof tasks> = {
     open: openTasks,
     mine: myTasks,
-    review: pendingReviewTasks,
     overdue: overdueTasks,
     done: doneTasks,
   };
@@ -128,11 +125,10 @@ export default async function DashboardPage({
           <Button>Neue Aufgabe</Button>
         </Link>
       </div>
-      <section className="grid gap-3 sm:grid-cols-5">
+      <section className="grid gap-3 sm:grid-cols-4">
         {[
           ["open", "Offen", openTasks.length],
           ["mine", "Meine", myTasks.length],
-          ["review", "Pruefung", pendingReviewTasks.length],
           ["overdue", "Ueberfaellig", overdueTasks.length],
           ["done", "Erledigt", doneTasks.length],
         ].map(([filter, label, value]) => (

@@ -22,7 +22,7 @@ export async function updateNotificationContactAction(formData: FormData) {
   const whatsappPhone = readString(formData, "whatsapp_phone") || null;
   const telegramChatId = readString(formData, "telegram_chat_id") || null;
   const telegramEnabled = formData.get("telegram_enabled") === "on";
-  const inAppEnabled = formData.get("in_app_enabled") !== "off";
+  const inAppEnabled = formData.get("in_app_enabled") === "on";
 
   if (!gardenId) {
     throw new Error("Garten fehlt.");

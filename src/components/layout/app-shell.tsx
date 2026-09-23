@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentGarden } from "@/lib/gardens/queries";
 import { getUnreadChatCount } from "@/lib/chat/queries";
+import { getUnreadNotificationCount } from "@/lib/notifications/queries";
 import { MobileMenu, type NavItem } from "@/components/layout/mobile-menu";
 
 const baseNavItems: NavItem[] = [
@@ -29,10 +30,15 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
   const unreadChat = supabase && garden && user
     ? await getUnreadChatCount(supabase, garden.id, user.id)
     : 0;
+  const unreadNotifications = supabase && garden && user
+    ? await getUnreadNotificationCount(supabase, garden.id)
+    : 0;
 
   const navItems: NavItem[] = baseNavItems.map((item) =>
     item.href === "/chat" && unreadChat > 0
       ? { ...item, badge: unreadChat }
+      : item.href === "/notifications" && unreadNotifications > 0
+        ? { ...item, badge: unreadNotifications }
       : item,
   );
 

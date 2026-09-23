@@ -1,3 +1,5 @@
+import { todayIsoDate } from "@/lib/format/date";
+
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 function toUtcDate(value: string) {
@@ -17,12 +19,12 @@ export function getCompletionWindow(dueDate: string) {
   };
 }
 
-export function isWithinCompletionWindow(dueDate: string, today = new Date().toISOString().slice(0, 10)) {
+export function isWithinCompletionWindow(dueDate: string, today = todayIsoDate()) {
   const { earliest, latest } = getCompletionWindow(dueDate);
   return today >= earliest && today <= latest;
 }
 
-export function daysUntilCompletionWindow(dueDate: string, today = new Date().toISOString().slice(0, 10)) {
+export function daysUntilCompletionWindow(dueDate: string, today = todayIsoDate()) {
   const { earliest } = getCompletionWindow(dueDate);
   return Math.ceil((toUtcDate(earliest).getTime() - toUtcDate(today).getTime()) / DAY_MS);
 }

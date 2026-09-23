@@ -5,7 +5,7 @@ import { requireUser } from "@/lib/auth/session";
 import { getAvailability } from "@/lib/availability/queries";
 import { getGardenMembers } from "@/lib/gardens/queries";
 import { canManageGarden, getUserGardenRole } from "@/lib/gardens/roles";
-import { addDays, getCadenceRule, isTemplateDateInSeason } from "@/lib/planning/cadence";
+import { addDays, getCadenceRule, hasTemplateTaskWithinInterval, isTemplateDateInSeason } from "@/lib/planning/cadence";
 import { suggestAssignee } from "@/lib/planning/fairness";
 import { createClient } from "@/lib/supabase/server";
 import { calculateScores, getTaskTemplates, getTasks } from "@/lib/tasks/queries";
@@ -52,6 +52,8 @@ export async function generateSeasonalTasksAction(formData: FormData) {
     throw new Error("Garten fehlt.");
   }
 
+  await assertCanManage(gardenId, user.id);
+
   const [templates, tasks, members, availability] = await Promise.all([
     getTaskTemplates(supabase, gardenId),
     getTasks(supabase, gardenId),
@@ -60,13 +62,19 @@ export async function generateSeasonalTasksAction(formData: FormData) {
   ]);
   const scores = calculateScores(tasks, members);
   const now = new Date();
-  const existingKeys = new Set(tasks.map((task) => `${task.template_id ?? task.title}:${task.due_date ?? ""}`));
   const rows = templates
     .filter((template) => template.recurrence_type !== "none" && template.recurrence_type !== "on_demand")
-    .map((template) => {
-      const cadence = getCadenceRule(template);
-      const dueDate = toIsoDate(addDays(now, cadence.intervalDays));
+    .map((template) => ({ template, dueDate: toIsoDate(addDays(now, getCadenceRule(template).intervalDays)) }))
+    .filter(({ template, dueDate }) => isTemplateDateInSeason(dueDate, template))
+    .filter(({ template, dueDate }) =>
+      !hasTemplateTaskWithinInterval(tasks, template.id, dueDate, getCadenceRule(template).intervalDays),
+    )
+    .map(({ template, dueDate }) => {
       const assignee = suggestAssignee(scores, dueDate, availability);
+      const score = assignee ? scores.find((row) => row.userId === assignee.userId) : null;
+      if (score) {
+        score.points += template.default_points;
+      }
 
       return {
         garden_id: gardenId,
@@ -80,12 +88,7 @@ export async function generateSeasonalTasksAction(formData: FormData) {
         status: assignee ? "assigned" as const : "open" as const,
         created_by: user.id,
       };
-    })
-    .filter((row) => {
-      const template = templates.find((entry) => entry.id === row.template_id);
-      return template ? isTemplateDateInSeason(row.due_date, template) : true;
-    })
-    .filter((row) => !existingKeys.has(`${row.template_id}:${row.due_date}`));
+    });
 
   if (rows.length === 0) {
     revalidatePath("/templates");

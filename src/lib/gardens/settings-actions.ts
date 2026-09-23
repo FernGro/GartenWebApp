@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth/session";
+import { canManageGarden, getUserGardenRole } from "@/lib/gardens/roles";
 import { createClient } from "@/lib/supabase/server";
 
 function readString(formData: FormData, key: string) {
@@ -11,7 +12,7 @@ function readString(formData: FormData, key: string) {
 }
 
 export async function updateGardenAction(formData: FormData) {
-  await requireUser();
+  const user = await requireUser();
   const supabase = await createClient();
 
   if (!supabase) {
@@ -23,6 +24,10 @@ export async function updateGardenAction(formData: FormData) {
 
   if (!gardenId || !name) {
     throw new Error("Gartenname fehlt.");
+  }
+
+  if (!canManageGarden(await getUserGardenRole(supabase, gardenId, user.id))) {
+    throw new Error("Nur Owner/Admin duerfen das aendern.");
   }
 
   const { error } = await supabase.from("gardens").update({ name }).eq("id", gardenId);

@@ -87,6 +87,23 @@ export function diffDays(a: string, b: string) {
   return Math.round((second - first) / (24 * 60 * 60 * 1000));
 }
 
+type ScheduledTask = { template_id: string | null; status: string; due_date: string | null };
+
+export function hasTemplateTaskWithinInterval(
+  tasks: ScheduledTask[],
+  templateId: string,
+  dueDate: string,
+  intervalDays: number,
+) {
+  return tasks.some(
+    (task) =>
+      task.template_id === templateId &&
+      task.status !== "cancelled" &&
+      task.due_date !== null &&
+      Math.abs(diffDays(task.due_date, dueDate)) < intervalDays,
+  );
+}
+
 function monthDayValue(month: number, day: number) {
   return month * 100 + day;
 }

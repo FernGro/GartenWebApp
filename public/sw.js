@@ -3,7 +3,6 @@ self.addEventListener("push", (event) => {
     title: "Garten Dienstplan",
     message: "Neue Meldung",
     url: "/notifications",
-    tag: "garten-notification",
   };
 
   if (event.data) {
@@ -19,7 +18,7 @@ self.addEventListener("push", (event) => {
       body: payload.message,
       icon: "/icon.svg",
       // tag groups notifications by topic — prevents duplicates on iOS and Android
-      tag: payload.tag,
+      tag: payload.tag || payload.url || "garten-notification",
       renotify: true,
       data: {
         url: payload.url || "/notifications",

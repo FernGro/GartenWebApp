@@ -1,9 +1,7 @@
 import Link from "next/link";
 import {
-  approveCompletionAction,
   completeTaskAction,
   deleteTaskAction,
-  rejectCompletionAction,
   lockTaskAssignmentAction,
   requestTakeoverAction,
   reopenTaskAction,
@@ -29,7 +27,7 @@ export function TaskCard({
   canManage?: boolean;
 }) {
   const canComplete = currentUserId && task.assigned_to === currentUserId && ["assigned", "overdue", "postponed"].includes(task.status);
-  const isCompletionWindowOpen = !task.due_date || isWithinCompletionWindow(task.due_date);
+  const isCompletionWindowOpen = !task.due_date || task.status === "overdue" || task.status === "postponed" || isWithinCompletionWindow(task.due_date);
   const completionWindow = task.due_date ? getCompletionWindow(task.due_date) : null;
   const daysUntilWindow = task.due_date ? daysUntilCompletionWindow(task.due_date) : 0;
   const canRequestTakeover = currentUserId && task.assigned_to !== currentUserId && ["open", "assigned", "overdue", "postponed"].includes(task.status);
@@ -61,7 +59,7 @@ export function TaskCard({
           <input name="garden_id" type="hidden" value={task.garden_id} />
           <input name="points" type="hidden" value={task.points} />
           <Button className="w-full sm:w-auto" type="submit">
-            Dienst als erfuellt bestaetigen
+            Dienst erledigt
           </Button>
         </form>
       ) : null}
@@ -69,27 +67,6 @@ export function TaskCard({
         <div className="mt-4 rounded-lg bg-[#fff7e8] px-4 py-3 text-sm text-[#915b10]">
           Diese Aufgabe kann erst im Zeitraum {formatDate(completionWindow.earliest)} bis {formatDate(completionWindow.latest)} erledigt gemeldet werden.
           {daysUntilWindow > 0 ? ` Das ist in ${daysUntilWindow} Tagen.` : " Das Zeitfenster ist bereits vorbei."}
-        </div>
-      ) : null}
-      {task.status === "pending_review" && canManage ? (
-        <div className="mt-4 rounded-lg bg-[#fff7e8] p-3">
-          <div className="text-sm font-semibold text-[#915b10]">Erledigung wartet auf Bestaetigung.</div>
-          <div className="mt-3 grid gap-2 sm:grid-cols-2">
-            <form action={approveCompletionAction}>
-              <input name="task_id" type="hidden" value={task.id} />
-              <input name="garden_id" type="hidden" value={task.garden_id} />
-              <input name="completed_by" type="hidden" value={task.completed_by ?? task.assigned_to ?? ""} />
-              <input name="points" type="hidden" value={task.points} />
-              <Button className="w-full" type="submit">Bestaetigen</Button>
-            </form>
-            <form action={rejectCompletionAction} className="flex flex-col gap-2">
-              <input name="task_id" type="hidden" value={task.id} />
-              <input name="garden_id" type="hidden" value={task.garden_id} />
-              <input name="completed_by" type="hidden" value={task.completed_by ?? ""} />
-              <input className="min-h-11 rounded-lg border border-[#cbd8c1] px-3 py-2 text-sm" name="note" placeholder="Grund" />
-              <Button className="w-full" variant="secondary" type="submit">Ablehnen</Button>
-            </form>
-          </div>
         </div>
       ) : null}
       {canRequestTakeover ? (

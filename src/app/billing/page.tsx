@@ -8,6 +8,7 @@ import { calculateBilling, calculateSettlementSuggestions, getBillingSettings, g
 import { formatDate } from "@/lib/format/date";
 import { formatMoney } from "@/lib/format/money";
 import { getCurrentGarden, getGardenMembers } from "@/lib/gardens/queries";
+import { canManageGarden, getUserGardenRole } from "@/lib/gardens/roles";
 import { createClient } from "@/lib/supabase/server";
 import { getTasks } from "@/lib/tasks/queries";
 
@@ -25,13 +26,16 @@ export default async function BillingPage() {
     );
   }
 
-  const [members, tasks, transactions, settings, adjustments] = await Promise.all([
+  const user = (await supabase.auth.getUser()).data.user;
+  const [members, tasks, transactions, settings, adjustments, role] = await Promise.all([
     getGardenMembers(supabase, garden.id),
     getTasks(supabase, garden.id),
     getGardenTransactions(supabase, garden.id),
     getBillingSettings(supabase, garden.id),
     getMemberAdjustments(supabase, garden.id),
+    user ? getUserGardenRole(supabase, garden.id, user.id) : Promise.resolve(null),
   ]);
+  const canManage = canManageGarden(role);
   const billing = calculateBilling(members, tasks, transactions, settings, adjustments);
   const settlements = calculateSettlementSuggestions(billing);
 
@@ -45,6 +49,7 @@ export default async function BillingPage() {
 
       <section className="grid gap-4 lg:grid-cols-[360px_1fr]">
         <div className="space-y-4">
+          {canManage ? (
           <form action={updateBillingSettingsAction} className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
             <h2 className="text-lg font-bold">Parameter</h2>
             <input name="garden_id" type="hidden" value={garden.id} />
@@ -58,6 +63,7 @@ export default async function BillingPage() {
             </label>
             <Button className="mt-3" type="submit">Speichern</Button>
           </form>
+          ) : null}
 
           <form action={createTransactionAction} className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
             <h2 className="text-lg font-bold">Ausgabe/Zahlung</h2>
@@ -105,6 +111,7 @@ export default async function BillingPage() {
             <Button className="mt-3" type="submit">Eintragen</Button>
           </form>
 
+          {canManage ? (
           <form action={createMemberAdjustmentAction} className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
             <h2 className="text-lg font-bold">Startwert / Uebernahme</h2>
             <input name="garden_id" type="hidden" value={garden.id} />
@@ -130,6 +137,7 @@ export default async function BillingPage() {
             </label>
             <Button className="mt-3" type="submit">Ausgleich eintragen</Button>
           </form>
+          ) : null}
         </div>
 
         <div className="space-y-4">

@@ -16,7 +16,7 @@ export const helpItems: HelpItem[] = [
     location: "Dashboard",
     keywords: ["dashboard", "uebersicht", "punkte", "offen", "ueberfaellig"],
     steps: [
-      "Offene, eigene, zu pruefende, ueberfaellige und erledigte Dienste oben vergleichen.",
+      "Offene, eigene, ueberfaellige und erledigte Dienste oben vergleichen.",
       "Auf eine Kennzahl klicken, um die passende Aufgabenuebersicht darunter zu sehen.",
       "Naechste Aufgaben direkt aus der Liste oeffnen.",
       "Punktestand und Fairness-Hinweis rechts pruefen.",
@@ -24,16 +24,16 @@ export const helpItems: HelpItem[] = [
   },
   {
     role: "Alle",
-    title: "Dienst als erfuellt bestaetigen",
+    title: "Dienst als erledigt melden",
     location: "Aufgaben oder Dashboard",
     keywords: ["erledigt", "bestaetigung", "dienst", "aufgabe"],
     steps: [
       "Eigene zugewiesene Aufgabe oeffnen.",
-      "Im erlaubten Zeitraum auf Dienst als erfuellt bestaetigen klicken.",
+      "Im erlaubten Zeitraum auf Dienst erledigt klicken.",
       "Ueberfaellige oder verschobene eigene Dienste koennen ebenfalls gemeldet werden.",
-      "Owner/Admin bestaetigt danach die Erledigung.",
+      "Die Punkte zaehlen sofort.",
     ],
-    note: "Punkte zaehlen erst nach Owner/Admin-Bestaetigung.",
+    note: "Owner/Admin koennen eine falsche Erledigung wieder oeffnen.",
   },
   {
     role: "Alle",
@@ -129,13 +129,13 @@ export const helpItems: HelpItem[] = [
   },
   {
     role: "Owner/Admin",
-    title: "Erledigungen bestaetigen",
+    title: "Erledigung zuruecknehmen",
     location: "Aufgaben",
-    keywords: ["bestaetigen", "pruefung", "punkte"],
+    keywords: ["zuruecknehmen", "wieder oeffnen", "punkte", "falsch erledigt"],
     steps: [
-      "Aufgaben mit Status Pruefung oeffnen.",
-      "Erledigung bestaetigen oder mit Grund ablehnen.",
-      "Nach Bestaetigung werden Punkte und Abrechnung aktualisiert.",
+      "Erledigte Aufgabe oeffnen.",
+      "Wieder oeffnen waehlen und Grund angeben.",
+      "Die Punkte werden wieder abgezogen, die Aufgabe ist erneut offen.",
     ],
   },
   {

@@ -18,8 +18,14 @@ export default async function GardenSettingsPage({
 }) {
   const params = await searchParams;
   const now = new Date();
-  const month = Number(params.month ?? now.getMonth() + 1);
-  const year = Number(params.year ?? now.getFullYear());
+  const requestedMonth = Number(params.month);
+  const requestedYear = Number(params.year);
+  const month = Number.isInteger(requestedMonth) && requestedMonth >= 1 && requestedMonth <= 12
+    ? requestedMonth
+    : now.getMonth() + 1;
+  const year = Number.isInteger(requestedYear) && requestedYear >= 2000 && requestedYear <= 2100
+    ? requestedYear
+    : now.getFullYear();
   const supabase = await createClient();
   const garden = supabase ? await getCurrentGarden(supabase) : null;
   const user = supabase ? (await supabase.auth.getUser()).data.user : null;

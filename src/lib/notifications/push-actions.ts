@@ -32,7 +32,7 @@ export async function savePushSubscriptionAction(gardenId: string, subscription:
     auth: subscription.keys.auth,
     user_agent: userAgent ?? null,
     is_active: true,
-  });
+  }, { onConflict: "user_id,garden_id,endpoint" });
 
   if (error) {
     throw new Error(error.message);

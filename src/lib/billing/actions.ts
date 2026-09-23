@@ -2,8 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth/session";
+import { todayIsoDate } from "@/lib/format/date";
 import { formatMoney } from "@/lib/format/money";
 import { createNotification } from "@/lib/notifications/send";
+import { canManageGarden, getUserGardenRole } from "@/lib/gardens/roles";
 import { createClient } from "@/lib/supabase/server";
 import type { GardenTransactionType } from "@/types/domain";
 
@@ -17,7 +19,7 @@ function eurosToCents(value: string) {
 }
 
 export async function updateBillingSettingsAction(formData: FormData) {
-  await requireUser();
+  const user = await requireUser();
   const supabase = await createClient();
 
   if (!supabase) {
@@ -30,6 +32,10 @@ export async function updateBillingSettingsAction(formData: FormData) {
 
   if (!gardenId || !Number.isFinite(hourlyRateCents) || !Number.isFinite(pointHours)) {
     throw new Error("Abrechnungseinstellungen sind ungueltig.");
+  }
+
+  if (!canManageGarden(await getUserGardenRole(supabase, gardenId, user.id))) {
+    throw new Error("Nur Owner/Admin duerfen das aendern.");
   }
 
   const { error } = await supabase.from("garden_billing_settings").upsert({
@@ -59,7 +65,7 @@ export async function createTransactionAction(formData: FormData) {
   const amountCents = eurosToCents(readString(formData, "amount"));
   const paidBy = readString(formData, "paid_by");
   const paidTo = readString(formData, "paid_to") || null;
-  const occurredOn = readString(formData, "occurred_on") || new Date().toISOString().slice(0, 10);
+  const occurredOn = readString(formData, "occurred_on") || todayIsoDate();
   const note = readString(formData, "note") || null;
 
   if (!gardenId || !["expense", "payment"].includes(type) || !title || !paidBy || !Number.isFinite(amountCents) || amountCents <= 0) {

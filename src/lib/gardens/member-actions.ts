@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth/session";
+import { getUserGardenRole } from "@/lib/gardens/roles";
 import { createClient } from "@/lib/supabase/server";
 import type { GardenRole } from "@/types/domain";
 
@@ -27,8 +28,35 @@ async function activeOwnerCount(gardenId: string) {
   return count ?? 0;
 }
 
+async function assertMayChangeMember(
+  supabase: NonNullable<Awaited<ReturnType<typeof createClient>>>,
+  gardenId: string,
+  memberId: string,
+  userId: string,
+  nextRole?: GardenRole,
+) {
+  const [callerRole, { data: target, error }] = await Promise.all([
+    getUserGardenRole(supabase, gardenId, userId),
+    supabase.from("garden_members").select("role").eq("id", memberId).eq("garden_id", gardenId).maybeSingle(),
+  ]);
+
+  if (error || !target) {
+    throw new Error(error?.message ?? "Mitglied wurde nicht gefunden.");
+  }
+
+  if (callerRole !== "owner" && callerRole !== "admin") {
+    throw new Error("Nur Owner/Admin duerfen Mitglieder verwalten.");
+  }
+
+  if (callerRole !== "owner" && (target.role === "owner" || nextRole === "owner")) {
+    throw new Error("Nur Owner duerfen Owner-Rechte vergeben oder Owner aendern.");
+  }
+
+  return target.role;
+}
+
 export async function updateMemberRoleAction(formData: FormData) {
-  await requireUser();
+  const user = await requireUser();
   const supabase = await createClient();
 
   if (!supabase) {
@@ -38,17 +66,18 @@ export async function updateMemberRoleAction(formData: FormData) {
   const memberId = readString(formData, "member_id");
   const gardenId = readString(formData, "garden_id");
   const role = readString(formData, "role") as GardenRole;
-  const currentRole = readString(formData, "current_role") as GardenRole;
 
   if (!memberId || !gardenId || !["owner", "admin", "member"].includes(role)) {
     throw new Error("Mitgliedsdaten sind ungueltig.");
   }
 
+  const currentRole = await assertMayChangeMember(supabase, gardenId, memberId, user.id, role);
+
   if (currentRole === "owner" && role !== "owner" && (await activeOwnerCount(gardenId)) <= 1) {
     throw new Error("Der letzte Owner kann nicht heruntergestuft werden.");
   }
 
-  const { error } = await supabase.from("garden_members").update({ role }).eq("id", memberId);
+  const { error } = await supabase.from("garden_members").update({ role }).eq("id", memberId).eq("garden_id", gardenId);
 
   if (error) {
     throw new Error(error.message);
@@ -58,7 +87,7 @@ export async function updateMemberRoleAction(formData: FormData) {
 }
 
 export async function setMemberActiveAction(formData: FormData) {
-  await requireUser();
+  const user = await requireUser();
   const supabase = await createClient();
 
   if (!supabase) {
@@ -67,18 +96,19 @@ export async function setMemberActiveAction(formData: FormData) {
 
   const memberId = readString(formData, "member_id");
   const gardenId = readString(formData, "garden_id");
-  const currentRole = readString(formData, "current_role") as GardenRole;
   const active = readString(formData, "active") === "true";
 
   if (!memberId || !gardenId) {
     throw new Error("Mitglied fehlt.");
   }
 
+  const currentRole = await assertMayChangeMember(supabase, gardenId, memberId, user.id);
+
   if (!active && currentRole === "owner" && (await activeOwnerCount(gardenId)) <= 1) {
     throw new Error("Der letzte Owner kann nicht deaktiviert werden.");
   }
 
-  const { error } = await supabase.from("garden_members").update({ is_active: active }).eq("id", memberId);
+  const { error } = await supabase.from("garden_members").update({ is_active: active }).eq("id", memberId).eq("garden_id", gardenId);
 
   if (error) {
     throw new Error(error.message);

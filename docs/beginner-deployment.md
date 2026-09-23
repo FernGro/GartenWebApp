@@ -56,9 +56,14 @@ Im Supabase Dashboard:
 13. Datei `supabase/migrations/011_web_push_subscriptions.sql` komplett kopieren und ausfuehren.
 14. Datei `supabase/migrations/012_locked_task_assignments.sql` komplett kopieren und ausfuehren.
 15. Datei `supabase/migrations/013_template_custom_schedule.sql` komplett kopieren und ausfuehren.
-12. Optional `supabase/seed.sql` kopieren und ausfuehren, damit Standard-Aufgabenvorlagen vorhanden sind.
+16. Datei `supabase/migrations/014_garden_chat.sql` komplett kopieren und ausfuehren.
+17. Datei `supabase/migrations/015_chat_read_receipts.sql` komplett kopieren und ausfuehren.
+18. Datei `supabase/migrations/016_garden_weather_location.sql` komplett kopieren und ausfuehren.
+19. Datei `supabase/migrations/017_direct_task_completion.sql` komplett kopieren und ausfuehren.
+20. Datei `supabase/migrations/018_harden_member_and_task_permissions.sql` komplett kopieren und ausfuehren.
+21. Optional `supabase/seed.sql` kopieren und ausfuehren, damit Standard-Aufgabenvorlagen vorhanden sind.
 
-Wenn ein `Application error` erscheint, pruefe zuerst, ob wirklich alle Migrationen (001 bis 013) in Supabase ausgefuehrt wurden. Die genaue Fehlermeldung findest du im Vercel Dashboard unter Projekt → Logs → Functions.
+Wenn ein `Application error` erscheint, pruefe zuerst, ob wirklich alle Migrationen (001 bis 018) in Supabase ausgefuehrt wurden. Die genaue Fehlermeldung findest du im Vercel Dashboard unter Projekt → Logs → Functions.
 
 ## 4. Supabase API Keys finden
 

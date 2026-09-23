@@ -15,6 +15,7 @@ export function GardenSettingsPanel({
   return (
     <>
       <section className="mb-4 grid gap-4 lg:grid-cols-2">
+        {userRole === "owner" || userRole === "admin" ? (
         <form action={updateGardenAction} className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
           <h2 className="text-lg font-bold">Gartenname</h2>
           <input name="garden_id" type="hidden" value={garden.id} />
@@ -24,6 +25,7 @@ export function GardenSettingsPanel({
           </label>
           <Button className="mt-3" type="submit">Garten speichern</Button>
         </form>
+        ) : null}
         <form action={updateProfileAction} className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
           <h2 className="text-lg font-bold">Mein Anzeigename</h2>
           <label className="mt-4 block text-sm font-semibold">
