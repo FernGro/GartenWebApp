@@ -1,77 +1,66 @@
+import { formatDate } from "@/lib/format/date";
+import { Mower } from "@/components/ui/mower";
 import type { ScoreRow } from "@/types/domain";
 
-function initials(name: string) {
-  return name
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join("")
-    .toUpperCase();
-}
+const mowerColors = ["#2f6b3f", "#3f6f8f", "#8a5a2b", "#6b4f8f", "#a0442f", "#44705f"];
 
-export function ScoreRace({ scores }: { scores: ScoreRow[] }) {
-  const maxPoints = Math.max(1, ...scores.map((score) => score.points));
-  const leaders = [...scores].sort((a, b) => b.points - a.points || a.displayName.localeCompare(b.displayName)).slice(0, 3);
-
+export function ScoreRace({ scores, currentUserId, fairnessName }: { scores: ScoreRow[]; currentUserId?: string; fairnessName?: string | null }) {
   if (scores.length === 0) {
     return null;
   }
 
+  const ranked = [...scores].sort((a, b) => b.points - a.points || a.displayName.localeCompare(b.displayName));
+  const maxPoints = Math.max(1, ...ranked.map((score) => score.points));
+
   return (
-    <section className="overflow-hidden rounded-lg border border-[#d7dfcf] bg-[#fffef9] shadow-sm shadow-[#4a5d3f]/5">
-      <div className="border-b border-[#d7dfcf] bg-[#eef6e8] px-4 py-3">
-        <h2 className="text-lg font-bold">Rasenmaeher-Rennen</h2>
-        <p className="mt-1 text-sm text-[#5a6655]">Mehr Punkte bedeuten mehr erledigte Gartenarbeit. Fuer Fairness wird trotzdem die Person mit wenig Punkten bevorzugt.</p>
+    <section className="overflow-hidden rounded-2xl border border-[#d7dfcf] bg-[#fffef9] shadow-[0_2px_0_#d7dfcf]">
+      <div className="px-4 pb-2 pt-4">
+        <h2 className="text-xl font-bold">Rasenmaeher-Rennen</h2>
+        <p className="mt-1 text-sm text-[#5a6655]">Wer mehr Dienste erledigt, hat mehr Rasen gemaeht.</p>
       </div>
-      <div className="space-y-4 p-4">
-        {scores
-          .slice()
-          .sort((a, b) => b.points - a.points || a.displayName.localeCompare(b.displayName))
-          .map((score, index) => {
-            const width = Math.max(12, Math.round((score.points / maxPoints) * 100));
-            return (
-              <div className="race-row" key={score.userId}>
-                <div className="mb-1 flex items-center justify-between gap-3 text-sm">
-                  <span className="font-semibold text-[#172016]">{score.displayName}</span>
-                  <span className="rounded-full bg-[#eef4e8] px-2 py-1 text-xs font-bold text-[#2f6b3f]">{score.points} Pkt.</span>
-                </div>
-                <div className="relative h-10 overflow-hidden rounded-lg border border-[#c6d7bd] bg-[#dcebcf]">
-                  <div className="absolute inset-x-0 bottom-0 h-3 bg-[repeating-linear-gradient(90deg,#86aa68_0_16px,#719c55_16px_32px)]" />
-                  <div
-                    className="race-lane absolute inset-y-0 left-0 rounded-r-lg bg-[#b8d99f]"
-                    style={{ width: `${width}%`, animationDelay: `${index * 80}ms` }}
-                  />
-                  <div className="absolute top-1/2 -translate-y-1/2" style={{ left: `calc(${width}% - 30px)` }}>
-                    <svg aria-hidden="true" className="h-8 w-12" viewBox="0 0 80 48">
-                      <path d="M10 28h38l12-13h8L58 36H12z" fill={index === 0 ? "#2f6b3f" : "#58774b"} />
-                      <path d="M20 15h22l6 13H13z" fill={index === 0 ? "#8fb36b" : "#9cad90"} />
-                      <circle cx="23" cy="37" fill="#172016" r="6" />
-                      <circle cx="52" cy="37" fill="#172016" r="6" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-      </div>
-      <div className="grid grid-cols-3 items-end gap-2 border-t border-[#d7dfcf] bg-[#f8faf3] px-4 py-4">
-        {[leaders[1], leaders[0], leaders[2]].map((leader, index) => {
-          const place = index === 1 ? 1 : index === 0 ? 2 : 3;
-          const height = index === 1 ? "h-20" : index === 0 ? "h-14" : "h-11";
+      <ol className="space-y-3 px-4 pb-4 pt-2">
+        {ranked.map((score, index) => {
+          const progress = Math.round((score.points / maxPoints) * 100);
+          const isLeader = index === 0 && score.points > 0;
+          const isMe = score.userId === currentUserId;
           return (
-            <div className="flex flex-col items-center justify-end gap-2" key={leader?.userId ?? index}>
-              <div className="grid h-9 w-9 place-items-center rounded-full bg-[#2f6b3f] text-xs font-bold text-white">
-                {leader ? initials(leader.displayName) : "-"}
+            <li key={score.userId}>
+              <div className="mb-1 flex items-baseline justify-between gap-3 text-sm">
+                <span className={`truncate font-semibold ${isMe ? "text-[#2f6b3f]" : "text-[#172016]"}`}>
+                  {index + 1}. {score.displayName}
+                  {isMe ? " (du)" : ""}
+                </span>
+                <span className="shrink-0 font-display text-base font-bold tabular-nums text-[#2f6b3f]">{score.points} P.</span>
               </div>
-              <div className={`grid w-full place-items-center rounded-t-lg bg-[#d2a24c] text-sm font-bold text-white ${height}`}>
-                {place}
+              <div className="relative h-12 rounded-xl">
+                <div className="lawn-tall absolute inset-0 overflow-hidden rounded-xl" />
+                <div
+                  className="race-trail lawn-mowed absolute inset-y-0 left-0 rounded-l-xl"
+                  style={{ width: `${progress}%`, animationDelay: `${index * 90}ms` }}
+                />
+                <svg aria-hidden="true" className="absolute right-1 top-1 h-10 w-6" viewBox="0 0 24 40">
+                  <path d="M4 2v36" stroke="#405039" strokeLinecap="round" strokeWidth="2.5" />
+                  <path className={isLeader ? "flag-wave" : ""} d="M5 3h15l-4 6 4 6H5z" fill={isLeader ? "#d2a24c" : "#f4efe1"} />
+                </svg>
+                <div
+                  className="race-mower absolute bottom-0"
+                  style={{ left: `max(0px, calc(${progress}% - 4.5rem))`, animationDelay: `${index * 90}ms` }}
+                >
+                  <Mower className="h-10 w-[4.5rem]" color={mowerColors[index % mowerColors.length]} idle />
+                </div>
               </div>
-              <div className="max-w-full truncate text-xs font-semibold text-[#405039]">{leader?.displayName ?? "frei"}</div>
-            </div>
+              <div className="mt-1 text-xs text-[#6d7669]">
+                {score.lastCompletedAt ? `Zuletzt gemaeht am ${formatDate(score.lastCompletedAt)}` : "Noch kein Dienst erledigt"}
+              </div>
+            </li>
           );
         })}
-      </div>
+      </ol>
+      {fairnessName ? (
+        <p className="border-t border-[#e5ecdc] bg-[#f8faf3] px-4 py-3 text-sm text-[#405039]">
+          Als Naechstes ist <span className="font-semibold">{fairnessName}</span> dran, damit es fair bleibt.
+        </p>
+      ) : null}
     </section>
   );
 }

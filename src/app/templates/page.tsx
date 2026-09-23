@@ -36,43 +36,43 @@ export default async function TemplatesPage() {
         ) : null}
       </div>
       {garden && canManage ? (
-        <form action={createTaskTemplateAction} className="mb-5 rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
+        <form action={createTaskTemplateAction} className="mb-5 rounded-2xl border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-[0_2px_0_#d7dfcf]">
           <input name="garden_id" type="hidden" value={garden.id} />
           <h2 className="text-lg font-bold">Eigene Vorlage anlegen</h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <label className="text-sm font-semibold">
               Titel
-              <input className="mt-1 w-full rounded-lg border border-[#cbd8c1] px-3 py-3" name="title" placeholder="z. B. Winterdienst" required />
+              <input className="mt-1 w-full rounded-xl border border-[#cbd8c1] px-3 py-3" name="title" placeholder="z. B. Winterdienst" required />
             </label>
             <label className="text-sm font-semibold">
               Punkte
-              <select className="mt-1 w-full rounded-lg border border-[#cbd8c1] bg-white px-3 py-3" name="default_points" defaultValue="2">
+              <select className="mt-1 w-full rounded-xl border border-[#cbd8c1] bg-white px-3 py-3" name="default_points" defaultValue="2">
                 {[1, 2, 3, 4, 5].map((point) => <option key={point} value={point}>{point}</option>)}
               </select>
             </label>
             <label className="text-sm font-semibold">
               Minuten
-              <input className="mt-1 w-full rounded-lg border border-[#cbd8c1] px-3 py-3" name="estimated_minutes" type="number" defaultValue="30" min="1" required />
+              <input className="mt-1 w-full rounded-xl border border-[#cbd8c1] px-3 py-3" name="estimated_minutes" type="number" defaultValue="30" min="1" required />
             </label>
             <label className="text-sm font-semibold">
               Intervall Tage
-              <input className="mt-1 w-full rounded-lg border border-[#cbd8c1] px-3 py-3" name="custom_interval_days" type="number" defaultValue="14" min="1" required />
+              <input className="mt-1 w-full rounded-xl border border-[#cbd8c1] px-3 py-3" name="custom_interval_days" type="number" defaultValue="14" min="1" required />
             </label>
             <label className="text-sm font-semibold">
               Start Monat
-              <input className="mt-1 w-full rounded-lg border border-[#cbd8c1] px-3 py-3" name="season_start_month" type="number" defaultValue="4" min="1" max="12" required />
+              <input className="mt-1 w-full rounded-xl border border-[#cbd8c1] px-3 py-3" name="season_start_month" type="number" defaultValue="4" min="1" max="12" required />
             </label>
             <label className="text-sm font-semibold">
               Start Tag
-              <input className="mt-1 w-full rounded-lg border border-[#cbd8c1] px-3 py-3" name="season_start_day" type="number" defaultValue="1" min="1" max="31" required />
+              <input className="mt-1 w-full rounded-xl border border-[#cbd8c1] px-3 py-3" name="season_start_day" type="number" defaultValue="1" min="1" max="31" required />
             </label>
             <label className="text-sm font-semibold">
               Ende Monat
-              <input className="mt-1 w-full rounded-lg border border-[#cbd8c1] px-3 py-3" name="season_end_month" type="number" defaultValue="9" min="1" max="12" required />
+              <input className="mt-1 w-full rounded-xl border border-[#cbd8c1] px-3 py-3" name="season_end_month" type="number" defaultValue="9" min="1" max="12" required />
             </label>
             <label className="text-sm font-semibold">
               Ende Tag
-              <input className="mt-1 w-full rounded-lg border border-[#cbd8c1] px-3 py-3" name="season_end_day" type="number" defaultValue="30" min="1" max="31" required />
+              <input className="mt-1 w-full rounded-xl border border-[#cbd8c1] px-3 py-3" name="season_end_day" type="number" defaultValue="30" min="1" max="31" required />
             </label>
           </div>
           <label className="mt-3 flex items-center gap-2 text-sm font-semibold">
@@ -85,7 +85,7 @@ export default async function TemplatesPage() {
 
       <div className="grid gap-3 sm:grid-cols-2">
         {templates.map((template) => (
-          <article className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5" key={template.id}>
+          <article className="rounded-2xl border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-[0_2px_0_#d7dfcf]" key={template.id}>
             <div className="flex items-start gap-3">
               <TaskIcon title={template.title} />
               <div className="min-w-0 flex-1">
@@ -111,34 +111,34 @@ export default async function TemplatesPage() {
                 <input name="template_id" type="hidden" value={template.id} />
                 <label className="text-sm font-semibold">
                   Titel
-                  <input className="mt-1 w-full rounded-lg border border-[#cbd8c1] px-3 py-2" name="title" defaultValue={template.title} />
+                  <input className="mt-1 w-full rounded-xl border border-[#cbd8c1] px-3 py-2" name="title" defaultValue={template.title} />
                 </label>
                 <label className="text-sm font-semibold">
                   Minuten
-                  <input className="mt-1 w-full rounded-lg border border-[#cbd8c1] px-3 py-2" name="estimated_minutes" type="number" defaultValue={template.estimated_minutes} min="1" />
+                  <input className="mt-1 w-full rounded-xl border border-[#cbd8c1] px-3 py-2" name="estimated_minutes" type="number" defaultValue={template.estimated_minutes} min="1" />
                 </label>
                 <label className="text-sm font-semibold">
                   Punkte
-                  <select className="mt-1 w-full rounded-lg border border-[#cbd8c1] bg-white px-3 py-2" name="default_points" defaultValue={template.default_points}>
+                  <select className="mt-1 w-full rounded-xl border border-[#cbd8c1] bg-white px-3 py-2" name="default_points" defaultValue={template.default_points}>
                     {[1, 2, 3, 4, 5].map((point) => <option key={point} value={point}>{point}</option>)}
                   </select>
                 </label>
                 <label className="text-sm font-semibold">
                   alle x Tage
-                  <input className="mt-1 w-full rounded-lg border border-[#cbd8c1] px-3 py-2" name="custom_interval_days" type="number" defaultValue={template.custom_interval_days ?? getCadenceRule(template).intervalDays} min="1" />
+                  <input className="mt-1 w-full rounded-xl border border-[#cbd8c1] px-3 py-2" name="custom_interval_days" type="number" defaultValue={template.custom_interval_days ?? getCadenceRule(template).intervalDays} min="1" />
                 </label>
                 <label className="text-sm font-semibold">
                   Start M/T
                   <div className="mt-1 grid grid-cols-2 gap-2">
-                    <input className="rounded-lg border border-[#cbd8c1] px-3 py-2" name="season_start_month" type="number" defaultValue={template.season_start_month} min="1" max="12" />
-                    <input className="rounded-lg border border-[#cbd8c1] px-3 py-2" name="season_start_day" type="number" defaultValue={template.season_start_day} min="1" max="31" />
+                    <input className="rounded-xl border border-[#cbd8c1] px-3 py-2" name="season_start_month" type="number" defaultValue={template.season_start_month} min="1" max="12" />
+                    <input className="rounded-xl border border-[#cbd8c1] px-3 py-2" name="season_start_day" type="number" defaultValue={template.season_start_day} min="1" max="31" />
                   </div>
                 </label>
                 <label className="text-sm font-semibold">
                   Ende M/T
                   <div className="mt-1 grid grid-cols-2 gap-2">
-                    <input className="rounded-lg border border-[#cbd8c1] px-3 py-2" name="season_end_month" type="number" defaultValue={template.season_end_month} min="1" max="12" />
-                    <input className="rounded-lg border border-[#cbd8c1] px-3 py-2" name="season_end_day" type="number" defaultValue={template.season_end_day} min="1" max="31" />
+                    <input className="rounded-xl border border-[#cbd8c1] px-3 py-2" name="season_end_month" type="number" defaultValue={template.season_end_month} min="1" max="12" />
+                    <input className="rounded-xl border border-[#cbd8c1] px-3 py-2" name="season_end_day" type="number" defaultValue={template.season_end_day} min="1" max="31" />
                   </div>
                 </label>
                 <label className="flex items-center gap-2 text-sm font-semibold">

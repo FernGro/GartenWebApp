@@ -1,104 +1,285 @@
 @import "tailwindcss";
 
+@theme {
+  --font-display: var(--font-bricolage), "Trebuchet MS", sans-serif;
+  --font-sans: var(--font-atkinson), "Segoe UI", Arial, sans-serif;
+}
+
 :root {
   color-scheme: light;
   --background: #f3f5ec;
   --foreground: #172016;
+  --lawn-dark: #3f7f45;
+  --lawn: #4d9350;
+  --lawn-light: #b8d99f;
+  --lawn-mowed: #cfe6ba;
+  --sun: #d2a24c;
 }
 
-body {
-  margin: 0;
-  background:
-    linear-gradient(180deg, rgba(247, 250, 241, 0.92), rgba(240, 246, 232, 0.92)),
-    radial-gradient(circle at 15% 8%, rgba(98, 142, 74, 0.18), transparent 26rem),
-    radial-gradient(circle at 88% 16%, rgba(210, 162, 76, 0.14), transparent 24rem),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.78) 0 25%, transparent 25% 50%, rgba(255, 255, 255, 0.45) 50% 75%, transparent 75%),
-    var(--background);
-  background-size: auto, auto, auto, 42px 42px, auto;
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  /* Wide, barely visible bands like a freshly mowed lawn. */
+  body {
+    margin: 0;
+    background:
+      repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.55) 0 140px, transparent 140px 280px),
+      var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  .font-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+
+  h1 {
+    letter-spacing: -0.025em;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+
+  input,
+  textarea,
+  select {
+    font-weight: 400;
+  }
+
+  :focus-visible {
+    outline: 3px solid #8fb36b;
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: #c8dfb7;
+  }
 }
 
-button,
-input,
-textarea,
-select {
-  font: inherit;
+/* Button feedback: squeeze on press, spring back on release. */
+.press {
+  transition:
+    transform 260ms cubic-bezier(0.34, 1.7, 0.5, 1),
+    background-color 150ms ease,
+    box-shadow 150ms ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
-::selection {
-  background: #c8dfb7;
+.press:active:not(:disabled) {
+  transform: scale(0.94) translateY(1px);
+  box-shadow: none;
+  transition-duration: 70ms;
 }
 
-.mower-drive {
-  animation: mower-drive 1.8s ease-in-out infinite;
+.press[data-pending] {
+  animation: press-pulse 900ms ease-in-out infinite;
 }
 
-.grass-dots {
-  display: inline-flex;
-  gap: 0.25rem;
-}
-
-.grass-dots span {
-  animation: grass-pulse 1s ease-in-out infinite;
-  background: #2f6b3f;
+.btn-spinner {
+  animation: spin 700ms linear infinite;
+  border: 2px solid currentColor;
   border-radius: 999px;
-  display: block;
-  height: 0.45rem;
-  width: 0.45rem;
+  border-right-color: transparent;
+  display: inline-block;
+  height: 0.9rem;
+  width: 0.9rem;
 }
 
-.grass-dots span:nth-child(2) {
-  animation-delay: 120ms;
+/* Mower parts */
+.mower-wheel {
+  animation: spin 520ms linear infinite;
+  transform-box: fill-box;
+  transform-origin: center;
 }
 
-.grass-dots span:nth-child(3) {
-  animation-delay: 240ms;
+.mower-body {
+  animation: engine-rumble 180ms ease-in-out infinite alternate;
+  transform-box: fill-box;
+  transform-origin: bottom;
 }
 
-.race-lane {
-  animation: lane-grow 620ms ease-out both;
+.mower-clipping {
+  animation: clipping-fly 700ms ease-out infinite;
+  opacity: 0;
+  transform-box: fill-box;
 }
 
-@keyframes mower-drive {
-  0% {
-    transform: translateX(-7rem);
+.mower-clipping:nth-child(2) {
+  animation-delay: 180ms;
+}
+
+.mower-clipping:nth-child(3) {
+  animation-delay: 360ms;
+}
+
+.mower-clipping:nth-child(4) {
+  animation-delay: 520ms;
+}
+
+.mower-idle .mower-wheel,
+.mower-idle .mower-body,
+.mower-idle .mower-clipping {
+  animation-iteration-count: 2;
+}
+
+/* Tall, unmowed grass and freshly mowed stripes. */
+.lawn-tall {
+  background:
+    repeating-linear-gradient(100deg, transparent 0 5px, rgba(23, 32, 22, 0.16) 5px 6px, transparent 6px 11px),
+    repeating-linear-gradient(80deg, transparent 0 7px, rgba(255, 255, 255, 0.12) 7px 8px, transparent 8px 13px),
+    linear-gradient(180deg, var(--lawn) 0%, var(--lawn-dark) 100%);
+}
+
+.lawn-mowed {
+  background:
+    repeating-linear-gradient(90deg, var(--lawn-mowed) 0 18px, #c1dda8 18px 36px);
+}
+
+.loader-track {
+  --loader-duration: 2.6s;
+}
+
+.loader-mower {
+  animation: loader-drive var(--loader-duration) cubic-bezier(0.45, 0, 0.35, 1) infinite;
+  left: -7rem;
+}
+
+.loader-trail {
+  animation: loader-trail var(--loader-duration) cubic-bezier(0.45, 0, 0.35, 1) infinite;
+}
+
+.race-trail {
+  animation: race-grow 1100ms cubic-bezier(0.25, 1, 0.4, 1) both;
+  transform-origin: left;
+}
+
+.race-mower {
+  animation: race-arrive 1100ms cubic-bezier(0.25, 1, 0.4, 1) both;
+}
+
+.flag-wave {
+  animation: flag-wave 1.4s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: left center;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
-  52% {
-    transform: translateX(calc(100vw - 10rem));
-  }
-  100% {
-    transform: translateX(calc(100vw - 10rem));
-  }
 }
 
-@keyframes grass-pulse {
-  0%,
-  100% {
-    opacity: 0.35;
+@keyframes engine-rumble {
+  from {
     transform: translateY(0);
   }
-  50% {
-    opacity: 1;
-    transform: translateY(-0.15rem);
+  to {
+    transform: translateY(-0.6px);
   }
 }
 
-@keyframes lane-grow {
+@keyframes clipping-fly {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) rotate(0deg);
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-22px, -14px) rotate(-160deg);
+  }
+}
+
+@keyframes loader-drive {
+  0% {
+    left: -7rem;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+@keyframes loader-trail {
+  0% {
+    width: 0;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+@keyframes race-grow {
   from {
     transform: scaleX(0);
-    transform-origin: left;
   }
   to {
     transform: scaleX(1);
-    transform-origin: left;
+  }
+}
+
+@keyframes race-arrive {
+  from {
+    left: 0;
+  }
+}
+
+@keyframes flag-wave {
+  0%,
+  100% {
+    transform: skewY(0deg) scaleX(1);
+  }
+  50% {
+    transform: skewY(-6deg) scaleX(0.92);
+  }
+}
+
+@keyframes press-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.75;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .mower-drive,
-  .grass-dots span,
-  .race-lane {
+  .press,
+  .press:active:not(:disabled) {
+    transform: none;
+    transition: background-color 150ms ease;
+  }
+
+  .mower-wheel,
+  .mower-body,
+  .mower-clipping,
+  .loader-mower,
+  .loader-trail,
+  .race-trail,
+  .race-mower,
+  .flag-wave,
+  .press[data-pending] {
     animation: none;
+  }
+
+  .mower-clipping {
+    display: none;
+  }
+
+  .loader-trail {
+    width: 60%;
+  }
+
+  .loader-mower {
+    left: calc(60% - 6rem);
   }
 }

@@ -3,24 +3,29 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentGarden } from "@/lib/gardens/queries";
 import { getUnreadChatCount } from "@/lib/chat/queries";
 import { getUnreadNotificationCount } from "@/lib/notifications/queries";
-import { MobileMenu, type NavItem } from "@/components/layout/mobile-menu";
+import { DesktopNav, MobileTabBar, type NavItem } from "@/components/layout/mobile-menu";
+import { buttonClass } from "@/components/ui/button-styles";
+import { Icon } from "@/components/ui/icons";
 
-const baseNavItems: NavItem[] = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/tasks", label: "Aufgaben" },
-  { href: "/tasks/new", label: "Neu" },
-  { href: "/templates", label: "Vorlagen" },
-  { href: "/forecast", label: "Forecast" },
-  { href: "/calendar", label: "Kalender" },
-  { href: "/billing", label: "Abrechnung" },
-  { href: "/notifications", label: "Meldungen" },
-  { href: "/chat", label: "Chat" },
-  { href: "/log", label: "Log" },
-  { href: "/settings/garden", label: "Garten" },
-  { href: "/settings/members", label: "Mitglieder" },
-  { href: "/help", label: "Hilfe" },
-  { href: "/install", label: "Install" },
+const allNavItems: NavItem[] = [
+  { href: "/dashboard", label: "Uebersicht", icon: "home" },
+  { href: "/tasks", label: "Aufgaben", icon: "tasks" },
+  { href: "/tasks/new", label: "Neue Aufgabe", icon: "plus" },
+  { href: "/chat", label: "Chat", icon: "chat" },
+  { href: "/calendar", label: "Kalender", icon: "calendar" },
+  { href: "/billing", label: "Abrechnung", icon: "euro" },
+  { href: "/notifications", label: "Meldungen", icon: "bell" },
+  { href: "/settings/members", label: "Mitglieder", icon: "people" },
+  { href: "/templates", label: "Vorlagen", icon: "template" },
+  { href: "/forecast", label: "Vorschau", icon: "forecast" },
+  { href: "/log", label: "Verlauf", icon: "log" },
+  { href: "/settings/garden", label: "Einstellungen", icon: "settings" },
+  { href: "/help", label: "Hilfe", icon: "help" },
+  { href: "/install", label: "App installieren", icon: "install" },
 ];
+
+const mobilePrimary = ["/dashboard", "/tasks", "/tasks/new", "/chat"];
+const desktopPrimary = ["/dashboard", "/tasks", "/calendar", "/chat", "/billing"];
 
 export async function AppShell({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -34,53 +39,64 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
     ? await getUnreadNotificationCount(supabase, garden.id)
     : 0;
 
-  const navItems: NavItem[] = baseNavItems.map((item) =>
+  const navItems: NavItem[] = allNavItems.map((item) =>
     item.href === "/chat" && unreadChat > 0
       ? { ...item, badge: unreadChat }
       : item.href === "/notifications" && unreadNotifications > 0
         ? { ...item, badge: unreadNotifications }
-      : item,
+        : item,
   );
+  const pick = (hrefs: string[]) => navItems.filter((item) => hrefs.includes(item.href));
+  const rest = (hrefs: string[]) => navItems.filter((item) => !hrefs.includes(item.href) && item.href !== "/tasks/new");
 
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-10 border-b border-[#d7dfcf] bg-[#f8faf3]/92 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-          <Link className="flex items-center gap-2 text-base font-bold text-[#172016]" href="/dashboard">
-            <span className="grid h-9 w-9 place-items-center rounded-lg bg-[#2f6b3f] text-white">GD</span>
-            <span>Garten Dienstplan</span>
+      <header className="sticky top-0 z-20 border-b border-[#d7dfcf] bg-[#fffef9]/90 backdrop-blur">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2.5">
+          <Link className="flex items-center gap-2.5 text-[#172016]" href="/dashboard">
+            <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#2f6b3f] text-white shadow-[0_2px_0_#1f4a2b]">
+              <svg aria-hidden="true" className="h-6 w-6" fill="none" viewBox="0 0 24 24">
+                <path d="M4 20c2-6 1-10 0-14M9 20c1-5 2-8 5-11M14 20c0-4 1-7 5-9M19 20c0-2 .5-4 2-5" stroke="#cfe6ba" strokeLinecap="round" strokeWidth="2" />
+              </svg>
+            </span>
+            <span className="font-display text-lg font-bold leading-tight">
+              {garden?.name ?? "Garten Dienstplan"}
+            </span>
           </Link>
-          <nav className="hidden gap-1 md:flex">
-            {navItems.map((item) => (
-              <Link
-                className="relative rounded-md px-3 py-2 text-sm font-medium text-[#405039] hover:bg-[#e3ecd9]"
-                href={item.href}
-                key={item.href}
-              >
-                {item.label}
-                {item.badge ? (
-                  <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
-                    {item.badge > 9 ? "9+" : item.badge}
-                  </span>
-                ) : null}
+          <DesktopNav more={rest(desktopPrimary)} primary={pick(desktopPrimary)} />
+          <div className="flex items-center gap-2">
+            <Link
+              aria-label={unreadNotifications > 0 ? `Meldungen, ${unreadNotifications} neu` : "Meldungen"}
+              className="press relative grid h-10 w-10 place-items-center rounded-xl text-[#405039] hover:bg-[#eef4e8]"
+              href="/notifications"
+            >
+              <Icon name="bell" />
+              {unreadNotifications > 0 ? (
+                <span className="absolute right-1 top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white">
+                  {unreadNotifications > 9 ? "9+" : unreadNotifications}
+                </span>
+              ) : null}
+            </Link>
+            <div className="hidden md:block">
+              <Link className={buttonClass("primary")} href="/tasks/new">
+                <Icon className="h-4 w-4" name="plus" />
+                Aufgabe
               </Link>
-            ))}
-          </nav>
-          <div className="hidden max-w-40 truncate text-xs text-[#5a6655] sm:block">{user?.email ?? "Setup"}</div>
-          <MobileMenu items={navItems} />
+            </div>
+          </div>
         </div>
       </header>
-      <main className="mx-auto max-w-6xl px-4 py-6 pb-24">{children}</main>
-      <footer className="border-t border-[#d7dfcf] bg-[#f8faf3]">
-        <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-5 text-sm text-[#5a6655] sm:flex-row sm:items-center sm:justify-between">
-          <span>Garten Dienstplan</span>
-          <div className="flex flex-wrap gap-3 font-semibold">
-            <Link className="text-[#2f6b3f]" href="/help">Hilfe</Link>
-            <Link className="text-[#2f6b3f]" href="/install">Installieren</Link>
-            <Link className="text-[#2f6b3f]" href="/settings/garden">Einstellungen</Link>
+      <main className="mx-auto max-w-6xl px-4 pb-32 pt-6 md:pb-16">{children}</main>
+      <footer className="hidden border-t border-[#d7dfcf] md:block">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-5 text-sm text-[#5a6655]">
+          <span>Angemeldet als {user?.email ?? "-"}</span>
+          <div className="flex gap-4 font-semibold">
+            <Link className="text-[#2f6b3f] hover:underline" href="/help">Hilfe</Link>
+            <Link className="text-[#2f6b3f] hover:underline" href="/install">App installieren</Link>
           </div>
         </div>
       </footer>
+      <MobileTabBar more={rest(mobilePrimary)} primary={pick(mobilePrimary)} />
     </div>
   );
 }

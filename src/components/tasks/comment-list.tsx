@@ -28,7 +28,7 @@ export function TaskDiscussion({
 }) {
   return (
     <section className="mt-4 grid gap-4 lg:grid-cols-[1fr_360px]">
-      <div className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
+      <div className="rounded-2xl border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-[0_2px_0_#d7dfcf]">
         <h2 className="text-lg font-bold">Kommentare</h2>
         <div className="mt-3 space-y-3">
           {comments.map((comment) => (
@@ -46,7 +46,7 @@ export function TaskDiscussion({
           <input name="task_id" type="hidden" value={taskId} />
           <input name="garden_id" type="hidden" value={gardenId} />
           <textarea
-            className="min-h-24 w-full rounded-lg border border-[#cbd8c1] px-3 py-3"
+            className="min-h-24 w-full rounded-xl border border-[#cbd8c1] px-3 py-3"
             name="comment"
             placeholder="Kommentar schreiben"
             required
@@ -54,7 +54,7 @@ export function TaskDiscussion({
           <Button type="submit">Kommentar speichern</Button>
         </form>
       </div>
-      <aside className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
+      <aside className="rounded-2xl border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-[0_2px_0_#d7dfcf]">
         <h2 className="text-lg font-bold">Verlauf</h2>
         <ol className="mt-3 space-y-3">
           {events.map((event) => (

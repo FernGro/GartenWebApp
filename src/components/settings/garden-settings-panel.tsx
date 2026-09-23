@@ -16,34 +16,34 @@ export function GardenSettingsPanel({
     <>
       <section className="mb-4 grid gap-4 lg:grid-cols-2">
         {userRole === "owner" || userRole === "admin" ? (
-        <form action={updateGardenAction} className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
+        <form action={updateGardenAction} className="rounded-2xl border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-[0_2px_0_#d7dfcf]">
           <h2 className="text-lg font-bold">Gartenname</h2>
           <input name="garden_id" type="hidden" value={garden.id} />
           <label className="mt-4 block text-sm font-semibold">
             Name
-            <input className="mt-1 w-full rounded-lg border border-[#cbd8c1] px-3 py-3" name="name" defaultValue={garden.name} required />
+            <input className="mt-1 w-full rounded-xl border border-[#cbd8c1] px-3 py-3" name="name" defaultValue={garden.name} required />
           </label>
           <Button className="mt-3" type="submit">Garten speichern</Button>
         </form>
         ) : null}
-        <form action={updateProfileAction} className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
+        <form action={updateProfileAction} className="rounded-2xl border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-[0_2px_0_#d7dfcf]">
           <h2 className="text-lg font-bold">Mein Anzeigename</h2>
           <label className="mt-4 block text-sm font-semibold">
             Name
-            <input className="mt-1 w-full rounded-lg border border-[#cbd8c1] px-3 py-3" name="display_name" defaultValue={profile?.display_name ?? ""} required />
+            <input className="mt-1 w-full rounded-xl border border-[#cbd8c1] px-3 py-3" name="display_name" defaultValue={profile?.display_name ?? ""} required />
           </label>
           <Button className="mt-3" type="submit">Namen speichern</Button>
         </form>
       </section>
       {(userRole === "owner" || userRole === "admin") && (
         <section className="mb-4 grid gap-4 lg:grid-cols-2">
-          <form action={updateChatSettingsAction} className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
+          <form action={updateChatSettingsAction} className="rounded-2xl border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-[0_2px_0_#d7dfcf]">
             <h2 className="text-lg font-bold">Chat-Einstellungen</h2>
             <input name="garden_id" type="hidden" value={garden.id} />
             <label className="mt-4 block text-sm font-semibold">
               Nachrichten automatisch löschen nach
               <select
-                className="mt-1 w-full rounded-lg border border-[#cbd8c1] px-3 py-3 bg-white"
+                className="mt-1 w-full rounded-xl border border-[#cbd8c1] px-3 py-3 bg-white"
                 name="chat_retention_days"
                 defaultValue={String(garden.chat_retention_days)}
               >
@@ -57,13 +57,13 @@ export function GardenSettingsPanel({
             </label>
             <Button className="mt-3" type="submit">Chat-Einstellungen speichern</Button>
           </form>
-          <form action={updateWeatherSettingsAction} className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
+          <form action={updateWeatherSettingsAction} className="rounded-2xl border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-[0_2px_0_#d7dfcf]">
             <h2 className="text-lg font-bold">Wetter</h2>
             <input name="garden_id" type="hidden" value={garden.id} />
             <label className="mt-4 block text-sm font-semibold">
               WetterOnline-Ort
               <input
-                className="mt-1 w-full rounded-lg border border-[#cbd8c1] px-3 py-3"
+                className="mt-1 w-full rounded-xl border border-[#cbd8c1] px-3 py-3"
                 name="weather_location"
                 defaultValue={garden.weather_location ?? ""}
                 placeholder="z. B. Berlin oder wetter/berlin"

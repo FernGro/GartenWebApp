@@ -12,20 +12,20 @@ export type HelpItem = {
 export const helpItems: HelpItem[] = [
   {
     role: "Alle",
-    title: "Dashboard lesen",
-    location: "Dashboard",
+    title: "Uebersicht lesen",
+    location: "Uebersicht",
     keywords: ["dashboard", "uebersicht", "punkte", "offen", "ueberfaellig"],
     steps: [
-      "Offene, eigene, ueberfaellige und erledigte Dienste oben vergleichen.",
-      "Auf eine Kennzahl klicken, um die passende Aufgabenuebersicht darunter zu sehen.",
-      "Naechste Aufgaben direkt aus der Liste oeffnen.",
-      "Punktestand und Fairness-Hinweis rechts pruefen.",
+      "Oben steht dein naechster Dienst. Mit Dienst erledigt meldest du ihn sofort.",
+      "Mit den Reitern Offen, Meine, Ueberfaellig und Erledigt die Liste darunter filtern.",
+      "Im Rasenmaeher-Rennen siehst du den Punktestand und wer als Naechstes dran ist.",
+      "Auf dem Handy fuehrt die Leiste unten zu Aufgaben, Chat und ueber Mehr zu allem anderen.",
     ],
   },
   {
     role: "Alle",
     title: "Dienst als erledigt melden",
-    location: "Aufgaben oder Dashboard",
+    location: "Uebersicht oder Aufgaben",
     keywords: ["erledigt", "bestaetigung", "dienst", "aufgabe"],
     steps: [
       "Eigene zugewiesene Aufgabe oeffnen.",
@@ -50,7 +50,7 @@ export const helpItems: HelpItem[] = [
   {
     role: "Alle",
     title: "Abwesenheit eintragen",
-    location: "Garten",
+    location: "Mehr > Einstellungen",
     keywords: ["abwesenheit", "urlaub", "keine zeit", "spontan"],
     steps: [
       "Garten oeffnen.",
@@ -84,7 +84,7 @@ export const helpItems: HelpItem[] = [
   {
     role: "Alle",
     title: "App installieren",
-    location: "Install",
+    location: "Mehr > App installieren",
     keywords: ["install", "handy", "pwa", "push"],
     steps: [
       "Install-Seite oeffnen.",
@@ -95,7 +95,7 @@ export const helpItems: HelpItem[] = [
   {
     role: "Owner/Admin",
     title: "Chat-Erinnerungen manuell testen",
-    location: "Dashboard",
+    location: "Uebersicht",
     keywords: ["test", "chat-check", "erinnerung", "wetter", "uebernahme"],
     steps: [
       "Dashboard oeffnen.",
@@ -107,7 +107,7 @@ export const helpItems: HelpItem[] = [
   {
     role: "Owner/Admin",
     title: "Wetterort setzen",
-    location: "Garten",
+    location: "Mehr > Einstellungen",
     keywords: ["wetteronline", "ort", "murnau", "staffelsee"],
     steps: [
       "Garten oeffnen.",
@@ -119,7 +119,7 @@ export const helpItems: HelpItem[] = [
   {
     role: "Owner/Admin",
     title: "Vorlagen verwalten",
-    location: "Vorlagen",
+    location: "Mehr > Vorlagen",
     keywords: ["vorlage", "wiederkehrend", "wetterabhaengig", "plan"],
     steps: [
       "Vorlagen oeffnen.",
@@ -141,7 +141,7 @@ export const helpItems: HelpItem[] = [
   {
     role: "Owner/Admin",
     title: "Mitglieder verwalten",
-    location: "Mitglieder",
+    location: "Mehr > Mitglieder",
     keywords: ["einladen", "rolle", "admin", "owner", "mitglied"],
     steps: [
       "Mitglieder oeffnen.",
@@ -152,7 +152,7 @@ export const helpItems: HelpItem[] = [
   {
     role: "Owner/Admin",
     title: "Mitbewohner ersetzen",
-    location: "Mitglieder",
+    location: "Mehr > Mitglieder",
     keywords: ["ersetzen", "nachfolger", "auszug", "einzug", "wg", "team", "platz"],
     steps: [
       "Einladung erstellen und bei Ersetzt die ausziehende Person waehlen.",
@@ -164,7 +164,7 @@ export const helpItems: HelpItem[] = [
   {
     role: "Owner/Admin",
     title: "Person vorab anlegen",
-    location: "Mitglieder",
+    location: "Mehr > Mitglieder",
     keywords: ["vorab", "anlegen", "noch nicht beigetreten", "profil uebernehmen", "e-mail"],
     steps: [
       "Unter Person vorab anlegen Name und E-Mail eintragen, optional Ersetzt waehlen.",
@@ -189,7 +189,7 @@ export const helpItems: HelpItem[] = [
   {
     role: "Owner/Admin",
     title: "Chat-Aufbewahrung einstellen",
-    location: "Garten",
+    location: "Mehr > Einstellungen",
     keywords: ["chat", "loeschen", "retention", "aufbewahrung"],
     steps: [
       "Garten oeffnen.",

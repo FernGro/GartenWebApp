@@ -44,14 +44,14 @@ export default async function LogPage({
         <EmptyState title="Keine Berechtigung">Nur Owner/Admins koennen den zentralen Log sehen.</EmptyState>
       ) : (
         <div className="space-y-4">
-          <form className="grid gap-3 rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5 sm:grid-cols-[1fr_220px_auto]">
+          <form className="grid gap-3 rounded-2xl border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-[0_2px_0_#d7dfcf] sm:grid-cols-[1fr_220px_auto]">
             <input
-              className="rounded-lg border border-[#cbd8c1] px-3 py-3"
+              className="rounded-xl border border-[#cbd8c1] px-3 py-3"
               defaultValue={params.q ?? ""}
               name="q"
               placeholder="Person, Aufgabe, Notiz suchen"
             />
-            <select className="rounded-lg border border-[#cbd8c1] bg-white px-3 py-3" defaultValue={eventFilter} name="event">
+            <select className="rounded-xl border border-[#cbd8c1] bg-white px-3 py-3" defaultValue={eventFilter} name="event">
               <option value="">Alle Events</option>
               {["created", "assigned", "reassigned", "accepted", "completed", "reopened", "postponed", "cancelled", "commented"].map((eventType) => (
                 <option key={eventType} value={eventType}>{eventType}</option>
@@ -59,7 +59,7 @@ export default async function LogPage({
             </select>
             <button className="rounded-lg bg-[#2f6b3f] px-4 py-3 font-semibold text-white" type="submit">Filtern</button>
           </form>
-          <div className="overflow-hidden rounded-lg border border-[#d7dfcf] bg-[#fffef9] shadow-sm shadow-[#4a5d3f]/5">
+          <div className="overflow-hidden rounded-2xl border border-[#d7dfcf] bg-[#fffef9] shadow-[0_2px_0_#d7dfcf]">
             {filteredEvents.map((event) => (
               <div className="grid gap-2 border-b border-[#e5ecdc] p-4 text-sm sm:grid-cols-[180px_1fr_auto]" key={event.id}>
                 <div className="font-semibold text-[#42513d]">{formatDateTime(event.created_at)}</div>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AppShell } from "@/components/layout/app-shell";
 import { TaskCard } from "@/components/tasks/task-card";
 import { Button } from "@/components/ui/button";
+import { buttonClass } from "@/components/ui/button-styles";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getCurrentGarden } from "@/lib/gardens/queries";
 import { canManageGarden, getUserGardenRole } from "@/lib/gardens/roles";
@@ -33,8 +34,8 @@ export default async function TasksPage() {
               <Button variant="secondary" type="submit">Fair neu zuweisen</Button>
             </form>
           ) : null}
-          <Link href="/tasks/new">
-            <Button>Neu</Button>
+          <Link className={buttonClass("primary")} href="/tasks/new">
+            Neue Aufgabe
           </Link>
         </div>
       </div>

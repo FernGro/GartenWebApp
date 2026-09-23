@@ -19,13 +19,13 @@ export function TaskForm({
   const suggested = suggestAssignee(scores, null, availability);
 
   return (
-    <form action={createTaskAction} className="space-y-4 rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
+    <form action={createTaskAction} className="space-y-4 rounded-2xl border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-[0_2px_0_#d7dfcf]">
       <input name="garden_id" type="hidden" value={gardenId} />
       <div>
         <label className="text-sm font-semibold" htmlFor="template_hint">
           Vorlage
         </label>
-        <select className="mt-1 w-full rounded-lg border border-[#cbd8c1] bg-white px-3 py-3" id="template_hint" name="template_hint">
+        <select className="mt-1 w-full rounded-xl border border-[#cbd8c1] bg-white px-3 py-3" id="template_hint" name="template_hint">
           <option value="">Manuelle Aufgabe</option>
           {templates.map((template) => (
             <option key={template.id} value={template.title}>
@@ -38,20 +38,20 @@ export function TaskForm({
         <label className="text-sm font-semibold" htmlFor="title">
           Titel
         </label>
-        <input className="mt-1 w-full rounded-lg border border-[#cbd8c1] px-3 py-3" id="title" name="title" required />
+        <input className="mt-1 w-full rounded-xl border border-[#cbd8c1] px-3 py-3" id="title" name="title" required />
       </div>
       <div>
         <label className="text-sm font-semibold" htmlFor="description">
           Beschreibung
         </label>
-        <textarea className="mt-1 min-h-24 w-full rounded-lg border border-[#cbd8c1] px-3 py-3" id="description" name="description" />
+        <textarea className="mt-1 min-h-24 w-full rounded-xl border border-[#cbd8c1] px-3 py-3" id="description" name="description" />
       </div>
       <div className="grid gap-4 sm:grid-cols-3">
         <div>
           <label className="text-sm font-semibold" htmlFor="points">
             Punkte
           </label>
-          <select className="mt-1 w-full rounded-lg border border-[#cbd8c1] bg-white px-3 py-3" id="points" name="points" defaultValue="2">
+          <select className="mt-1 w-full rounded-xl border border-[#cbd8c1] bg-white px-3 py-3" id="points" name="points" defaultValue="2">
             {[1, 2, 3, 4, 5].map((point) => (
               <option key={point} value={point}>
                 {point}
@@ -63,14 +63,14 @@ export function TaskForm({
           <label className="text-sm font-semibold" htmlFor="due_date">
             Faellig am
           </label>
-          <input className="mt-1 w-full rounded-lg border border-[#cbd8c1] px-3 py-3" id="due_date" name="due_date" type="date" />
+          <input className="mt-1 w-full rounded-xl border border-[#cbd8c1] px-3 py-3" id="due_date" name="due_date" type="date" />
         </div>
         <div>
           <label className="text-sm font-semibold" htmlFor="assigned_to">
             Zuweisung
           </label>
           <select
-            className="mt-1 w-full rounded-lg border border-[#cbd8c1] bg-white px-3 py-3"
+            className="mt-1 w-full rounded-xl border border-[#cbd8c1] bg-white px-3 py-3"
             defaultValue={suggested?.userId ?? ""}
             id="assigned_to"
             name="assigned_to"

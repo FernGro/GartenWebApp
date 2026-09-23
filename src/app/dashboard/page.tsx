@@ -1,14 +1,13 @@
 import Link from "next/link";
 import { AppShell } from "@/components/layout/app-shell";
 import { OwnerRecovery } from "@/components/dashboard/owner-recovery";
-import { ScorePie } from "@/components/dashboard/score-pie";
 import { ScoreRace } from "@/components/dashboard/score-race";
-import { ScoreTable } from "@/components/dashboard/score-table";
 import { TaskCard } from "@/components/tasks/task-card";
 import { Button } from "@/components/ui/button";
+import { buttonClass } from "@/components/ui/button-styles";
 import { EmptyState } from "@/components/ui/empty-state";
 import { SupabaseSetupWarning } from "@/components/ui/setup-warning";
-import { todayIsoDate } from "@/lib/format/date";
+import { formatDate, todayIsoDate } from "@/lib/format/date";
 import { createGardenAction } from "@/lib/gardens/actions";
 import { getCurrentGarden, getGardenMembers } from "@/lib/gardens/queries";
 import { canManageGarden, getUserGardenRole } from "@/lib/gardens/roles";
@@ -69,14 +68,14 @@ export default async function DashboardPage({
   if (!garden) {
     return (
       <AppShell>
-        <div className="max-w-xl rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-5 shadow-sm shadow-[#4a5d3f]/5">
+        <div className="max-w-xl rounded-2xl border border-[#d7dfcf] bg-[#fffef9] p-5 shadow-[0_2px_0_#d7dfcf]">
           <h1 className="text-2xl font-bold">Garten beitreten oder anlegen</h1>
           <p className="mt-2 text-sm leading-6 text-[#5a6655]">
             Wenn du eingeladen wurdest, oeffne den Einladungslink, den der Owner unter Mitglieder erstellt hat.
             Nur wenn du einen eigenen neuen Haushalt starten willst, lege hier einen neuen Garten an.
           </p>
           <form action={createGardenAction} className="mt-5 space-y-4">
-            <input className="w-full rounded-lg border border-[#cbd8c1] px-3 py-3" name="name" placeholder="z. B. Garten Haus 12" required />
+            <input className="w-full rounded-xl border border-[#cbd8c1] px-3 py-3" name="name" placeholder="z. B. Garten Haus 12" required />
             <Button type="submit">Garten erstellen</Button>
           </form>
           <Link className="mt-4 inline-block text-sm font-semibold text-[#2f6b3f] underline" href="/install">
@@ -112,91 +111,116 @@ export default async function DashboardPage({
     .filter((task) => task.assigned_to)
     .sort((a, b) => (a.due_date ?? "9999-12-31").localeCompare(b.due_date ?? "9999-12-31"))
     .slice(0, 2);
+  const myName = members.find((member) => member.user_id === user.id)?.profiles?.display_name?.trim();
+  const nextMine = [...myTasks].sort((a, b) => (a.due_date ?? "9999-12-31").localeCompare(b.due_date ?? "9999-12-31"))[0];
+  const filters: [DashboardFilter, string, number][] = [
+    ["open", "Offen", openTasks.length],
+    ["mine", "Meine", myTasks.length],
+    ["overdue", "Ueberfaellig", overdueTasks.length],
+    ["done", "Erledigt", doneTasks.length],
+  ];
 
   return (
     <AppShell>
       <OwnerRecovery gardenId={garden.id} members={allMembers} currentUserId={user.id} createdBy={garden.created_by} />
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-sm font-semibold text-[#2f6b3f]">{garden.name}</p>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
-        </div>
-        <Link href="/tasks/new">
-          <Button>Neue Aufgabe</Button>
-        </Link>
-      </div>
-      <section className="grid gap-3 sm:grid-cols-4">
-        {[
-          ["open", "Offen", openTasks.length],
-          ["mine", "Meine", myTasks.length],
-          ["overdue", "Ueberfaellig", overdueTasks.length],
-          ["done", "Erledigt", doneTasks.length],
-        ].map(([filter, label, value]) => (
-          <Link
-            className={`rounded-lg border p-4 shadow-sm shadow-[#4a5d3f]/5 transition hover:border-[#8fb36b] hover:bg-[#f8faf3] ${
-              activeFilter === filter ? "border-[#2f6b3f] bg-[#eef6e8]" : "border-[#d7dfcf] bg-[#fffef9]"
-            }`}
-            href={`/dashboard?view=${filter}`}
-            key={filter}
-          >
-            <div className="text-sm text-[#5a6655]">{label}</div>
-            <div className="mt-2 text-3xl font-bold text-[#172016]">{value}</div>
-          </Link>
-        ))}
-      </section>
-      {canManage && nextTriggerTasks.length > 0 ? (
-        <section className="mt-6 rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
-          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="text-lg font-bold">Chat-Test fuer Owner/Admin</h2>
-              <p className="text-sm text-[#5a6655]">Prueft die naechsten zwei Dienste und schreibt je nach Status eine Erinnerung oder einen Uebernahme-Aufruf in den Chat.</p>
+      <section className="relative overflow-hidden rounded-3xl bg-[#2f6b3f] px-5 pb-5 pt-6 text-white shadow-[0_3px_0_#1f4a2b] sm:px-7">
+        <div aria-hidden="true" className="absolute inset-0 bg-[repeating-linear-gradient(90deg,rgba(255,255,255,0.06)_0_56px,transparent_56px_112px)]" />
+        <div className="relative">
+          <h1 className="text-3xl font-bold sm:text-4xl">{myName ? `Hallo ${myName}` : "Hallo"}</h1>
+          <p className="mt-1 max-w-xl text-[#dcebcf]">
+            {myTasks.length === 0
+              ? "Du hast gerade keinen Dienst. Geniess den Garten."
+              : myTasks.length === 1
+                ? "Du hast einen offenen Dienst."
+                : `Du hast ${myTasks.length} offene Dienste. Das ist der naechste:`}
+          </p>
+          {nextMine ? (
+            <div className="mt-4 text-[#172016]">
+              <TaskCard currentUserId={user.id} canManage={canManage} task={nextMine} />
             </div>
-            <Link className="text-sm font-semibold text-[#2f6b3f]" href="/chat">Zum Chat</Link>
-          </div>
-          <div className="mt-4 grid gap-3 md:grid-cols-2">
-            {nextTriggerTasks.map((task) => (
-              <form action={triggerTaskChatAutomationAction} className="rounded-lg bg-[#f8faf3] p-3" key={task.id}>
-                <input name="task_id" type="hidden" value={task.id} />
-                <input name="garden_id" type="hidden" value={task.garden_id} />
-                <div className="text-sm font-semibold text-[#172016]">{task.title}</div>
-                <div className="mt-1 text-xs text-[#6d7669]">{task.due_date ? `Faellig ${task.due_date}` : "Ohne Faelligkeit"}</div>
-                <Button className="mt-3 w-full" variant="secondary" type="submit">Chat-Check ausloesen</Button>
-              </form>
-            ))}
-          </div>
-        </section>
-      ) : null}
-      <section className="mt-6 grid gap-6 lg:grid-cols-[1fr_360px]">
+          ) : (
+            <Link className={buttonClass("secondary", "mt-4")} href="/tasks">
+              Offene Aufgaben ansehen
+            </Link>
+          )}
+          {overdueTasks.length > 0 ? (
+            <Link
+              className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#fff7e8] px-3 py-1.5 text-sm font-semibold text-[#6f4d16] hover:bg-white"
+              href="/dashboard?view=overdue"
+            >
+              {overdueTasks.length} {overdueTasks.length === 1 ? "Dienst ist" : "Dienste sind"} ueberfaellig und {overdueTasks.length === 1 ? "sucht" : "suchen"} Hilfe
+            </Link>
+          ) : null}
+        </div>
+      </section>
+
+      <section className="mt-8 grid gap-8 lg:grid-cols-[1fr_380px]">
         <div>
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-xl font-bold">{filterLabels[activeFilter]}</h2>
-            <Link className="text-sm font-semibold text-[#2f6b3f]" href="/tasks">
-              Alle ansehen
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-2xl font-bold">{filterLabels[activeFilter]}</h2>
+            <Link className="text-sm font-semibold text-[#2f6b3f] hover:underline" href="/tasks">
+              Alle Aufgaben
             </Link>
           </div>
+          <nav aria-label="Aufgaben filtern" className="mb-4 flex gap-1 overflow-x-auto rounded-2xl bg-[#e7efe1] p-1">
+            {filters.map(([filter, label, value]) => (
+              <Link
+                aria-current={activeFilter === filter ? "page" : undefined}
+                className={`press flex min-w-max flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold ${
+                  activeFilter === filter ? "bg-[#fffef9] text-[#172016] shadow-[0_1px_0_#d7dfcf]" : "text-[#405039] hover:bg-[#f8faf3]/70"
+                }`}
+                href={`/dashboard?view=${filter}`}
+                key={filter}
+              >
+                {label}
+                <span
+                  className={`rounded-full px-2 py-0.5 text-xs tabular-nums ${
+                    filter === "overdue" && value > 0 ? "bg-[#efc071] text-[#6f4d16]" : "bg-[#d7dfcf]/70 text-[#405039]"
+                  }`}
+                >
+                  {value}
+                </span>
+              </Link>
+            ))}
+          </nav>
           <div className="space-y-3">
             {selectedTasks.slice(0, 8).map((task) => (
               <TaskCard compact key={task.id} task={task} currentUserId={user.id} canManage={canManage} />
             ))}
             {selectedTasks.length === 0 ? (
-              <EmptyState title="Keine Aufgaben">In dieser Ansicht gibt es aktuell nichts.</EmptyState>
+              <EmptyState title="Hier ist gerade nichts">
+                {activeFilter === "overdue" ? "Nichts ist ueberfaellig. Stark!" : "In dieser Ansicht gibt es keine Aufgaben."}
+              </EmptyState>
             ) : null}
-            {selectedTasks.length > 8 ? <div className="text-sm text-[#5a6655]">+{selectedTasks.length - 8} weitere in Aufgaben</div> : null}
+            {selectedTasks.length > 8 ? (
+              <Link className="block text-sm font-semibold text-[#2f6b3f] hover:underline" href="/tasks">
+                {selectedTasks.length - 8} weitere in Aufgaben ansehen
+              </Link>
+            ) : null}
           </div>
         </div>
-        <aside>
-          <h2 className="mb-3 text-xl font-bold">Punkte</h2>
-          <ScoreTable scores={scores} />
-          <div className="mt-3">
-            <ScorePie scores={scores} />
-          </div>
-          <div className="mt-3">
-            <ScoreRace scores={scores} />
-          </div>
-          {suggestion ? (
-            <p className="mt-3 rounded-lg bg-[#e7efe1] px-4 py-3 text-sm text-[#2f6b3f]">
-              Fairness-Hinweis: {suggestion.displayName} hat aktuell den niedrigsten Stand.
-            </p>
+        <aside className="space-y-4">
+          <ScoreRace currentUserId={user.id} fairnessName={suggestion?.displayName ?? null} scores={scores} />
+          {canManage && nextTriggerTasks.length > 0 ? (
+            <details className="rounded-2xl border border-[#d7dfcf] bg-[#fffef9] p-4">
+              <summary className="cursor-pointer font-semibold text-[#405039]">Chat-Erinnerung testen</summary>
+              <p className="mt-2 text-sm text-[#5a6655]">
+                Schreibt fuer die naechsten Dienste je nach Status eine Erinnerung oder einen Uebernahme-Aufruf in den Chat.
+              </p>
+              <div className="mt-3 space-y-2">
+                {nextTriggerTasks.map((task) => (
+                  <form action={triggerTaskChatAutomationAction} className="flex items-center justify-between gap-3 rounded-xl bg-[#f8faf3] p-3" key={task.id}>
+                    <input name="task_id" type="hidden" value={task.id} />
+                    <input name="garden_id" type="hidden" value={task.garden_id} />
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-semibold text-[#172016]">{task.title}</div>
+                      <div className="text-xs text-[#6d7669]">{task.due_date ? `Faellig ${formatDate(task.due_date)}` : "Ohne Faelligkeit"}</div>
+                    </div>
+                    <Button variant="secondary" type="submit">Testen</Button>
+                  </form>
+                ))}
+              </div>
+            </details>
           ) : null}
         </aside>
       </section>

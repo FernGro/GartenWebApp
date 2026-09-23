@@ -38,7 +38,7 @@ export default async function TaskDetailPage({ params }: { params: Promise<{ id:
       </div>
       <TaskCard task={task} currentUserId={user?.id} canManage={canManageGarden(role)} />
       <TakeoverPanel requests={takeoverRequests} currentUserId={user?.id} canManage={canManageGarden(role)} />
-      <section className="mt-4 rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
+      <section className="mt-4 rounded-2xl border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-[0_2px_0_#d7dfcf]">
         <h2 className="text-lg font-bold">Details</h2>
         <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-2">
           <div>

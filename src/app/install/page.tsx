@@ -13,7 +13,7 @@ export default function InstallPage() {
       </div>
 
       <div className="mt-6 grid gap-4 md:grid-cols-3">
-        <section className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
+        <section className="rounded-2xl border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-[0_2px_0_#d7dfcf]">
           <h2 className="text-lg font-bold">iPhone / iPad</h2>
           <ol className="mt-3 space-y-2 text-sm leading-6 text-[#42513d]">
             <li>1. Webseite in Safari oeffnen.</li>
@@ -23,7 +23,7 @@ export default function InstallPage() {
           </ol>
         </section>
 
-        <section className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
+        <section className="rounded-2xl border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-[0_2px_0_#d7dfcf]">
           <h2 className="text-lg font-bold">Android</h2>
           <ol className="mt-3 space-y-2 text-sm leading-6 text-[#42513d]">
             <li>1. Webseite in Chrome oeffnen.</li>
@@ -33,7 +33,7 @@ export default function InstallPage() {
           </ol>
         </section>
 
-        <section className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
+        <section className="rounded-2xl border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-[0_2px_0_#d7dfcf]">
           <h2 className="text-lg font-bold">Desktop</h2>
           <ol className="mt-3 space-y-2 text-sm leading-6 text-[#42513d]">
             <li>1. Webseite in Chrome oder Edge oeffnen.</li>
@@ -43,7 +43,7 @@ export default function InstallPage() {
         </section>
       </div>
 
-      <section className="mt-6 rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
+      <section className="mt-6 rounded-2xl border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-[0_2px_0_#d7dfcf]">
         <h2 className="text-lg font-bold">Serdar zum bestehenden Garten einladen</h2>
         <p className="mt-2 text-sm leading-6 text-[#42513d]">
           Oeffne als Owner die Seite Mitglieder, erstelle einen Invite-Link und schicke genau diesen Link an Serdar.

@@ -87,7 +87,7 @@ export function LoginForm() {
   }
 
   return (
-    <div className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-5 shadow-sm shadow-[#4a5d3f]/5">
+    <div className="rounded-2xl border border-[#d7dfcf] bg-[#fffef9] p-5 shadow-[0_2px_0_#d7dfcf]">
       <div className="mb-4 grid grid-cols-3 rounded-lg bg-[#eef4e8] p-1 text-sm font-semibold">
         {[
           ["magic", "Magic-Link"],
@@ -110,21 +110,21 @@ export function LoginForm() {
             <label className="text-sm font-semibold" htmlFor="display_name">
               Anzeigename
             </label>
-            <input className="mt-1 w-full rounded-lg border border-[#cbd8c1] px-3 py-3" id="display_name" name="display_name" />
+            <input className="mt-1 w-full rounded-xl border border-[#cbd8c1] px-3 py-3" id="display_name" name="display_name" />
           </div>
         ) : null}
         <div>
           <label className="text-sm font-semibold" htmlFor="email">
             E-Mail
           </label>
-          <input className="mt-1 w-full rounded-lg border border-[#cbd8c1] px-3 py-3" id="email" name="email" required type="email" />
+          <input className="mt-1 w-full rounded-xl border border-[#cbd8c1] px-3 py-3" id="email" name="email" required type="email" />
         </div>
         {mode !== "magic" ? (
           <div>
             <label className="text-sm font-semibold" htmlFor="password">
               Passwort
             </label>
-            <input className="mt-1 w-full rounded-lg border border-[#cbd8c1] px-3 py-3" id="password" minLength={8} name="password" required type="password" />
+            <input className="mt-1 w-full rounded-xl border border-[#cbd8c1] px-3 py-3" id="password" minLength={8} name="password" required type="password" />
           </div>
         ) : null}
         <Button className="w-full" disabled={loading} type="submit">

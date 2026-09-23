@@ -11,7 +11,7 @@ export function NotificationContactPanel({
   contact: NotificationContact | null;
 }) {
   return (
-    <section className="mb-4 rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
+    <section className="mb-4 rounded-2xl border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-[0_2px_0_#d7dfcf]">
       <h2 className="text-lg font-bold">Benachrichtigungen</h2>
       <p className="mt-2 text-sm leading-6 text-[#5a6655]">
         WhatsApp ist nur als Kontaktinfo vorbereitet. Fuer kostenlose automatische Nachrichten ist Telegram besser geeignet.
@@ -20,11 +20,11 @@ export function NotificationContactPanel({
         <input name="garden_id" type="hidden" value={gardenId} />
         <label className="text-sm font-semibold">
           WhatsApp Nummer optional
-          <input className="mt-1 w-full rounded-lg border border-[#cbd8c1] px-3 py-3" name="whatsapp_phone" defaultValue={contact?.whatsapp_phone ?? ""} placeholder="+491..." />
+          <input className="mt-1 w-full rounded-xl border border-[#cbd8c1] px-3 py-3" name="whatsapp_phone" defaultValue={contact?.whatsapp_phone ?? ""} placeholder="+491..." />
         </label>
         <label className="text-sm font-semibold">
           Telegram Chat-ID
-          <input className="mt-1 w-full rounded-lg border border-[#cbd8c1] px-3 py-3" name="telegram_chat_id" defaultValue={contact?.telegram_chat_id ?? ""} placeholder="123456789" />
+          <input className="mt-1 w-full rounded-xl border border-[#cbd8c1] px-3 py-3" name="telegram_chat_id" defaultValue={contact?.telegram_chat_id ?? ""} placeholder="123456789" />
         </label>
         <label className="flex items-center gap-2 text-sm font-semibold">
           <input defaultChecked={contact?.in_app_enabled ?? true} name="in_app_enabled" type="checkbox" />

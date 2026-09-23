@@ -14,6 +14,10 @@ import type { GardenMember } from "@/types/domain";
 
 export const dynamic = "force-dynamic";
 
+const inputClass = "mt-1 w-full rounded-xl border border-[#cbd8c1] bg-white px-3 py-3";
+const labelClass = "block text-sm font-semibold text-[#405039]";
+const panelClass = "rounded-2xl border border-[#d7dfcf] bg-[#fffef9] shadow-[0_2px_0_#d7dfcf]";
+
 function memberLabel(member: GardenMember) {
   const name = member.profiles?.display_name ?? "Mitglied";
   return member.is_active ? name : `${name} (ausgezogen)`;
@@ -26,6 +30,19 @@ function snapshotSettlements(snapshot: unknown): SettlementSuggestion[] {
 
   const settlements = (snapshot as { settlements: unknown }).settlements;
   return Array.isArray(settlements) ? (settlements as SettlementSuggestion[]) : [];
+}
+
+function Settlement({ settlement, currentUserId }: { settlement: SettlementSuggestion; currentUserId?: string }) {
+  const from = settlement.fromUserId === currentUserId ? "Du" : settlement.fromName;
+  const to = settlement.toUserId === currentUserId ? "dich" : settlement.toName;
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-xl bg-[#f2f7ec] px-3 py-2.5 text-sm">
+      <span>
+        <span className="font-semibold">{from}</span> {from === "Du" ? "zahlst" : "zahlt"} an <span className="font-semibold">{to}</span>
+      </span>
+      <span className="font-display text-lg font-bold tabular-nums text-[#2f6b3f]">{formatMoney(settlement.amountCents)}</span>
+    </div>
+  );
 }
 
 export default async function BillingPage() {
@@ -47,252 +64,301 @@ export default async function BillingPage() {
   ]);
   const canManage = canManageGarden(role);
   const settlements = calculateSettlementSuggestions(billing.rows);
+  const mySettlements = settlements.filter((item) => item.fromUserId === user?.id || item.toUserId === user?.id);
+  const otherSettlements = settlements.filter((item) => !mySettlements.includes(item));
+  const myRow = billing.rows.find((row) => row.userId === user?.id);
   const periodAdjustments = adjustments.filter((adjustment) => todayIsoDate(new Date(adjustment.created_at)) >= range.startsOn);
+  const maxSlotValue = Math.max(1, ...billing.slots.map((slot) => Math.max(slot.contributionCents, slot.fairShareCents)));
 
   return (
     <AppShell>
       <div className="mb-6">
-        <p className="text-sm font-semibold text-[#2f6b3f]">{garden.name}</p>
-        <h1 className="text-3xl font-bold">Abrechnung</h1>
-        <p className="mt-2 text-sm text-[#5a6655]">
-          Zeitraum seit {formatDate(range.startsOn)}. Punkte werden als Arbeitszeit bewertet. Wer jemanden ersetzt, bildet mit ihm ein Team:
-          Ein Minus wird nach Anwesenheit geteilt, ein Plus nach eigenem Beitrag.
-        </p>
+        <h1 className="text-3xl font-bold sm:text-4xl">Abrechnung</h1>
+        <p className="mt-1 text-[#5a6655]">Laufender Zeitraum seit {formatDate(range.startsOn)}</p>
       </div>
 
-      <section className="grid gap-4 lg:grid-cols-[360px_1fr]">
-        <div className="space-y-4">
-          {canManage ? (
-          <form action={updateBillingSettingsAction} className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
-            <h2 className="text-lg font-bold">Parameter</h2>
-            <input name="garden_id" type="hidden" value={garden.id} />
-            <label className="mt-3 block text-sm font-semibold">
-              Stundenlohn EUR
-              <input className="mt-1 w-full rounded-lg border border-[#cbd8c1] px-3 py-3" name="hourly_rate" defaultValue={(settings.hourly_rate_cents / 100).toFixed(2)} />
-            </label>
-            <label className="mt-3 block text-sm font-semibold">
-              Stunden pro Punkt
-              <input className="mt-1 w-full rounded-lg border border-[#cbd8c1] px-3 py-3" name="point_hours" defaultValue={settings.point_hours} />
-            </label>
-            <Button className="mt-3" type="submit">Speichern</Button>
-          </form>
-          ) : null}
+      <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
+        <div className="space-y-6">
+          <section className="relative overflow-hidden rounded-3xl bg-[#2f6b3f] p-5 text-white shadow-[0_3px_0_#1f4a2b] sm:p-7">
+            <div aria-hidden="true" className="absolute inset-0 bg-[repeating-linear-gradient(90deg,rgba(255,255,255,0.06)_0_56px,transparent_56px_112px)]" />
+            <div className="relative">
+              <h2 className="text-lg font-semibold text-[#dcebcf]">Dein Stand</h2>
+              {myRow ? (
+                <>
+                  <p className="mt-1 font-display text-4xl font-bold tabular-nums sm:text-5xl">
+                    {myRow.balanceCents > 0
+                      ? `+${formatMoney(myRow.balanceCents)}`
+                      : myRow.balanceCents < 0
+                        ? formatMoney(myRow.balanceCents)
+                        : "Ausgeglichen"}
+                  </p>
+                  <p className="mt-1 text-[#dcebcf]">
+                    {myRow.balanceCents > 0
+                      ? "Du hast mehr beigetragen als dein Anteil und bekommst Geld zurueck."
+                      : myRow.balanceCents < 0
+                        ? "Du liegst unter deinem Anteil und zahlst beim Ausgleich."
+                        : "Du bist genau bei deinem Anteil."}
+                  </p>
+                </>
+              ) : (
+                <p className="mt-1 text-[#dcebcf]">Du bist in diesem Zeitraum nicht in der Abrechnung.</p>
+              )}
+              {mySettlements.length > 0 ? (
+                <div className="mt-4 space-y-2 text-[#172016]">
+                  {mySettlements.map((settlement) => (
+                    <Settlement currentUserId={user?.id} key={`${settlement.fromUserId}-${settlement.toUserId}`} settlement={settlement} />
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          </section>
 
-          <form action={createTransactionAction} className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
-            <h2 className="text-lg font-bold">Ausgabe/Zahlung</h2>
-            <input name="garden_id" type="hidden" value={garden.id} />
-            <label className="mt-3 block text-sm font-semibold">
-              Typ
-              <select className="mt-1 w-full rounded-lg border border-[#cbd8c1] bg-white px-3 py-3" name="type" defaultValue="expense">
-                <option value="expense">Ausgabe</option>
-                <option value="payment">Zahlung</option>
-              </select>
-            </label>
-            <label className="mt-3 block text-sm font-semibold">
-              Titel
-              <input className="mt-1 w-full rounded-lg border border-[#cbd8c1] px-3 py-3" name="title" placeholder="Rasenmaehersprit" required />
-            </label>
-            <label className="mt-3 block text-sm font-semibold">
-              Betrag EUR
-              <input className="mt-1 w-full rounded-lg border border-[#cbd8c1] px-3 py-3" name="amount" placeholder="30,00" required />
-            </label>
-            <label className="mt-3 block text-sm font-semibold">
-              Bezahlt von
-              <select className="mt-1 w-full rounded-lg border border-[#cbd8c1] bg-white px-3 py-3" name="paid_by">
-                {members.map((member) => (
-                  <option key={member.user_id} value={member.user_id}>{memberLabel(member)}</option>
-                ))}
-              </select>
-            </label>
-            <label className="mt-3 block text-sm font-semibold">
-              Zahlung an (nur bei Zahlung)
-              <select className="mt-1 w-full rounded-lg border border-[#cbd8c1] bg-white px-3 py-3" name="paid_to">
-                <option value="">Niemand</option>
-                {members.map((member) => (
-                  <option key={member.user_id} value={member.user_id}>{memberLabel(member)}</option>
-                ))}
-              </select>
-            </label>
-            <label className="mt-3 block text-sm font-semibold">
-              Datum
-              <input className="mt-1 w-full rounded-lg border border-[#cbd8c1] px-3 py-3" name="occurred_on" type="date" />
-            </label>
-            <label className="mt-3 block text-sm font-semibold">
-              Notiz
-              <input className="mt-1 w-full rounded-lg border border-[#cbd8c1] px-3 py-3" name="note" />
-            </label>
-            <Button className="mt-3" type="submit">Eintragen</Button>
-          </form>
+          <section>
+            <div className="mb-3 flex items-baseline justify-between gap-3">
+              <h2 className="text-2xl font-bold">Plaetze im Haushalt</h2>
+              <span className="text-sm text-[#5a6655]">Gesamt {formatMoney(billing.potCents)}</span>
+            </div>
+            <p className="mb-4 max-w-2xl text-sm text-[#5a6655]">
+              Wer jemanden ersetzt, bildet mit ihm ein Team. Liegt ein Team unter seinem Soll, wird das Minus nach Anwesenheit geteilt, ein Plus nach eigenem Beitrag.
+            </p>
+            <div className="space-y-3">
+              {billing.slots.map((slot) => {
+                const contribution = Math.max(0, Math.round((slot.contributionCents / maxSlotValue) * 100));
+                const target = Math.round((slot.fairShareCents / maxSlotValue) * 100);
+                return (
+                  <article className={`${panelClass} overflow-hidden`} key={slot.slotId}>
+                    <div className="p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <h3 className="text-lg font-bold">
+                          {slot.members.map((row) => row.displayName).join(" + ")}
+                        </h3>
+                        <span className={`shrink-0 font-display text-lg font-bold tabular-nums ${slot.teamBalanceCents >= 0 ? "text-[#2f6b3f]" : "text-[#915b10]"}`}>
+                          {slot.teamBalanceCents > 0 ? "+" : ""}
+                          {formatMoney(slot.teamBalanceCents)}
+                        </span>
+                      </div>
+                      <div aria-hidden="true" className="relative mt-3 h-3 rounded-full bg-[#e7efe1]">
+                        <div
+                          className={`h-3 rounded-full ${slot.contributionCents >= slot.fairShareCents ? "bg-[#4d9350]" : "bg-[#d2a24c]"}`}
+                          style={{ width: `${contribution}%` }}
+                        />
+                        <div className="absolute -top-1 h-5 w-0.5 rounded bg-[#172016]" style={{ left: `${target}%` }} />
+                      </div>
+                      <div className="mt-2 flex justify-between text-xs text-[#5a6655]">
+                        <span>Beitrag {formatMoney(slot.contributionCents)}</span>
+                        <span>Soll {formatMoney(slot.fairShareCents)}</span>
+                      </div>
+                    </div>
+                    {slot.members.length > 1 || slot.members.some((row) => row.transferCents !== 0) ? (
+                      <div className="divide-y divide-[#e5ecdc] border-t border-[#e5ecdc] bg-[#f8faf3]">
+                        {slot.members.map((row) => (
+                          <div className="flex items-center justify-between gap-3 px-4 py-3 text-sm" key={row.userId}>
+                            <div className="min-w-0">
+                              <div className="font-semibold">{row.displayName}</div>
+                              <div className="text-xs text-[#6d7669]">
+                                {row.isActive ? "wohnt hier" : `ausgezogen am ${formatDate(row.leftOn)}`}, {row.presenceDays} Tage im Zeitraum
+                                {row.transferCents !== 0 ? `, Zahlungen ${formatMoney(row.transferCents)}` : ""}
+                              </div>
+                            </div>
+                            <span className={`shrink-0 font-bold tabular-nums ${row.balanceCents >= 0 ? "text-[#2f6b3f]" : "text-[#915b10]"}`}>
+                              {formatMoney(row.balanceCents)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+                  </article>
+                );
+              })}
+              {billing.slots.length === 0 ? <EmptyState title="Noch keine Eintraege">Im aktuellen Zeitraum gibt es noch nichts abzurechnen.</EmptyState> : null}
+            </div>
+          </section>
 
-          {canManage ? (
-          <form action={createMemberAdjustmentAction} className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
-            <h2 className="text-lg font-bold">Startwert / Uebernahme</h2>
-            <input name="garden_id" type="hidden" value={garden.id} />
-            <label className="mt-3 block text-sm font-semibold">
-              Mitglied
-              <select className="mt-1 w-full rounded-lg border border-[#cbd8c1] bg-white px-3 py-3" name="user_id">
-                {members.map((member) => (
-                  <option key={member.user_id} value={member.user_id}>{memberLabel(member)}</option>
+          {otherSettlements.length > 0 ? (
+            <section className={`${panelClass} p-4`}>
+              <h2 className="text-lg font-bold">Weitere Ausgleichszahlungen</h2>
+              <div className="mt-3 space-y-2">
+                {otherSettlements.map((settlement) => (
+                  <Settlement currentUserId={user?.id} key={`${settlement.fromUserId}-${settlement.toUserId}`} settlement={settlement} />
                 ))}
-              </select>
-            </label>
-            <label className="mt-3 block text-sm font-semibold">
-              Punkte +/-
-              <input className="mt-1 w-full rounded-lg border border-[#cbd8c1] px-3 py-3" name="points_delta" defaultValue="0" />
-            </label>
-            <label className="mt-3 block text-sm font-semibold">
-              Betrag EUR +/-
-              <input className="mt-1 w-full rounded-lg border border-[#cbd8c1] px-3 py-3" name="amount_delta" defaultValue="0" />
-            </label>
-            <label className="mt-3 block text-sm font-semibold">
-              Grund
-              <input className="mt-1 w-full rounded-lg border border-[#cbd8c1] px-3 py-3" name="reason" placeholder="Anna uebernimmt Markus Punkte" required />
-            </label>
-            <Button className="mt-3" type="submit">Ausgleich eintragen</Button>
-          </form>
+              </div>
+            </section>
           ) : null}
         </div>
 
-        <div className="space-y-4">
-          <div className="grid gap-3 sm:grid-cols-3">
-            <div className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
-              <div className="text-sm text-[#5a6655]">Gesamtbeitrag</div>
-              <div className="mt-2 text-2xl font-bold text-[#2f6b3f]">{formatMoney(billing.potCents)}</div>
-            </div>
-            <div className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
-              <div className="text-sm text-[#5a6655]">Plaetze</div>
-              <div className="mt-2 text-2xl font-bold text-[#2f6b3f]">{billing.slots.length}</div>
-            </div>
-            <div className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
-              <div className="text-sm text-[#5a6655]">Seit</div>
-              <div className="mt-2 text-2xl font-bold text-[#2f6b3f]">{formatDate(range.startsOn)}</div>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            {billing.slots.map((slot) => (
-              <div className="overflow-hidden rounded-lg border border-[#d7dfcf] bg-[#fffef9] shadow-sm shadow-[#4a5d3f]/5" key={slot.slotId}>
-                <div className="flex flex-col gap-1 bg-[#f8faf3] p-4 text-sm sm:flex-row sm:items-center sm:justify-between">
-                  <div className="font-bold">
-                    {slot.members.length > 1 ? "Team: " : ""}
-                    {slot.members.map((row) => row.displayName).join(" + ")}
-                  </div>
-                  <div className="text-[#5a6655]">
-                    Beitrag {formatMoney(slot.contributionCents)} · Soll {formatMoney(slot.fairShareCents)} ·{" "}
-                    <span className={slot.teamBalanceCents >= 0 ? "font-bold text-[#2f6b3f]" : "font-bold text-[#915b10]"}>
-                      {formatMoney(slot.teamBalanceCents)}
-                    </span>
-                  </div>
-                </div>
-                {slot.members.map((row) => (
-                  <div className="grid gap-1 border-t border-[#e5ecdc] p-4 text-sm sm:grid-cols-[1fr_repeat(4,110px)]" key={row.userId}>
-                    <div>
-                      <div className="font-bold">{row.displayName}</div>
-                      <div className="text-xs text-[#6d7669]">
-                        {row.isActive ? "wohnt hier" : `ausgezogen ${formatDate(row.leftOn)}`} · {row.presenceDays} Tage
-                      </div>
-                    </div>
-                    <div>Beitrag {formatMoney(row.contributionCents)}</div>
-                    <div>Anteil {formatMoney(row.teamShareCents)}</div>
-                    <div>Zahlungen {formatMoney(row.transferCents)}</div>
-                    <div className={row.balanceCents >= 0 ? "font-bold text-[#2f6b3f]" : "font-bold text-[#915b10]"}>
-                      {formatMoney(row.balanceCents)}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ))}
-            {billing.slots.length === 0 ? <p className="text-sm text-[#6d7669]">Im aktuellen Zeitraum gibt es noch keine Mitglieder.</p> : null}
-          </div>
-
-          <div className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
-            <h2 className="text-lg font-bold">Zahlungsvorschlaege</h2>
-            <div className="mt-3 space-y-3">
-              {settlements.map((settlement) => (
-                <div className="flex flex-col gap-2 rounded-lg bg-[#f2f7ec] p-3 text-sm sm:flex-row sm:items-center sm:justify-between" key={`${settlement.fromUserId}-${settlement.toUserId}-${settlement.amountCents}`}>
-                  <div>
-                    <span className="font-bold">{settlement.fromName}</span> zahlt an <span className="font-bold">{settlement.toName}</span>
-                  </div>
-                  <div className="text-lg font-bold text-[#2f6b3f]">{formatMoney(settlement.amountCents)}</div>
-                </div>
-              ))}
-              {settlements.length === 0 ? <p className="text-sm text-[#6d7669]">Aktuell ist rechnerisch nichts auszugleichen.</p> : null}
-            </div>
-          </div>
-
-          {canManage ? (
-            <form action={closeBillingPeriodAction} className="rounded-lg border border-[#efc071] bg-[#fff7e8] p-4 text-[#6f4d16]">
-              <h2 className="text-lg font-bold">Abrechnung abschliessen</h2>
-              <p className="mt-1 text-sm">
-                Speichert das Ergebnis bis gestern im Archiv. Ab heute laeuft ein neuer Zeitraum. Das kann nicht rueckgaengig gemacht werden.
-              </p>
+        <aside className="space-y-4">
+          <details className={`${panelClass} p-4`} open>
+            <summary className="cursor-pointer text-lg font-bold">Ausgabe oder Zahlung eintragen</summary>
+            <form action={createTransactionAction} className="mt-4 space-y-3">
               <input name="garden_id" type="hidden" value={garden.id} />
-              <label className="mt-3 block text-sm font-semibold">
-                Zur Bestaetigung ABSCHLIESSEN eintippen
-                <input className="mt-1 w-full rounded-lg border border-[#efc071] bg-white px-3 py-3" name="confirm" autoComplete="off" required />
+              <fieldset>
+                <legend className={labelClass}>Was ist passiert?</legend>
+                <div className="mt-1 grid grid-cols-2 gap-2">
+                  <label className="press flex cursor-pointer items-center justify-center rounded-xl border border-[#cbd8c1] bg-white px-3 py-3 text-center text-sm font-semibold has-[:checked]:border-[#2f6b3f] has-[:checked]:bg-[#e7efe1] has-[:focus-visible]:outline has-[:focus-visible]:outline-[3px] has-[:focus-visible]:outline-[#8fb36b]">
+                    <input className="sr-only" defaultChecked name="type" type="radio" value="expense" />
+                    Ausgabe
+                  </label>
+                  <label className="press flex cursor-pointer items-center justify-center rounded-xl border border-[#cbd8c1] bg-white px-3 py-3 text-center text-sm font-semibold has-[:checked]:border-[#2f6b3f] has-[:checked]:bg-[#e7efe1] has-[:focus-visible]:outline has-[:focus-visible]:outline-[3px] has-[:focus-visible]:outline-[#8fb36b]">
+                    <input className="sr-only" name="type" type="radio" value="payment" />
+                    Zahlung an jemanden
+                  </label>
+                </div>
+              </fieldset>
+              <label className={labelClass}>
+                Wofuer
+                <input className={inputClass} name="title" placeholder="z. B. Benzin fuer den Rasenmaeher" required />
               </label>
-              <Button className="mt-3" type="submit">Abrechnung abschliessen</Button>
-            </form>
-          ) : null}
-
-          {closedPeriods.length > 0 ? (
-            <div className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
-              <h2 className="text-lg font-bold">Archiv</h2>
-              <div className="mt-3 space-y-3">
-                {closedPeriods.map((period) => {
-                  const archived = snapshotSettlements(period.snapshot);
-                  return (
-                    <details className="rounded-lg bg-[#f2f7ec] p-3 text-sm" key={period.id}>
-                      <summary className="cursor-pointer font-semibold">
-                        {formatDate(period.starts_on)} bis {formatDate(period.ends_on)}
-                      </summary>
-                      <div className="mt-2 space-y-1">
-                        {archived.map((settlement) => (
-                          <div key={`${period.id}-${settlement.fromUserId}-${settlement.toUserId}`}>
-                            {settlement.fromName} zahlt an {settlement.toName}: <span className="font-bold">{formatMoney(settlement.amountCents)}</span>
-                          </div>
-                        ))}
-                        {archived.length === 0 ? <div className="text-[#6d7669]">Nichts auszugleichen.</div> : null}
-                      </div>
-                    </details>
-                  );
-                })}
+              <div className="grid grid-cols-2 gap-3">
+                <label className={labelClass}>
+                  Betrag in EUR
+                  <input className={inputClass} inputMode="decimal" name="amount" placeholder="30,00" required />
+                </label>
+                <label className={labelClass}>
+                  Datum
+                  <input className={inputClass} defaultValue={todayIsoDate()} name="occurred_on" type="date" />
+                </label>
               </div>
-            </div>
-          ) : null}
+              <label className={labelClass}>
+                Bezahlt von
+                <select className={inputClass} defaultValue={user?.id} name="paid_by">
+                  {members.map((member) => (
+                    <option key={member.user_id} value={member.user_id}>{memberLabel(member)}</option>
+                  ))}
+                </select>
+              </label>
+              <label className={labelClass}>
+                Empfaenger (nur bei Zahlung)
+                <select className={inputClass} name="paid_to">
+                  <option value="">Niemand</option>
+                  {members.map((member) => (
+                    <option key={member.user_id} value={member.user_id}>{memberLabel(member)}</option>
+                  ))}
+                </select>
+              </label>
+              <label className={labelClass}>
+                Notiz (optional)
+                <input className={inputClass} name="note" />
+              </label>
+              <Button className="w-full" type="submit">Eintragen</Button>
+            </form>
+          </details>
 
-          <div className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
-            <h2 className="text-lg font-bold">Transaktionen</h2>
-            <div className="mt-3 space-y-3">
+          <details className={`${panelClass} p-4`}>
+            <summary className="cursor-pointer text-lg font-bold">Verlauf in diesem Zeitraum</summary>
+            <div className="mt-3 space-y-2">
               {transactions.map((transaction) => (
-                <div className="rounded-lg bg-[#f2f7ec] p-3 text-sm" key={transaction.id}>
-                  <div className="font-semibold">{transaction.title} · {formatMoney(transaction.amount_cents)}</div>
+                <div className="rounded-xl bg-[#f2f7ec] px-3 py-2.5 text-sm" key={transaction.id}>
+                  <div className="flex justify-between gap-3 font-semibold">
+                    <span className="truncate">{transaction.title}</span>
+                    <span className="tabular-nums">{formatMoney(transaction.amount_cents)}</span>
+                  </div>
                   <div className="text-xs text-[#6d7669]">
-                    {transaction.type} · {formatDate(transaction.occurred_on)} · {transaction.paid_by_profile?.display_name ?? "Mitglied"}
+                    {transaction.type === "payment" ? "Zahlung" : "Ausgabe"} am {formatDate(transaction.occurred_on)} von {transaction.paid_by_profile?.display_name ?? "Mitglied"}
                     {transaction.paid_to_profile ? ` an ${transaction.paid_to_profile.display_name}` : ""}
                   </div>
                 </div>
               ))}
-              {transactions.length === 0 ? <p className="text-sm text-[#6d7669]">Noch keine Ausgaben oder Zahlungen.</p> : null}
-            </div>
-          </div>
-
-          <div className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
-            <h2 className="text-lg font-bold">Ausgleiche</h2>
-            <div className="mt-3 space-y-3">
               {periodAdjustments.map((adjustment) => (
-                <div className="rounded-lg bg-[#f2f7ec] p-3 text-sm" key={adjustment.id}>
-                  <div className="font-semibold">{adjustment.profiles?.display_name ?? "Mitglied"} · {adjustment.reason}</div>
+                <div className="rounded-xl bg-[#f4efe1] px-3 py-2.5 text-sm" key={adjustment.id}>
+                  <div className="font-semibold">Korrektur fuer {adjustment.profiles?.display_name ?? "Mitglied"}</div>
                   <div className="text-xs text-[#6d7669]">
-                    {adjustment.points_delta} Punkte · {formatMoney(adjustment.amount_cents_delta)}
+                    {adjustment.reason}: {adjustment.points_delta} Punkte, {formatMoney(adjustment.amount_cents_delta)}
                   </div>
                 </div>
               ))}
-              {periodAdjustments.length === 0 ? <p className="text-sm text-[#6d7669]">Noch keine Startwerte oder Uebernahmen.</p> : null}
+              {transactions.length === 0 && periodAdjustments.length === 0 ? (
+                <p className="text-sm text-[#6d7669]">Noch keine Ausgaben, Zahlungen oder Korrekturen.</p>
+              ) : null}
             </div>
-          </div>
-        </div>
-      </section>
+          </details>
+
+          {closedPeriods.length > 0 ? (
+            <details className={`${panelClass} p-4`}>
+              <summary className="cursor-pointer text-lg font-bold">Fruehere Abrechnungen</summary>
+              <div className="mt-3 space-y-3">
+                {closedPeriods.map((period) => {
+                  const archived = snapshotSettlements(period.snapshot);
+                  return (
+                    <div key={period.id}>
+                      <div className="text-sm font-semibold text-[#405039]">
+                        {formatDate(period.starts_on)} bis {formatDate(period.ends_on)}
+                      </div>
+                      <div className="mt-1 space-y-1.5">
+                        {archived.map((settlement) => (
+                          <Settlement currentUserId={user?.id} key={`${period.id}-${settlement.fromUserId}-${settlement.toUserId}`} settlement={settlement} />
+                        ))}
+                        {archived.length === 0 ? <div className="text-sm text-[#6d7669]">Nichts auszugleichen.</div> : null}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </details>
+          ) : null}
+
+          {canManage ? (
+            <details className={`${panelClass} p-4`}>
+              <summary className="cursor-pointer text-lg font-bold">Verwaltung</summary>
+              <div className="mt-4 space-y-6">
+                <form action={updateBillingSettingsAction} className="space-y-3">
+                  <h3 className="font-bold">Wert eines Punktes</h3>
+                  <input name="garden_id" type="hidden" value={garden.id} />
+                  <div className="grid grid-cols-2 gap-3">
+                    <label className={labelClass}>
+                      Stundenlohn EUR
+                      <input className={inputClass} defaultValue={(settings.hourly_rate_cents / 100).toFixed(2)} inputMode="decimal" name="hourly_rate" />
+                    </label>
+                    <label className={labelClass}>
+                      Stunden pro Punkt
+                      <input className={inputClass} defaultValue={settings.point_hours} inputMode="decimal" name="point_hours" />
+                    </label>
+                  </div>
+                  <Button type="submit" variant="secondary">Speichern</Button>
+                </form>
+
+                <form action={createMemberAdjustmentAction} className="space-y-3 border-t border-[#e5ecdc] pt-5">
+                  <h3 className="font-bold">Korrektur eintragen</h3>
+                  <input name="garden_id" type="hidden" value={garden.id} />
+                  <label className={labelClass}>
+                    Fuer
+                    <select className={inputClass} name="user_id">
+                      {members.map((member) => (
+                        <option key={member.user_id} value={member.user_id}>{memberLabel(member)}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <label className={labelClass}>
+                      Punkte +/-
+                      <input className={inputClass} defaultValue="0" inputMode="numeric" name="points_delta" />
+                    </label>
+                    <label className={labelClass}>
+                      Betrag EUR +/-
+                      <input className={inputClass} defaultValue="0" inputMode="decimal" name="amount_delta" />
+                    </label>
+                  </div>
+                  <label className={labelClass}>
+                    Grund
+                    <input className={inputClass} name="reason" placeholder="z. B. Startwert beim Einzug" required />
+                  </label>
+                  <Button type="submit" variant="secondary">Korrektur eintragen</Button>
+                </form>
+
+                <form action={closeBillingPeriodAction} className="space-y-3 rounded-xl border border-[#efc071] bg-[#fff7e8] p-4 text-[#6f4d16]">
+                  <h3 className="font-bold">Abrechnung abschliessen</h3>
+                  <p className="text-sm">Speichert das Ergebnis bis gestern im Archiv. Ab heute laeuft ein neuer Zeitraum. Das laesst sich nicht rueckgaengig machen.</p>
+                  <input name="garden_id" type="hidden" value={garden.id} />
+                  <label className="block text-sm font-semibold">
+                    Zur Bestaetigung ABSCHLIESSEN eintippen
+                    <input autoComplete="off" className="mt-1 w-full rounded-xl border border-[#efc071] bg-white px-3 py-3" name="confirm" required />
+                  </label>
+                  <Button type="submit">Abrechnung abschliessen</Button>
+                </form>
+              </div>
+            </details>
+          ) : null}
+        </aside>
+      </div>
     </AppShell>
   );
 }

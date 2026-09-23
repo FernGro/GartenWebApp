@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AppShell } from "@/components/layout/app-shell";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
+import { buttonClass } from "@/components/ui/button-styles";
 import { formatDateTime } from "@/lib/format/date";
 import { getCurrentGarden } from "@/lib/gardens/queries";
 import { markNotificationReadAction } from "@/lib/notifications/actions";
@@ -32,7 +33,7 @@ export default async function NotificationsPage() {
       </div>
       <div className="grid gap-3">
         {notifications.map((notification) => (
-          <article className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5" key={notification.id}>
+          <article className="rounded-2xl border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-[0_2px_0_#d7dfcf]" key={notification.id}>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <div className="flex flex-wrap items-center gap-2">
@@ -46,8 +47,8 @@ export default async function NotificationsPage() {
               </div>
               <div className="flex gap-2">
                 {notification.related_task_id ? (
-                  <Link href={`/tasks/${notification.related_task_id}`}>
-                    <Button variant="secondary">Aufgabe</Button>
+                  <Link className={buttonClass("secondary")} href={`/tasks/${notification.related_task_id}`}>
+                    Aufgabe
                   </Link>
                 ) : null}
                 {!notification.read_at ? (

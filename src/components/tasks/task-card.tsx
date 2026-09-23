@@ -34,12 +34,16 @@ export function TaskCard({
   const canAcceptTakeoverDirectly = task.status === "overdue" || task.status === "postponed";
 
   return (
-    <article className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
+    <article
+      className={`rounded-2xl border bg-[#fffef9] p-4 shadow-[0_2px_0_#d7dfcf] ${
+        task.status === "overdue" ? "border-[#efc071] border-l-4" : "border-[#d7dfcf]"
+      }`}
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 gap-3">
           <TaskIcon title={task.title} />
           <div className="min-w-0">
-            <Link className="text-base font-bold text-[#172016] hover:underline" href={`/tasks/${task.id}`}>
+            <Link className="font-display text-lg font-bold leading-snug text-[#172016] hover:underline" href={`/tasks/${task.id}`}>
               {task.title}
             </Link>
             <div className="mt-2 flex flex-wrap gap-2 text-xs text-[#6d7669]">
@@ -58,7 +62,10 @@ export function TaskCard({
           <input name="task_id" type="hidden" value={task.id} />
           <input name="garden_id" type="hidden" value={task.garden_id} />
           <input name="points" type="hidden" value={task.points} />
-          <Button className="w-full sm:w-auto" type="submit">
+          <Button className="w-full text-base sm:w-auto" type="submit">
+            <svg aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" viewBox="0 0 24 24">
+              <path d="M5 12.5l4.5 4.5L19 7.5" />
+            </svg>
             Dienst erledigt
           </Button>
         </form>
@@ -75,7 +82,7 @@ export function TaskCard({
           <input name="garden_id" type="hidden" value={task.garden_id} />
           <input name="current_assignee" type="hidden" value={task.assigned_to ?? ""} />
           <input
-            className="min-h-11 flex-1 rounded-lg border border-[#cbd8c1] px-3 py-2 text-sm"
+            className="min-h-11 flex-1 rounded-xl border border-[#cbd8c1] px-3 py-2 text-sm"
             name="note"
             placeholder="Warum willst du uebernehmen?"
           />
@@ -98,12 +105,12 @@ export function TaskCard({
           <Button variant="ghost" type="submit">Fixierung loesen</Button>
         </form>
       ) : null}
-      {task.status === "done" && canManage ? (
+      {!compact && task.status === "done" && canManage ? (
         <form action={reopenTaskAction} className="mt-4 flex flex-col gap-2 sm:flex-row">
           <input name="task_id" type="hidden" value={task.id} />
           <input name="garden_id" type="hidden" value={task.garden_id} />
           <input
-            className="min-h-11 flex-1 rounded-lg border border-[#cbd8c1] px-3 py-2 text-sm"
+            className="min-h-11 flex-1 rounded-xl border border-[#cbd8c1] px-3 py-2 text-sm"
             name="note"
             placeholder="Grund fuer Ruecknahme"
           />
@@ -112,7 +119,7 @@ export function TaskCard({
           </Button>
         </form>
       ) : null}
-      {task.status === "cancelled" && canManage ? (
+      {!compact && task.status === "cancelled" && canManage ? (
         <form action={restoreTaskAction} className="mt-3">
           <input name="task_id" type="hidden" value={task.id} />
           <input name="garden_id" type="hidden" value={task.garden_id} />
@@ -122,7 +129,7 @@ export function TaskCard({
           </Button>
         </form>
       ) : null}
-      {canManage && task.status !== "cancelled" ? (
+      {!compact && canManage && task.status !== "cancelled" ? (
         <form action={deleteTaskAction} className="mt-3">
           <input name="task_id" type="hidden" value={task.id} />
           <input name="garden_id" type="hidden" value={task.garden_id} />

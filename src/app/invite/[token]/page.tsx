@@ -13,7 +13,7 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
 
   return (
     <AppShell>
-      <div className="max-w-xl rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-5 shadow-sm shadow-[#4a5d3f]/5">
+      <div className="max-w-xl rounded-2xl border border-[#d7dfcf] bg-[#fffef9] p-5 shadow-[0_2px_0_#d7dfcf]">
         <h1 className="text-2xl font-bold">Garten-Einladung</h1>
         <p className="mt-2 text-sm text-[#5a6655]">
           Das ist der Link, der deinen Account mit dem bestehenden Garten verbindet. Ohne diesen Schritt siehst du nur die Option,

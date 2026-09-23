@@ -47,7 +47,7 @@ export default async function ForecastPage() {
           Das sind nur Vorschlaege. Erst beim Erzeugen oder Uebernehmen werden Aufgaben verbindlich zugewiesen.
         </p>
       </div>
-      <div className="overflow-hidden rounded-lg border border-[#d7dfcf] bg-[#fffef9] shadow-sm shadow-[#4a5d3f]/5">
+      <div className="overflow-hidden rounded-2xl border border-[#d7dfcf] bg-[#fffef9] shadow-[0_2px_0_#d7dfcf]">
         {forecast.map((row) => (
           <div className="grid gap-2 border-b border-[#e5ecdc] p-4 text-sm lg:grid-cols-[120px_1fr_180px_120px_160px]" key={`${row.sourceTemplateId}-${row.dueDate}`}>
             <div className="font-semibold">{formatDate(row.dueDate)}</div>

@@ -25,11 +25,11 @@ export function HelpBrowser() {
 
   return (
     <div>
-      <div className="grid gap-3 rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5 md:grid-cols-[220px_1fr]">
+      <div className="grid gap-3 rounded-2xl border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-[0_2px_0_#d7dfcf] md:grid-cols-[220px_1fr]">
         <label className="text-sm font-semibold text-[#172016]">
           Rolle
           <select
-            className="mt-1 w-full rounded-lg border border-[#cbd8c1] bg-white px-3 py-3"
+            className="mt-1 w-full rounded-xl border border-[#cbd8c1] bg-white px-3 py-3"
             value={role}
             onChange={(event) => setRole(event.target.value as HelpRole)}
           >
@@ -41,7 +41,7 @@ export function HelpBrowser() {
         <label className="text-sm font-semibold text-[#172016]">
           Suche
           <input
-            className="mt-1 w-full rounded-lg border border-[#cbd8c1] px-3 py-3"
+            className="mt-1 w-full rounded-xl border border-[#cbd8c1] px-3 py-3"
             placeholder="z. B. Wetter, Uebernahme, Abwesenheit"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
@@ -55,7 +55,7 @@ export function HelpBrowser() {
             <h2 className="mb-3 text-xl font-bold">{group.role}</h2>
             <div className="grid gap-3 lg:grid-cols-2">
               {group.items.map((item) => (
-                <article className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5" key={`${item.role}-${item.title}`}>
+                <article className="rounded-2xl border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-[0_2px_0_#d7dfcf]" key={`${item.role}-${item.title}`}>
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                     <h3 className="text-base font-bold text-[#172016]">{item.title}</h3>
                     <span className="rounded-full bg-[#eef4e8] px-2 py-1 text-xs font-semibold text-[#2f6b3f]">{item.location}</span>

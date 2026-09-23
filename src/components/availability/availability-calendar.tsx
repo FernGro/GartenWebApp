@@ -37,7 +37,7 @@ export function AvailabilityCalendar({
 
   return (
     <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
-      <section className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
+      <section className="rounded-2xl border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-[0_2px_0_#d7dfcf]">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-lg font-bold">Abwesenheit eintragen</h2>
           <div className="flex items-center gap-2 text-sm font-semibold">
@@ -54,15 +54,15 @@ export function AvailabilityCalendar({
           <input name="garden_id" type="hidden" value={gardenId} />
           <label className="text-sm font-semibold">
             Von
-            <input className="mt-1 w-full rounded-lg border border-[#cbd8c1] px-3 py-3" name="from_date" required type="date" />
+            <input className="mt-1 w-full rounded-xl border border-[#cbd8c1] px-3 py-3" name="from_date" required type="date" />
           </label>
           <label className="text-sm font-semibold">
             Bis
-            <input className="mt-1 w-full rounded-lg border border-[#cbd8c1] px-3 py-3" name="to_date" required type="date" />
+            <input className="mt-1 w-full rounded-xl border border-[#cbd8c1] px-3 py-3" name="to_date" required type="date" />
           </label>
           <label className="text-sm font-semibold sm:col-span-2">
             Grund
-            <input className="mt-1 w-full rounded-lg border border-[#cbd8c1] px-3 py-3" name="reason" placeholder="Urlaub, keine Zeit, beschaeftigt" />
+            <input className="mt-1 w-full rounded-xl border border-[#cbd8c1] px-3 py-3" name="reason" placeholder="Urlaub, keine Zeit, beschaeftigt" />
           </label>
           <Button className="sm:col-span-2" type="submit">Speichern</Button>
         </form>
@@ -80,7 +80,7 @@ export function AvailabilityCalendar({
           ))}
         </div>
       </section>
-      <aside className="rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
+      <aside className="rounded-2xl border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-[0_2px_0_#d7dfcf]">
         <h2 className="text-lg font-bold">Eintraege</h2>
         <div className="mt-3 space-y-3">
           {entries.map((entry) => (

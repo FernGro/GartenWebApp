@@ -1,22 +1,28 @@
+"use client";
+
 import type { ButtonHTMLAttributes, ReactNode } from "react";
+import { useFormStatus } from "react-dom";
+import { buttonClass, type ButtonVariant } from "@/components/ui/button-styles";
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   children: ReactNode;
-  variant?: "primary" | "secondary" | "ghost";
+  variant?: ButtonVariant;
 };
 
-export function Button({ children, className = "", variant = "primary", ...props }: ButtonProps) {
-  const variants = {
-    primary: "bg-[#2f6b3f] text-white shadow-sm shadow-[#2f6b3f]/20 hover:bg-[#275a35]",
-    secondary: "bg-white text-[#172016] ring-1 ring-[#d7dfcf] hover:bg-[#eef4e8]",
-    ghost: "bg-transparent text-[#2f6b3f] hover:bg-[#e3ecd9]",
-  };
+export function Button({ children, className = "", variant = "primary", type = "button", disabled, ...props }: ButtonProps) {
+  const { pending } = useFormStatus();
+  const isSubmitting = pending && type === "submit";
 
   return (
     <button
-      className={`inline-flex min-h-11 items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60 ${variants[variant]} ${className}`}
+      aria-busy={isSubmitting || undefined}
+      className={buttonClass(variant, className)}
+      data-pending={isSubmitting || undefined}
+      disabled={disabled || isSubmitting}
+      type={type}
       {...props}
     >
+      {isSubmitting ? <span aria-hidden="true" className="btn-spinner" /> : null}
       {children}
     </button>
   );

@@ -17,7 +17,7 @@ export function TakeoverPanel({
   }
 
   return (
-    <section className="mt-4 rounded-lg border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-sm shadow-[#4a5d3f]/5">
+    <section className="mt-4 rounded-2xl border border-[#d7dfcf] bg-[#fffef9] p-4 shadow-[0_2px_0_#d7dfcf]">
       <h2 className="text-lg font-bold">Offene Uebernahmen</h2>
       <div className="mt-3 space-y-3">
         {requests.map((request) => {
